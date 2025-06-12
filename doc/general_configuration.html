@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="generation_objects.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#general_configuration" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="simple_pages.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">General configuration</a></h1>
+    <div class="page_body">
+
+<p>Contents:
+</p>
+<ul>
+<li><a href="#overview">General configuration overview</a></li>
+<li><a href="#section_general">The <code>[general]</code>
+      configuration section</a></li>
+<li><a href="#format_section">The <code>[format]</code> section</a></li>
+<li><a href="#html_section">The <code>[html]</code> section</a></li>
+<li><a href="#options">The <code>[options <em>NNN</em>]</code>
+      section group</a></li>
+<p></ul>
+</p>
+
+<h2 id="overview">General configuration overview<p></h2>
+</p>
+<p>General configuration, in the sense that it affects most general aspects of
+Thalassa's functioning, is done with:</p>
+<ul>
+
+<li><code>[options NNN]</code>
+<a href="ini_basics.html#sectiongroups">section group</a>, in which
+parameters are set that are later available via the
+<code>%[opt:&nbsp;]</code> macro;</li>
+
+<li><code>[general]</code> <a href="ini_basics.html">section</a>, which
+sets the most &ldquo;global&rdquo; parameters, such as the path for the web tree to
+be generated and the option set selector(s);</li>
+
+<li><code>[format]</code> section, in which the base
+<a href="headed_text.html#encodings">character encoding</a> (codepage) may
+be configured, as well as the list of HTML tags and tag attributes allowed
+for user-supplied content;</li>
+
+<li><code>[html]</code> section, in which HTML snippets and simple
+templates are defined.</li>
+
+<p></ul>
+</p>
+
+<h2 id="section_general">The <code>[general]</code> configuration section<p></h2>
+</p>
+<p>The <code>[general]</code> configuration section contains parameters that
+affect functioning of the <code>thalassa</code> program as a whole; some
+of them may be overriden by <a href="thalassa_cmdline.html">command line
+options</a>.  <strong>All parameters in this section are passed through the
+macroprocessor</strong> to make it possible to use the
+<a href="#options">options</a>.  The only exception is the
+<strong><code>opt_selector</code> parameter, in which macro expansion is
+not done.</strong>
+</p>
+<p><strong id="general_rootdir_parameter">The <code>rootdir</code>
+parameter</strong> sets the directory
+serving as the root for your site's tree.  Both relative or absolute path
+may be specified; as usual for Unix-like operating systems, the path is
+considered absolute in case its first char is &ldquo;<code>/</code>&rdquo;, otherwise
+it is taken relative to the working directory &mdash; either directory from
+which <code>thalassa</code> is invoked, or the directory explicitly
+specified at the command line with the respective option.
+</p>
+<p>By default (in case the parameter is not specified in the configuration
+files), &ldquo;<code>html</code>&rdquo; is used, so the site will be generated in the
+<code>html</code> subdirectory of your source tree.  In most cases you'd
+probably want to specify something that starts with <code>../</code>.
+</p>
+
+
+This parameter can be overriden with <p><code>gen -t <em>dir</em></code>
+command line option.
+</p>
+<p><strong>The <code>base_url</code> and <code>base_uri</code>
+parameters</strong> set the base URL (the URL without the local part, e.g.
+<code>http://www.example.com</code>) and the base URI (the local part of
+the URL to which the root of your generated tree corresponds, typically
+just &ldquo;<code>/</code>&rdquo;).  By default, <code>base_url</code> is empty
+string and <code>base_uri</code> is &ldquo;<code>/</code>&rdquo;.
+</p>
+<p>The <code>base_url</code> parameter is not used by Thalassa itself, it is
+only made available with the <code>%base_url%</code> macro.  This may be
+useful when you need to specify a &ldquo;canonical&rdquo; reference to your site,
+e.g., for an RSS feed.
+</p>
+<p>In contrast, the <code>base_uri</code> parameter is actively used by
+Thalassa when it has to generate navigation links on its own; the obvious
+cases of such use are
+<a href="generation_objects.html#index_bars">index bars</a> and
+links from comment answers to parent comments within
+<a href="generation_objects.html#comment_sections">comment sections</a>.
+</p>
+<p><strong>The <code>inifiles</code> parameter</strong> specifies additional
+ini files to be loaded by <code>thalassa</code>.  The value is simply a
+list of file names, separated either with whitespace, or with commas, or
+both &mdash; you can write it however you like.  Please note that
+<strong>there's no way to specify a file with whitespace chars in its name,
+nor with commas</strong>, and this is not going to change, because we
+believe spaces and commas must never be used in file names.
+</p>
+<p>Additional files loaded this way may as well contain the [general]/inifiles
+parameter, thus specifying more files, and <code>thalassa</code> is able to
+handle it correclty.  Loading files one by one, <code>thalassa</code>
+memorizes names of the files it loaded already, so a file is never loaded
+more than once, unless it is specified by different names.  For example,
+<code>my.ini</code> and <code>./my.ini</code> obviously name the same file,
+but being taken as strings, these names are different, so it is relatively
+easy to fool <code>thalassa</code> and force it to read the same file more
+than once.  Don't do it, the result will never be of any use.
+</p>
+<p>You can specify ini files at the command line as well, but this doesn't
+override the inifiles parameter, in the sense that if the files you specify
+at command line contain the parameter, then files enumerated in the
+parameter will be loaded, too.
+</p>
+
+<p><strong>The <code>spooldir</code> parameter</strong> specifies the
+directory to be used for the <a href="thalassa_cmdline.html#spooler">spooler
+mode</a>.  The default value is <code>_spool</code>, but in most cases it
+is better to place this directory together with the
+<code>thalcgi.cgi</code>'s <a href="overview.html#session_database">session
+database</a>.  This parameter is only used in case <code>thalassa</code> is
+explicitly instructed to work in spool mode; in particular, if you don't
+use the dynamic features of Thalassa CMS (that is, the CGI program), then
+you shouldn't care about this parameter at all.
+</p>
+
+<p><strong id="opt_selector">The <code>opt_selector</code> parameter</strong>
+is used to choose a set of options in case several such sets are
+preconfigured within the <a href="#options"><code>[options
+<em>NNN</em>]</code> section group</a>.  <a href="ini_basics.html#parameter_specifiers">Specifiers</a> may be
+used with the parameter; if given, specifiers should match
+<code>options</code> section IDs, and the value will only be used for the
+corresponding section.  The value set without specifiers is, as usual,
+considered the default; <code>thalassa</code> uses it for option sections
+for which there's no specific value.
+</p>
+<p>In the present version, the default (and only the default)
+<code>opt_selector</code> value can be overriden by command line.
+</p>
+<p>In contrast to all other options within the <code>[general]</code>
+section, the value(s) for the <code>opt_selector</code> parameter are not
+passed through the macroprocessor.
+</p>
+
+
+
+
+<h2 id="format_section">The <code>[format]</code> section<p></h2>
+</p>
+<p>The <code>[format]</code> section affects conversions performed on
+<a href="headed_text.html">headed text files</a> when they are used
+in content generation.  Three parameters are currently recognized in this
+section:</p>
+<ul>
+
+<li><code>encoding</code> declares the character encoding used both in the
+ini files and for the generated HTML files.  See the
+<a href="headed_text.html#encodings">headed text files</a> page for
+discussion of character encodings.  If this parameter is omitted or empty,
+Thalassa assumes no encoding conversions is ever needed and acts completely
+encoding-agnostic.</li>
+
+<li><code>tags</code> enumerates HTML tags allowed in user-supplied
+content, namely in comments and in some of the <em>set pages</em>
+(see <a href="generation_objects.html#pagesets">page sets</a> here).  If
+omitted or empty, it means no tags are allowed at all, so all tags get
+filtered off.</li>
+
+<li><code>tag_attributes</code> sets HTML tag attributes allowed in
+user-supplied content; the list is space-separated.  The attributes may be
+listed in one of the two forms: simply as an attribute name, e.g.,
+<code>style</code> or <code>title</code>, or as a pair of the tag name and
+the attribute name, joined with the <code>=</code> char, e.g.,
+<code>a=href</code>, <code>img=src</code> and the like.  The former makes
+the attribute available for all allowed tags, while the latter only makes
+it available for the particular tag.  If the parameter is omitted, the
+default value is used, which is <code>a=href img=src img=alt</code> for the
+current version.</li>
+
+<p></ul>
+</p>
+<p>The values of both parameters are passed through the macroprocessor to make
+the <a href="#options">options</a> available.
+</p>
+<p>Once again, this only affects <a href="headed_text.html">headed text
+files</a>; no content that comes from the ini files is affected by
+parameters of this section in any way.  Both <code>tags</code> and
+<code>tag_attributes</code> only affect the content of files in which the
+<code>tags</code> flag is present in the <code>format</code> header field.
+</p>
+
+
+
+<h2 id="html_section">The <code>[html]</code> section<p></h2>
+</p>
+<p>The <code>[html]</code> section contains named HTML snippets, which are
+available where you need them via macro calls
+<code>%[html:<em>snippet_name</em>]</code>.  You can have as many
+parameters in this section as you wish, and name them whatever you like.
+Well, not really whatever: make sure you only use latin letters, digits and
+the underscore char for the parameters' names, or else you are almost
+guaranteed to have problems.
+</p>
+<p>For example, if you place a parameter <code>foobar</code> into the section,
+like this:
+</p>
+<pre>
+  [html]
+  foobar = foo bar bur buzz
+<p></pre>
+</p>
+<p>&mdash; then anywhere where the macroprocessing is done, macro call
+<code>%[html:foobar]</code> will be replaced with (expanded to) the string
+&ldquo;<code>foo bar bur buzz</code>&rdquo;.
+</p>
+<p><strong>Macroprocessing is done on the values</strong>, which allows to use
+macros in your snippets, including the <code>%[html:&nbsp;]</code> macro
+itself, so you can use your snippets within other snippets.
+</p>
+<p>The <code>%[html:&nbsp;]</code> macro can accept additional arguments
+(there's no formal limit on their count), and such arguments can be
+referenced within the snippets as <code>%0%</code>, <code>%1%</code>,
+<code>%2%</code>, ...  <code>%17%</code> etc.  Only remember that
+<strong>they are numbered from zero</strong>, which may be not what you're
+used to.  For example, if you have a snippet
+</p>
+<pre>
+  [html]
+  notwhat = %0% is not a thing I %1%.
+<p></pre>
+</p>
+<p>&mdash; then <code>%[html:notwhat:Ice cream:like]</code> will turn into
+&ldquo;<code>Ice cream is not a thing I like.</code>&rdquo;, while
+<code>%[html:notwhat:Fish oil:hate]</code> turns into &ldquo;<code>Fish oil is
+not a thing I hate.</code>&rdquo;.  This allows to use the <code>[html]</code>
+section and the macro not only for simple snippets, but for a kind of
+templates as well.
+</p>
+
+
+<h2 id="options">The <code>[options <em>NNN</em>]</code> section group<p></h2>
+</p>
+<p>Sections of the <code>[options&nbsp;]</code> group are intended to contain
+relatively small values that allow to customize the site's configuration.
+Values of the parameters are accessible by calling the
+<code>%[opt:&nbsp;]</code> macro; it accepts exactly two arguments, the
+first is the section name, and the second is the parameter name.  For
+example, if the ini files contain
+</p>
+<pre>
+  [options foo]
+  bar = abracadabra
+<p></pre>
+then <code>%[opt:foo:bar]</code> will expand to &ldquo;<code>abracadabra</code>&rdquo;.
+</p>
+<p>All parameters in this section group may have
+<a href="ini_basics.html#parameter_specifiers">specifiers</a>, but
+generally (unless empty string is the desired default value) it is a good
+idea to provide the default value as well, like this:
+</p>
+<pre>
+  [options colors]
+
+  text:night = #808080
+  text:matrix = #00aa00
+  text = #000000
+
+  background:night = #000000
+  background:matrix = #000000
+  background:girly = #ffc0cb
+  background = #ffffff
+<p></pre>
+</p>
+<p>As we <a href="#opt_selector">already mentioned</a>, specific values here
+are chosen by the parameter <code>opt_selector</code> from the
+<code>[general]</code> section, and this parameter, in turn, may have a
+specifier which corresponds to the <code>options</code> section ID.  For
+example, here:
+</p>
+<pre>
+  [general]
+  opt_selector:colors = matrix
+  opt_selector = twilight
+<p></pre>
+the word <code>matrix</code> will be used as the specifier for the
+section <code>[options matrix]</code>, and the word <code>twilight</code>
+will affect all the other sections in the <code>[options ]</code> section
+group.
+</p>
+<p><strong>Macroprocessing is <em>not</em> performed within this section
+group.</strong>
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="generation_objects.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#general_configuration" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="simple_pages.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

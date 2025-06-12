@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> &nbsp;&nbsp; <a href="index.html#principles" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="doyouneedit.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Design principles</a></h1>
+    <div class="page_body">
+
+<p>Thalassa CMS is based on architecture principles that look unusual in
+'modern' circumstances:</p>
+<ul>
+
+<li> it is written in C++ (and partly in plain C), and it basically
+     only needs the compiler and GNU make to build; </li>
+
+<li> it doesn't rely on client-side scripting; the examples and templates
+     provided along with the source code emit no JS nor any other code to
+     be executed in the browser, and we hope you will not introduce any
+     of that crap in your own Thalassa-managed sites, although it is
+     technically possible; </li>
+
+<li> it uses no DBMS, everything is stored in plain text files; </li>
+
+<li> it generates pages when they are created and modified,
+     <strong>not</strong> when they are requested by the visitor; </li>
+
+<li> it provides certain interactive features, such as a contact form and
+     user comments (with possibility of both moderation and premoderation),
+     using a CGI program; however, if you don't need them, you can even
+     avoid installing Thalassa on your server: all the site can be
+     generated locally on your home computer, and uploaded to the server
+     afterwards, just as a bunch of static html files; </li>
+
+<li> for non-interactive sites, Thalassa doesn't use any cookies; the
+     interactive capabilities rely on exactly one cookie, which is
+     typically only set when the user requests it explicitly, so you don't
+     need all that nonsense with &ldquo;asking&rdquo; the user for &ldquo;permission&rdquo;
+     which they are actually forced to give. </li>
+
+<p></ul>
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> &nbsp;&nbsp; <a href="index.html#principles" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="doyouneedit.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

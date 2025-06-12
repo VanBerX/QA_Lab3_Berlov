@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_sessions.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_webforms" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_user_accounts.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">POST requests (handling web forms)</a></h1>
+    <div class="page_body">
+<ul>
+<li><a href="#post_capable_pages">Pages accepting
+                            <code>POST</code> requests</a></li>
+<li><a href="#list_of_actions">What actions are supported</a></li>
+<li><a href="#post_result">Handling a
+                            <code>POST</code> request's result</a></li>
+<ul>
+   <li><a href="#post_result_messages">The messages</a></li>
+   <li><a href="#post_result_macros">Macros accessing action result</a></li>
+</ul>
+<li><a href="#action_rmsession">Session removal action</a></li>
+<p></ul>
+</p>
+
+<h2 id="post_capable_pages">Pages accepting <code>POST</code> requests<p></h2>
+</p>
+<p>Thalassa CGI has built-in support for several webforms, or, strictly
+speaking, for several fixed sets of parameters sent with a
+<code>POST</code> request.  With the exception of
+<code>command=setcookie</code> case, all other forms are handled
+in a unified manner.  To handle a form, a
+<a href="thalcgi_pages.html">page</a> must be configured; each of the
+configured pages (actually, <code>[page&nbsp;]</code> ini sections,
+including these multipath ones) may either handle one of the predefined
+forms, or none of them.
+</p>
+<p>A page intended to handle a form must have the <code>post_allowed</code>
+parameter set to <code>yes</code>.  In most cases the page should also have
+a non-empty value for the <code>action</code> parameter.  This is not a
+requirement, so you can have a page that accepts <code>POST</code> requests
+but does nothing, only shows some HTML; using macros, primarily the
+<code>%[req:param:&nbsp;]</code> macro function, a lot of things can be
+done, but it is all about generating the HTML response, not actually
+performing anything.
+</p>
+<p>Please note all configured pages also accept <code>GET</code> requests, and
+there's no way to tell the CGI not to accept them.  In most cases it is
+convenient to show the user the corresponding web form when the page
+intended to handle it is requested with the <code>GET</code> method.
+If, however, you for any reason decide otherwise, it is still possible to
+use conditional macros and the <code>%[req:method]</code> function just to
+tell the user (s)he shouldn't have reached this page in this way.
+</p>
+
+
+<h2 id="list_of_actions">What actions are supported<p></h2>
+</p>
+<p>The <code>action</code> parameter's value must consist of the action name
+and arguments, much like a command line; there's a fixed set of action
+names supported by the CGI program, each of them expects a fixed set of
+form input values.  In the present version, the following actions are
+supported: </p>
+<ul>
+
+<li><code>rmsession</code> &mdash; <em>remove session</em>; if there's an
+active session, it is removed (that is, its file is deleted from the
+database directory), and a cookie removal request is sent to the client;</li>
+
+<li><code>login</code> performs two different functions typically requested
+from the same webform: either validates the supplied login name and a
+single use password, and logs the user in if the validation is passed, or
+generates new single-use passwords for the requesting user and sends them
+by email;</li>
+
+<li><code>signup</code> processes a new user registration application;</li>
+
+<li><code>profile</code> updates the user's profile data, such as the
+visible name and the web site URL;</li>
+
+<li><code>changemail</code> processes the user's request for changing their
+active email;</li>
+
+<li><code>feedback</code> sends an email to one of the predefined email
+addresses (performs the function of a site-wide contact form);</li>
+
+<li><code>comment_add</code> adds a new comment for the given page,
+assigning it a comment ID;</li>
+
+<li><code>comment_edit</code> can perform any of the following:
+<ul>
+  <li>replace the given comment's title and body;</li>
+  <li>remove the given comment;</li>
+  <li>hide a previously visible comment;</li>
+  <li>show a previously hidden comment, removing it from the moderation
+      queue if it was there;</li>
+  <li>remove the comment from the moderation queue without showing it.</li>
+</ul>
+</li>
+<p></ul>
+</p>
+<p>Only <code>feedback</code>, <code>comment_add</code> and
+<code>comment_edit</code> accept arguments; for example, &ldquo;<code>feedback
+techsupport</code>&rdquo; as the action parameter's value means a feedback
+category &ldquo;techsupport&rdquo; must be preselected in the feedback web form.  For
+the rest of actions, the action value consists of only one word &mdash; the
+action name itself.  Later on, we'll document each of the actions together
+with their arguments, if any, and the web form parameters they accept.
+</p>
+
+
+<h2 id="post_result">Handling a <code>POST</code> request's result<p></h2>
+</p>
+<p>Once a <code>POST</code> request is received, the CGI first performs
+whatever actions are requested, and only then generates and sends back the
+response page.  So, at the time of the HTML generation, it is already
+known what has just been done and was it successful or not.  This result
+obviously should be communicated to the user somehow.
+</p>
+<p>From the Thalassa CGI's point of view, the action result consists of two
+things: a message and a boolean value that reflects whether the requested
+action successfully done.
+</p>
+<p>There's one important thing to take into account.  Even when you expect
+your page to be displayed as a response for a <code>GET</code> request, but
+the page is configured to require an active session, it can end up being
+displayed <strong>as a result of a set-cookie <code>POST</code>
+request</strong>.  In this case the request is known to be successful,
+otherwise the user would see the Retry Captcha special page instead;
+however, you should be prepared to this.  For instance, you should check
+for presence of a message and include it in your page in case it is there,
+even if your page is not intended to handle <code>POST</code> requests at
+all &mdash; but nonetheless requires the session to be established.
+</p>
+<p>And, well, don't be too surprized if the <code>%[req:method]</code> returns
+&ldquo;<code>POST</code>&rdquo; on a page configured as POST-uncapable.  If it
+requires an active session, you now know why such strange things happen
+sometime.
+</p>
+
+
+
+   <h3 id="post_result_messages">The messages<p></h3>
+</p>
+<p>There's a fixed set of messages; the CGI program identifies them with
+names, hopefully self-descriptive, such as <code>new_values_saved</code>
+or <code>comment_deleted</code>.  The particular wording for each of the
+messages is configurable; furthermore, in the present version there are no
+defaults for them, so one <em>must</em> configure all messages.  To do so,
+the <code>[message]</code> ini section is used; every parameter in this
+section has a name that corresponds to a message name, and the value is the
+actual text of the message.  Here's an example of the section with values
+for all messages used by Thalassa CGI; certainly you can choose your own
+wording or translate the messages to another language, but this example is
+nonetheless useful:
+</p>
+<pre>
+  [message]
+  server_side_error = Server side error.  Please report this
+      to the site owner.
+  cookie_set = Cookie has been set, session established.
+      The interactive features of the site are now available to you.
+  cookie_removed = Session closed, cookie removed.
+  field_not_filled = Some of mandatory fields are not filled in.
+  logged_in = Logged in successfully.
+  wrong_login_password = Wrong user id or password.
+  login_unknown = User id unknown.
+  invalid_login_name = The user id is not acceptable.
+      Please choose another user id.
+  login_not_available = The user id already exists or blocked.
+      Please choose another user id.
+  pass_req_too_early = You still have some passwords left and
+      less than 24 hours passed since they were sent.
+      Please try again later.
+  invalid_email_address = Invalid format of email address.
+  email_already_used = This email address is user by an existing
+      user of the site.  If you forgot your user id, please contact
+      the site administrators.
+  email_belonged_to_other = This email address was once confirmed
+      to belong to another user.  The system doesn't allow to
+      change ownership of emails; if you've got a reason for it,
+      please contact the site administration.
+  email_recently_tried = Someone recently tried to register a user
+      using this email, but didn't confirm it.  To prevent flooding
+      of innocent mailboxes, the site blocks repeated registration
+      messages to the same address for a certain time.
+  email_banned = This address or its domain name is on the
+      stop-list.
+  changemail_too_early = Recently you already requested to change
+      your address.  Please try again later.
+  changemail_canceled = Email change request cancelled.
+  invalid_feedback_category = The given feedback category is not
+      configured.  Please report this error to the site owner.
+  email_sent_to_you = Message to your email address
+      successfully sent.
+  your_email_sent = Your email successfully sent.
+  error_sending_email = Error sending email.
+      Sorry for the inconvenience.
+  new_values_saved = New values saved.
+  email_changed = Your email address changed.
+  wrong_confirmation_code = Wrong confirmation code.
+  not_really_confirm = Not confirmed.  To confirm the request
+      you need to enter the word &lt;em&gt;really&lt;/em&gt;
+      into the confirmation input field.
+  comment_deleted = Comment deleted.
+  comment_queued_for_premod = Your comment has been queued
+      for moderation.
+  comment_saved = Comment submitted.
+  page_regenerated = Page regenerated.
+  not_logged_in = Logged in users only.
+  not_this_way = This doesn't work this way :-)
+  permission_denied = Permission denied.
+  anon_denied = Anonymous users are not allowed to do this.
+  not_implemented_yet = The feature is not implemented yet.
+  bug_in_the_code = There's a bug in the site's implementation.
+      Please report this to the site's owner.
+<p></pre>
+</p>
+<p>The exact situations when each of the messages is used will be explained
+together with their respective actions.
+</p>
+
+
+   <h3 id="post_result_macros">Macros accessing action result<p></h3>
+</p>
+<p>A handful of macros is used to access a <code>POST</code> request status.
+The <code>%message%</code> expands to the
+<a href="#post_result_messages"><code>POST</code> result message</a>, as
+configured in the <code>[message]</code> section, if such message exists;
+otherwise (e.g. if the page is being generated in response to a
+<code>GET</code> request, not <code>POST</code>), the macro returns an empty
+string.
+</p>
+<p>The <code>ifmessage</code>, <code>ifmessageok</code>,
+<code>ifactresult</code> and <code>ifactresultok</code> macros are
+condition checkers; they all accept exactly two arguments, the
+<em>then</em> value and the <em>else</em> value, and return the former in
+case the condition is true and the latter if it is false.
+</p>
+<p>For the <code>%[ifmessage:&nbsp;]</code> macro, the condition being checked
+is whether there's a message, that is, would the <code>%message%</code>
+return a non-empty string if we call it.
+</p>
+<p>The <code>%[ifmessageok:&nbsp;]</code> macro checks whether the result is
+present <strong>and it is a success</strong>.
+</p>
+<p>The <code>%[ifactresult:&nbsp;]</code> macro checks whether we have a
+result of <strong>the action configured for this page</strong>.  This is
+different from the question <em>if we've got a message</em> in that in case
+we're composing the page <em>as a result of successful passing of the
+CAPTCHA and establishing the session</em>.  If it is a CAPTCHA success,
+then the <code>ifmessage</code>'s (and even the <code>ifmessageok</code>'s)
+condition is true, but the <code>ifactresult</code>'s condition is false.
+</p>
+<p>The <code>%[ifactresultok:&nbsp;]</code> macro's condition is if there's an
+action result (as for the <code>ifactresult</code> macro) <strong>and it is
+successful</strong>.
+</p>
+<p>For example, your template for the page which accepts <code>POST</code>
+requests may include something like this:
+</p>
+<pre>
+  %[ifmessage:&lt;div
+    class="msgbox_%[ifmessageok:ok:err]"&gt;%message%&lt;/div&gt;]
+<p></pre>
+</p>
+<p>&mdash; while your CSS can have the respective classes, like this:
+</p>
+<pre>
+  .msgbox_ok {
+    border: 2px solid #00b000;
+    margin: auto;
+    width: 75%;
+  }
+  .msgbox_err {
+    border: 2px solid #b00000;
+    margin: auto;
+    width: 75%;
+  }
+<p></pre>
+</p>
+
+<h2 id="action_rmsession">Session removal action<p></h2>
+</p>
+<p>The <code>rmsession</code> action is perhaps the simplest one among actions
+supported by Thalassa CGI, but it can serve as a good example on how all
+the machinery works.  The action doesn't accept any arguments, and,
+furthermore, it doesn't need any parameters from the webform that sends
+the <code>POST</code> request.  This effectively means the form may consist
+of the submit button only; its duty is to form an (empty!)
+<code>POST</code> request directed to the desired page &mdash; the one you
+use for the <code>rmsession</code> action.
+</p>
+<p>Let's name the page <code>/rmspage</code>.  In a real life situation you
+might want to name it more intuitively, like <code>/remore_session</code>,
+<code>/close_session</code> or even just <code>/rmsession</code>, it is
+still okay, but in our example it is better to make the action name and the
+page name differ &mdash; just to avoid confusion.  So, the page is
+available at <code>/rmspage</code> <em>under</em> the path to your CGI; we
+don't assume any particular location for the CGI, instead we just use the
+path we were called through, which is available as
+<code>%[req:script]</code>.  The web form that removes the session and the
+cookie may then look like this:
+</p>
+<pre>
+  &lt;form name="rmform" action="%[req:script]/rmspage" method="POST"&gt;
+  &lt;input type="submit" value="Close your session" /&gt;
+  &lt;/form&gt;
+<p></pre>
+</p>
+<p>Note that the form name (<code>rmform</code> in this example) doesn't
+matter anything special, you can name it whatever you want.  Also, you can
+place this form on any of the pages your CGI generates, or even on all of
+them.  It may be useful to check whether the session actually exist and
+only display the form if it does.  It is also possible to place the form on
+any of your static pages, but this is not recommended, because, first,
+you'll be unable to use the <code>%[req:script]</code> macro which is
+CGI-specific, so you'll have to mention the full URI explicitly, and,
+second, on static pages you can't <em>check</em> anything so your visitors
+will see the form even when they don't have any sessions.
+</p>
+<p>The <code>/rmspage</code> page configuration can then look like this:
+</p>
+<pre>
+  [page /rmspage]
+  session_required = no
+  embedded = no
+  post_allowed = yes
+  action = rmsession
+  template = %html:header%
+  +%[ifmessage:&lt;div
+  +   class="msgbox_%[ifmessageok:ok:err]"&gt;%message%&lt;/div&gt;]
+  +%[sess|ifvalid|&lt;p&gt;Session is active&lt;/p&gt;
+  +  &lt;form name="rmform" action="%[req:script]/rmspage" method="POST"&gt;
+  +  &lt;input type="submit" value="Close your session" /&gt;
+  +  &lt;/form&gt;
+  +   |
+  +  &lt;p&gt;Cookie is not set, no session&lt;/p&gt;
+  +]
+  +%html:footer%
+<p></pre>
+</p>
+<p>In this example we placed the cookie removal request form on the same page,
+so that if the browser is directed to the page (that is, to the URI like
+<code>/thalcgi.cgi/rmspage</code>) with a usual <code>GET</code> request
+(that is, with a regular link, not a web form), the user will see the
+<code>Close your session</code> button if there's a session, and the
+message <code>Cookie is not set, no session</code> otherwise.  For the case
+of a <code>POST</code> request, the user will see the message box at the
+top of the page, which will either say that the cookie has just been
+successfully removed, or that there's no cookie and no session to close.  In
+both cases, the page itself (under the message box) will consist of a
+single paragraph saying <code>Cookie is not set, no session</code>;
+this is because the cookie either didn't exist, or has been removed,
+anyways there's no cookie here and now.
+</p>
+
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_sessions.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_webforms" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_user_accounts.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

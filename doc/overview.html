@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="doyouneedit.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="index.html#overview" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="quickstart.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Thalassa overview</a></h1>
+    <div class="page_body"><p>Thalassa is a CMS written with simplicity in mind.  Clearly, there are
+different points of view on what simplicity actually is; the simplicity
+provided by Thalassa is best visible from system administrators' and
+package maintainers' point of view, as its <strong>list of external
+dependencies is reduced to a minimum close to absolute</strong>.
+</p>
+
+
+<p>Contents: </p>
+<ul>
+<li><a href="#prerequisites">What you need in order to run Thalassa</a></li>
+<li><a href="#build">How to build it</a></li>
+<li><a href="#workflow">The workflow</a></li>
+<p></ul>
+</p>
+
+<h3 id="prerequisites">What you need in order to run Thalassa<p></h3>
+</p>
+<p>To build it, you need:</p>
+<ul>
+
+<li>a computer running a Unix-like operating system; Thalassa is mainly
+tested on Linux, but will likely work on BSDs or other Unices, including
+older ones;</li>
+
+<li>gcc/g++ compiler; it is known to build successfully with gcc 3.4.5,
+released in 2004, and perhaps will compile with older versions of gcc,
+too; certainly any newer version will also work, unless gcc team decides to
+break the backward compatibility;</li>
+
+<li>GNU make; well, it must be easy to create makefiles for POSIX make as
+well, but this is not a high-priority task.</li>
+
+<p></ul>
+</p>
+<p>The best news is: <strong>that's all</strong>.  Thalassa doesn't depend on
+any external libraries, not even the C++ &ldquo;standard&rdquo; library; it only uses
+a (small and obvious) subset of plain C standard library, and all other
+libs it needs are found within the source tarball.  It is written using a
+very restricted <a href="cpp_subset.html">subset of C++</a> as such &mdash;
+actually, the C++ language as it was <strong>before</strong> the so-called
+&ldquo;standards&rdquo; turned it into a complete mess (yes, before the very first
+damn standard known as C++98).
+</p>
+<p>With Thalassa, you will never run into dependency hell; it will never force
+you into updating, upgrading, renewing or otherwise adapting anything on
+your computer.
+</p>
+<p>And yes, <strong>it does build statically</strong> if you want so.
+</p>
+<p>What you need <strong>to run a site</strong> managed with Thalassa, depends
+on whether you are going to use its interactive features.  If your site is
+not intended to be interactive, actually you only need a web server
+software capable of providing access to static HTML files, which
+effectively means <strong>any</strong> http server.  You don't even have to
+run Thalassa on the server computer, it is possible to generate your site
+on your own computer and upload the resulting HTML to the server.
+</p>
+<p>The interactive capabilities of Thalassa currently include user comments
+and a contact form; if you need these on your site, you will at least need
+to run Thalassa on the server.  Strange enough, this can be problematic, as
+many of hosting operators that provide 'shared hosting' service don't allow
+to run binary executables within their web space.  Usually they say it's
+all for the &ldquo;security&rdquo;, but that's nonsense: if they allow to run
+arbitrary code written in ANY language, such as PHP, Python, Perl, NodeJS
+and so on, then banning arbitrary binaries does not improve security in any
+way, it only creates inconvenience but no real effect.  It is simply stupid
+to impose limitations like this, and it is only done by people who don't
+understand how computers are attacked and how to keep them secure.
+</p>
+<p>Furthermore, it is terribly inconvenient (although possible) to run
+Thalassa on a server having no shell access, and shell access is not
+available with most of 'shared hosting' services.
+</p>
+<p>However, the solution is obvious: you always can run your site on a VPS.
+Nowadays, a VPS might be even cheaper than shared web-hosting.  Visit,
+e.g., <a href="https://lowendbox.com">lowendbox.com</a> to pick a server
+under $2 a month (sometimes there are even offers for $1 per month).
+Thalassa is so light-weight that you can run literally
+<strong>hundreds</strong> of Thalassa-managed sites on a single low-end
+VPS, so paying these $2 per month, you can invite all your friends to host
+their sites.
+</p>
+<p>Running sites on a VPS (or, broadly speaking, on a Unix computer you've got
+root access to, be it virtual or real) is the thing Thalassa is best suited
+for.  With most other CMSes, you might not want to do so, as they rely upon
+database management systems, primarily MySQL/MariaDB, so you've got to
+install a DMBS, run it, create a database, regularly think about making
+backups of it (and yes, it is not so easy to make a backup of a running
+database), constantly keep an eye on it, as it tends to fail at the most
+terribly inconvenient moment, etc.  Even worse, other CMSes are usually
+implemented in interpreted languages with their own <em>ecosystems</em>,
+and despite these Python and Ruby fans do their best to convince you there
+are no problems with these, the fact is you'll perhaps end up having to put
+every single program (including every CMS running a single site) into its
+own container, like Docker, which, well, these low-end VPSes are usually
+too low-end to run.
+</p>
+<p>In contrast, Thalassa only consists of two executable binaries, one called
+<code>thalassa</code>, which you run to generate your site, and the other
+called <code>thalcgi.cgi</code>, which is, well, a CGI :-) &mdash; that is,
+a program the web server runs when it handles requests for interactive
+features of your site.  When <code>thalcgi.cgi</code> needs to regenerate a
+part of your site, e.g. a page with user comments after a new comment is
+left there, it also runs <code>thalassa</code>, so you need both of them
+for interactivity.  The good news is that they literally <strong>depend on
+nothing</strong>, they can even be built statically and uploaded to the
+server (in case no C++ compiler is available there; okay, for a VPS it's
+never the case, but sometimes you have to use shared hostings despite you
+don't want so).
+</p>
+<p>In its full (interactive-capable) configuration, Thalassa is known to run
+with the well-known Apache HTTP server, probably <strong>any</strong>
+version of it you can manage to find these days; at least it is known to
+work with Apache 1.3.*, which was declared End-Of-Life in 2010.  Certainly
+it works with later Apache versions, such as 2.4.* and 2.2.*.  The
+<code>mod_cgi</code> module must be loaded from within your Apache
+configuration.  Examples and templates provided along with Thalassa also
+rely on the <code>mod_rewrite</code> module.  The last but not least, for
+the sake of security it is strongly recommended to use
+<code>suexec</code>, so that the CGI program runs under a UID different
+from the HTTP server's UID, even if you only have one site on your server.
+</p>
+
+<h3 id="build">How to build it<p></h3>
+</p>
+<p>To build Thalassa, just unpack the source tarball, enter the directory and
+type <code>make</code> (or <code>gmake</code>, if you're on a BSD-like
+system), like this:
+</p>
+<pre>
+  tar -xzf thalassa_0.1.0.tgz
+  cd thalassa_0.1.0
+  make
+<p></pre>
+</p>
+<p>and then wait a minute.  Both <code>thalassa</code> and
+<code>thalcgi.cgi</code> binaries will be found in the <code>cms/</code>
+subdirectory, which also contains the source code.
+</p>
+<p>In case you have an older gcc compiler, such as gcc 4.* or earlier, it is
+necessary to remove some command line flags which actually disable certain
+(idiotic) &ldquo;new features&rdquo; of later gcc versions.  In this case, instead of
+just <code>make</code>, issue the following command:
+</p>
+<pre>
+  make CC=gcc CXX=g++
+<p></pre>
+</p>
+<p>By default, both binaries are built <em>statically linked</em> and
+<em>stripped</em>.  If this is not what you want, add <code>STATIC=</code>
+to the command line of <code>make</code>, like this:
+</p>
+<pre>
+  make STATIC=
+<p></pre>
+</p>
+<p>or, if you still want them stripped, like this:
+</p>
+<pre>
+  make STATIC=-s
+<p></pre>
+</p>
+<p>The libraries of Thalassa itself (these found under the <code>lib/</code>
+subdirectory) are statically linked into the binaries anyway, because these
+libs are never built as shared objects.
+Your dynamic binaries will therefore only depend on &ldquo;system&rdquo; libs such as
+libc, libgcc, libstdc++, linux-vdso and the like, so the binaries' size
+only shrinks about 3-4 times; this may be not so bad, but it makes the
+binaries totally unportable (most of people aroud think it's the norm, but
+we disagree).
+</p>
+
+
+<h3 id="workflow">The workflow<p></h3>
+</p>
+<p>The <code>thalassa</code> program can generate a whole site or some parts of
+it, as requested by its command line arguments.  The content of the site
+being generated is determined by <em>sources</em> prepared by the
+webmaster.  The sources must include one or more configuration files in <a href="ini_basics.html">ini format</a>.  Also the sources may (but not
+necessarily do) include text files that represent sets of similarly
+formatted pages (one file per page, or a directory with a main file and
+auxilliary files such as images, to generate a page with files) and
+comments (one file per comment).  Both page set source files and comment
+source files together are referred to as &ldquo;database&rdquo;, despite that this
+has nothing to do with any DBMSes, Sql and the like; usually the database
+for Thalassa is simply a directory with subdirectories containing files
+(mainly plain text files, but there can be files of any type as auxilliary
+files to generated pages).  Each page and comment file may have its own
+format and <a href="headed_text.html#encodings">character encoding</a>.
+</p>
+<p>The last kind of the sources is directories or individual files to be
+copied into the docroot of your site &ldquo;as is&rdquo;.  These files may even be
+linked or symlinked instead of being copied, which is useful for large
+files such as videos, software archives etc.
+</p>
+<p>For a site with no interactive features, that's almost all.  You just
+prepare the source files, run <code>thalassa</code> and your site is ready.
+</p>
+<p>Interactive-capable sites need the <code>thalassa.cgi</code> binary to be
+placed into the site's docroot, together with its configuration file
+<code>thalassa.ini</code>, which must be placed in the same directory and
+made unreadable for anyone but the user under which the CGI will run.
+Typically this means you need to configure and run <code>suexec</code>, so
+that <code>thalassa.cgi</code> runs with a uid different from the HTTP
+server's uid.
+</p>
+<p>The CGI program has its own database, known as <em id="session_database">session database</em>, which may be placed outside of
+the docroot.  You don't need to prepare it anyhow, all you need is to
+create a directory and make it writable for the user under which the CGI
+works.  This directory will be used to store session information, user
+accounts, premoderation queue and a spool directory for pages that need to
+be regenerated.  The main <code>thalassa</code> program only uses the spool
+directory, and only when it is explicitly instructed to use it.  Typically
+this is the case when <code>thalassa</code> is being launched by the CGI.
+</p>
+<p>In the present version, the CGI program only operates on comments: you site
+visitors can leave new comments, and you as the site's owner can edit the
+comments and perform moderation and other administration tasks.
+<strong>Pages (unlike comments) can not be created nor edited through the
+CGI program</strong>, so you need to edit the corresponding files manually.
+</p>
+<p>Certainly it is more convenient to edit the files on your own computer
+rather than on the server; but this raises the question of uploading your
+changes to the server.  Practice shows that the most convenient way to do
+so is using a verion control system such as <a href="https://en.wikipedia.org/wiki/Git">git</a>; this way you can also
+transfer new comments (and all the changes made to comment files through
+the CGI interface) back from the server to your workstation, having a
+fully-functional copy of your site locally.  However, definitely this is
+not required, you can, e.g., simply copy the modified files to the server
+using whatever access method you have.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="doyouneedit.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="index.html#overview" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="quickstart.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

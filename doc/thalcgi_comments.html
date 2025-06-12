@@ -1,0 +1,1010 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_contact_form.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_comments" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="setup_apache.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">User comments</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ul>
+<li><a href="#intro">Introduction</a></li>
+<li><a href="#format">Comments storage and format</a></li>
+<li><a href="#premod_queue">Premoderation queue implementation</a></li>
+<li><a href="#comments_section">The <code>[comments]</code> ini
+                                 section</a></li>
+<ul>
+   <li><a href="#cmt_db_dirs">Comment database path</a></li>
+   <li><a href="#cmt_access">Access control</a></li>
+   <li><a href="#cmt_backlinks">Links back to discussion</a></li>
+   <li><a href="#cmt_origpage">Original page text display</a></li>
+   <li><a href="#cmt_page_regen">Rebuilding commented pages</a></li>
+   <li><a href="#cmt_premod_queue">Displaying premoderation queue</a></li>
+</ul>
+<li><a href="#comment_add_form">New comment form</a></li>
+<li><a href="#comment_edit_form">Comment text and status modification
+                                 form</a></li>
+<li><a href="#comment_related_macros">Comment-related macros</a></li>
+<ul>
+   <li><a href="#discuss_macro">The <code>%[discuss:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#cmtinfo_macro">The <code>%[cmtinfo:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#cmtpreview_macro">The <code>%[cmtpreview:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#ifperm_macro">The <code>%[ifperm:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#justposted_macro">The <code>%[justposted:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#commentmap_macro">The <code>%[commentmap:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#sess_macro">Premoderation-related functions
+                         of the <code>%[sess:&nbsp;]</code> macro</a></li>
+   <li><a href="#splitpremodq_macro">The <code>%[splitpremodq:&nbsp;]</code>
+                                    macro</a></li>
+</ul>
+<p></ul>
+</p>
+
+<h2 id="intro">Introduction<p></h2>
+</p>
+<p>To let the users comment on the site's pages is actually the main thing
+Thalassa CGI is created for, so there are lots of configuration aspects
+directly related to comments, and also there are things that look generic
+enough, but in reality are only used for comments, such as
+</p>
+<p><a href="thalcgi_pages.html#request_args">request arguments</a> (BTW, if
+you didn't read that section or don't remember it, it's now the time to
+refresh it).
+</p>
+<p>To have the comment support on your site to the full extent possible with
+Thalassa CGI, it is necessary to configure:</p>
+<ul>
+
+<li>access to the comment-related part of the database, access rights for
+users and commands that regenerate comment-containing pages when something
+changes; this all is done with the <code>[comments]</code> ini
+section;</li>
+
+<li>web form that adds new comments;</li>
+
+<li>web form that deals with existing comments, that is, enables users to
+view, edit, delete, hide and unhide comments;</li>
+
+<li>page that displays the moderation queue.</li>
+
+<p></ul>
+</p>
+<p>The last step can be omitted in case you decide not to
+<strong>pre</strong>moderate comments on the site.
+</p>
+<p>Anyway, without the comments facility, Thalassa CGI in its present version
+may only be useful for its <a href="contact_form.html">contact form</a>,
+but then you don't need all user account-related stuff too.
+</p>
+
+
+<h2 id="format">Comments storage and format<p></h2>
+</p>
+<p>Before proceeding any further, please get back to Thalassa static
+generator description and re-read the section
+&ldquo;<a href="comment_sections.html#storage">How comments are stored</a>&rdquo;.
+</p>
+<p>It is important to keep in mind that a separate comment collection
+(effectively, a directory with <a href="headed_text.html#encodings">headed
+text files</a>, one file per comment) corresponds to every generated page
+(in terms of the generator) that has a comment section.
+</p>
+<p>For the generator, it doesn't matter what particular format and encoding
+the comment files have, the thing that matters is that format-related
+information is correctly reflected in each file's header.  It must,
+however, know the target encoding and the list of allowed HTML tags to
+generate everything correctly.
+</p>
+<p>As for the CGI program, it always stores comments in the (presumably) same
+encoding in which everything works, so it just doesn't emit the
+<code>encoding:</code> header field.  However, in case a comment file is
+not created by the Thalassa CGI program, and the user requests to view or
+edit the comment, the file <em>can</em> have its own encoding, so the CGI
+program needs to know to which encoding to convert it &mdash; that is, what
+is the main working encoding here.  Furthermore, such file can contain HTML
+tags, and the program might need to filter them, hence it must know which tags
+are allowed.
+</p>
+<p>To provide all the format-related information, a
+<code id="format_section">[format]</code> ini
+section should be added into the configuraiton file.  It has the same
+parameters as the
+<a href="general_configuration.html#format_section"><code>[format]</code>
+ini section in the static content generator configuration files</a>;
+actually, the section should be copied from there, altogether.  The only
+difference is that, unlike the generator, the CGI program configuration
+doesn't have the <code>[options&nbsp;]</code> section group, so
+<code>[format]</code> section parameters here are not macroprocessed at all.
+</p>
+
+
+<h2 id="premod_queue">Premoderation queue implementation<p></h2>
+</p>
+<p>Within the
+<a href="thalcgi_overview.html#database">session database</a>, a
+subdirectory named <code>_premod_queue</code> is created to hold your
+premoderation queue; if the subdirectory isn't there, it means no comments
+were ever added to the queue on your site.
+</p>
+<p>The directory contains symbolic links to the comment files that reside
+within the <a href="comment_sections.html#storage">content database</a>.
+However, the most of information needed by the Thalassa CGI resides within
+<em id="premodq_triples">names</em> of these symlinks.
+Each name consists of three parts:
+<em>realm ID</em>, page ID (within the realm) and comment ID.  The term
+<em id="realm_id">realm</em> here corresponds to something within which
+there are pages with IDs; in the present version of Thalassa, it is either
+a <a href="page_sets.html">page set</a>, or a <a href="lists.html">list</a>
+that has item pages.  It is important to note that the realm ID may, but is
+not obliged to match the list or set ID.  The actual mapping from the realm
+IDs to lists and sets is done by various configuration file parameters, and
+is never done explicitly, as Thalassa CGI has no direct support for it.
+Consider the realm ID as something that <strong>you</strong> use to tell
+one page ID space from another, in case you have more than one of them.
+</p>
+<p>The three components of the symlink name are joined with the
+&ldquo;<code>=</code>&rdquo; char, like <code>pages=pg37=233</code>.  Here
+&ldquo;<code>pages</code>&rdquo; is the realm ID, <code>pg37</code> is the page ID
+within the realm, and <code>233</code> is the comment ID.
+</p>
+<p>When a user leaves a comment on your site and according to the
+configuration the comment is to go through the premoderation procedure,
+Thalassa CGI saves the comment with <code>premod</code> and
+<code>hidden</code> flags set, and makes the appropriate symlink.  The
+<code>premod</code> is not used by the present version of Thalassa, but it
+still can be used by third party software; Thalassa itself only uses the
+contents of the <code>_premod_queue</code> directory.
+</p>
+
+
+
+<h2 id="comments_section">The <code>[comments]</code> ini section<p></h2>
+</p>
+   <h3 id="cmt_db_dirs">Comment database path<p></h3>
+</p>
+<p>To be able to work with comments, the CGI program needs to know where they
+(that is, the &ldquo;database&rdquo; files that store comments) are located.
+Thalassa CGI assumes by design there's a common directory under which all
+comments are found, and these &ldquo;comment tree&rdquo; directories, which correspond
+to every page with comments, are subdirectories of the common one.
+</p>
+<p>The <code>[comments]</code> ini section recognizes two parameters to deal
+with directories:</p>
+<ul>
+
+<li id="comments_dir_parameter"><code>dir</code> is the
+&ldquo;common&rdquo; directory path, either absolute or relative (as usual,
+to the current working directory of the CGI);</li>
+
+<li id="comments_subdir_parameter"><code>subdir</code> is the subdirectory
+name, usually created using
+<a href="thalcgi_pages.html#request_args">request arguments</a> &mdash;
+that is, the value here is usually composed using the
+<code>%[reqarg:&nbsp;]</code> macro.</li>
+
+<p></ul>
+</p>
+<p>The <code>dir</code> and <code>subdir</code> are concatenaded as <em>path
+parts</em> (in contrast with as strings), so if neither the
+<code>dir</code> ends with &ldquo;<code>/</code>&rdquo;, nor <code>subdir</code>
+begins with one, then the &ldquo;<code>/</code>&rdquo; is inserted between them
+forcibly.  Hence, the <code>subdir</code> is always used as relative to the
+<code>dir</code>.
+</p>
+<p><del>If you really want it to be an absolute path, then set
+the <code>dir</code> to &ldquo;<code>/</code>&rdquo; (root
+directory).</del>  <ins>Since the
+<a href="#cmtinfo_topics_func"><code>%[cmtinfo:topics]</code></a> function
+appeared, this practice can no longer be recommended.</ins>
+</p>
+
+
+   <h3 id="cmt_access">Access control<p></h3>
+</p>
+<p>Various aspects of creating and managing comments are subject to access
+control.  The authorization scheme is based on a fixed list ofi
+<em>permissions</em>, for each of which a list of authorized
+<a href="thalcgi_user_accounts.html#roles">user roles</a> may be specified.
+</p>
+<p>Thalassa CGI knows the following permissions related to comments:</p>
+<ul>
+
+<li><code>post</code> &mdash; the user is permitted to create new
+comments, which are placed to the premoderation queue and are marked as
+hidden;</li>
+
+<li><code>post_visible</code> &mdash; the user is permitted to create new
+comments, visible right after the submission, bypassing the premoderation
+queue;</li>
+
+<li><code>see_own_hidden</code> &mdash; the user is permitted to see
+hidden comments provided that the comments belong to this user;</li>
+
+<li><code>see_hidden</code> &mdash; the user is permitted to see
+<em>all</em> hidden comments;</li>
+
+<li><code>edit_own</code> &mdash; the user is permitted to edit and delete
+comments that belong to this user;</li>
+
+<li><code>edit_own_recent</code> &mdash; the user is permitted to edit and
+delete comments that belong to this user, but only in case they are posted
+<em>recently</em> (see the
+<a href="#recent_timeout"><code>recent_timeout</code></a> parameter
+description below);</li>
+
+<li><code>edit</code> &mdash; the user is permitted to edit and
+delete <em>any</em> comments (be sure to give this permission to your own
+account only, or at least only to people trusted enough);</li>
+
+<li><code>moderation</code> &mdash; the user is permitted to perform
+<em>moderaion</em> actions, that is, hide visible comments, reveal (unhide)
+hidden comments, remove comments from the moderation queue without changing
+their visibility, and request forcible regeneration of pages with comments;
+please note this permission doesn't give the right to edit nor to delete
+comments.</li>
+
+<p></ul>
+</p>
+<p>It is very important to understand the difference between
+<em>permissions</em> and <em>roles</em>.  There is a fixed set of
+permissions, hardcoded into the Thalassa CGI program; in the present
+version, <em>comments</em> is the only facility that uses the permission
+system, so the permission identifiers listed above are the only existing
+ones.
+</p>
+<p>Roles, in contrast, are intended to be introduced by the site
+administrator.  There are three &ldquo;special&rdquo; roles (the <code>all</code>
+role is always there, even if there's no user, the <code>anon</code> role
+is there for sessions that aren't logged in, and the <code>auth</code> role
+belongs to every logged in user), but that's all; <em>you</em> decide which
+other roles to use, how to name them etc.
+</p>
+<p>To assign permissions to roles, the <code>access</code> parameter (within
+the <code>[comments]</code> section) is used.  Its value must consist of
+<em>stanzas</em>, separated with the semicolon &ldquo;<code>;</code>&rdquo;.  For each
+stanza, any leading and trailing whitespace is stripped, then the first
+<em>word</em> (delimited by whitespace) is considered the permission name,
+and the rest is a comma-separated list of roles.  For example:
+</p>
+<pre>
+  access = post            all;
+           post_visible    superposter, moderator, admin;
+           see_hidden      moderator, admin;
+           see_own_hidden  auth;
+           moderation      moderator, admin;
+           edit            admin;
+           edit_own        superposter, admin;
+           edit_own_recent auth;
+<p></pre>
+</p>
+<p>In this example, three &ldquo;custom&rdquo; roles are used: <code>admin</code>,
+<code>moderator</code> and <code>superposter</code>; users with the
+<code>admin</code> role effectively can do everything Thalassa CGI is
+capable of, while <code>moderator</code>s can do, well,
+<em>moderation</em>, and to do so, they are permitted to see hidden
+comments (otherwise it will be hard to moderate).  Besides that, for
+<code>moderator</code>s the premoderation queue is bypassed, which is
+logical enough, as they can go and let their comments pass anyway.
+The last custom role in the example, <code>superposter</code>s, also can
+post comments without anyone's approval, and besides that, they are granted
+the permission to edit (and delete) their own comments.  All registered
+(authenticated) users are permitted to see their own comments, even in
+hidden state, and to edit their own <em>recent</em> comments; anonymous
+users can only post comments, but once posted, they are unable to view
+their comments and to do anything else with the comments (which is obvious:
+there's no way to tell which comments are &ldquo;owned&rdquo; by a particualar
+anonymous user).
+</p>
+<p>Certainly your permission system can be much simpler, e.g.:
+</p>
+<pre>
+  access = post            all;
+           edit_own_recent auth;
+           post_visible    admin;
+           see_hidden      admin;
+           moderation      admin;
+           edit            admin;
+<p></pre>
+</p>
+<p>In this example, only one custom role (<code>admin</code>) is used.
+Everyone can post, authenticated (registered) users enjoy the possibility
+to edit/delete a recently posted comment, and everything else is only
+available to <code>admin</code>s.  If you replace the &ldquo;<code>all</code>&rdquo; at
+the top line with &ldquo;<code>auth</code>&rdquo;, users will have to sign up in
+order to make comments.
+</p>
+<p>One can even go with something like this:
+</p>
+<pre>
+  access = post_visible auth
+<p></pre>
+</p>
+<p>Here, all authenticated users are able to comment without premoderation
+approval, and nothing else can be done through the web interface; all
+administration tasks and everything else is done manually.
+</p>
+<p>Thalassa CGI decides if a particular comment is &ldquo;recently posted&rdquo; or not,
+basing on the value of the <code>recent_timeout</code> parameter.  The unit
+here is a minute, so
+</p>
+<pre>
+  recent_timeout = 30
+<p></pre>
+</p>
+<p>means half an hour.
+</p>
+<p>In the present version there's no web interface for manipulating user
+roles, so if you need to grant a user some custom roles, let the user
+<a href="thalcgi_user_accounts.html#form_signup">sign up for an
+account</a>, then go to your
+<a href="thalcgi_overview.html#database">database</a> directory, change to
+<code>_users/<em>NNNNN</em></code> subdirectory (where
+<code><em>NNNNN</em></code> is the user login name), open the file
+<code>_data</code> in your favourite editor and add a line like this:
+</p>
+<pre>
+  roles = moderator, superposter
+<p></pre>
+</p>
+
+
+   <h3 id="cmt_backlinks">Links back to discussion<p></h3>
+</p>
+<p>On pages created to adding and editing comments, it is useful to have links
+back to the page where the comment belongs to.  To make such links
+possible, two parameters must be properly filled:</p>
+<ul>
+
+<li><code>page_url</code> must point to the page containing the comment,
+without navigating to any of the comments;</li>
+
+<li><code>orig_url</code> must point to the page containing the comment
+and, in case there's a parent comment, contain the anchor part pointing to
+that comment.</li>
+
+<p></ul>
+</p>
+<p>Both URLs must either be full URLs, or local URIs, as used in the <code>a
+href</code> attribute.  It is recommended to make local URIs absolute, that
+is, starting with &ldquo;<code>/</code>&rdquo;.
+Both parameters are usually created with
+<a href="thalcgi_pages.html#request_args">request arguments</a>.
+</p>
+<p>The values set here are available through the respective functions of the
+<a href="#discuss_macro"><code>%[discuss:&nbsp;]</code> macro</a>.
+</p>
+
+
+
+   <h3 id="cmt_origpage">Original page text display<p></h3>
+</p>
+<p>Users generally prefer to see the text they are replying to.  When the text
+being commented on is another comment, this doesn't make any problems as
+Thalassa CGI is fully capable of working with the <em>comment part</em> of the
+<a href="comment_sections.html#storage">content database</a>, so it can
+just get the text of the comment in question by means it has to have anyway.
+However, the things aren't that easy when the comment being composed is
+supposed to be a &ldquo;top-level&rdquo;, so the text being commented doesn't belong
+to any other comments &mdash; it is the text of the page.
+</p>
+<p>Things remain relatively easy if the page comes from a
+<a href="page_sets.html">page set</a>, so it is represented with a
+<a href="headed_text.html">headed text file</a>.  The CGI program is linked
+with the modules supporting this format anyway, so it is not too
+complicated to extract the necessary information.  The only problem is the
+file's location.  It could be deduced from the
+<a href="components_and_data.html">static generator</a>'s configuration,
+but to achieve that, the CGI problem would need to have all the code the
+generator uses to access its database, which is a bit too much.  So instead
+of this, Thalassa CGI simply uses another parameter within the
+<code>[comments]</code> section, named <code>page_source</code>.  Its
+value, if defined and not empty, must be the filesystem path (either
+absolute, or relative to the CGI's working directory) of the headed text
+file which is the source of the page being discussed.  Certainly, the value
+should in most cases be created with
+<a href="thalcgi_pages.html#request_args">request arguments</a>, typically
+it is something like
+</p>
+<pre>
+  page_source = %[reqarg:origpgpath]
+<p></pre>
+</p>
+<p>and the <code>origpgpath</code> is set completely within the respective
+<code>[page&nbsp;]</code> section.
+</p>
+<p>In case the page actually comes from a <a href="lists.html">list</a> which
+has item pages, not from a page set, there's actually no source file, and,
+furthermore, despite it is still possible to deduce the page text from the
+content database, a significant part of the static generator's code (if not
+all) would be necessary for that.  So, for this case the text is rather
+taken right from the <em>generated</em> page, that is, the HTML file.
+</p>
+<p>To enable the CGI program to do this, first of all, two <em>marks</em> must
+be inserted into every such page: the text begin mark and the text end
+mark.  Both marks are whole lines and perpaps should be HTML comments; you
+can peek any strings for this purpose, for example,
+<code>&lt;!--THALCGI-BEGIN-MARK--&gt;</code> and
+<code>&lt;!--THALCGI-END-MARK--&gt;</code>.  The lines containing the marks
+may also contain any amount of leading and trailing whitespace, but no
+other chars besides the marks themselves.  The static generator has no
+special means for this, from its point of view these marks are just a part
+of the content being generated.  For the CGI program, these marks must be
+set explictly with the <code>page_html_marks</code> parameter.  The
+parameter's value must consist of exactly two strings, the first for the
+<em>begin</em> mark and the second for the <em>end</em> mark, like this:
+</p>
+<pre>
+  page_html_marks = &lt;!--THALCGI-BEGIN-MARK--&gt;
+                    &lt;!--THALCGI-END-MARK--&gt;
+<p></pre>
+</p>
+<p>All leading and trailing whitespace is trimmed off in both lines.
+</p>
+<p>The <code>page_source</code> parameter must be left empty for this case,
+which means its value may only contain whitespace (but any amount of it).
+</p>
+<p>The path to the HTML file is set with the <code>page_html_file</code>
+parameter; it may be both an absolute or a relative path, but as the HTML
+file typically resides within the web site content tree, just like the CGI
+program itself, in most cases this path should be relative.  Like for all
+similar cases, this parameter's content is almost always created using
+<a href="thalcgi_pages.html#request_args">request arguments</a>.
+</p>
+<p>In both cases, the text extracted from either source will be available with
+the <code>body</code> function of the
+<a href="#discuss_macro"><code>%[discuss:&nbsp;]</code> macro</a>.  If the
+page comes from a page set and hence is extracted using the
+<code>page_source</code> parameter from its source (headed text) file,
+the page's title will also be available, with the <code>title</code>
+function.  Thalassa CGI is unable to extract the title separately from the
+body in case the HTML file is used as the source (<code>page_html_file</code>
+and <code>page_html_marks</code> parameters), so if the HTML file is used,
+the <code>title</code> function will return an empty string.
+</p>
+
+
+
+   <h3 id="cmt_page_regen">Rebuilding commented pages<p></h3>
+</p>
+<p>Whenever a comment is added, deleted or changes its visibility status, the
+page containing the comment needs to be rebuilt.  This is typically done
+running the <code>thalassa</code> program (that is, the static content
+generator) with command line parameters that tell it to rebuild a
+particular page using the spool facility (the spool is necessary because
+several copies of CGI program may run simultaneously and run several copies
+of the generator).
+</p>
+<p>The <code>page_regen_command</code> parameter sets the
+command line (name and
+arguments) for the external program (presumably <code>thalassa</code>) to
+launch to regenerate the <em>current page</em>, that is, the page whose
+properties are set by
+<a href="thalcgi_pages.html#request_args">request arguments</a>.
+As usual for command lines set by ini file parameters, arguments are split
+down to words, using the apostrophe &ldquo;<code>'</code>&rdquo; and the doublequote
+&ldquo;<code>"</code>&rdquo; as grouping symbols (both an apostrophe within
+doublequotes and a doublequote within apostrophes are considered as plain
+chars).
+</p>
+<p>In most cases, there should be a dedicated request argument that sets the
+string to be passed as the <code>-g</code> parameter to
+<code>thalassa</code>.  A name like <code>gentarget</code> might be a good
+choice for this request argument.
+</p>
+
+   <h3 id="cmt_premod_queue">Displaying premoderation queue<p></h3>
+</p>
+<p>Every time a comment is added, removed, hidden or revealed, the HTML page
+that contains the comment must be regenerated.  To do so, the CGI program
+runs the static generator; however, the CGI program itself doesn't know how
+to run the generator (is this surprising?), so you need to tell it.  This
+is done with the <code>premodq_page_id</code> parameter.  The parameter's
+value is a command line (name and arguments) for the external program to
+regenerate the &ldquo;current&rdquo; page; arguments are split down to words, using
+the apostrophe &ldquo;<code>'</code>&rdquo; and the doublequote &ldquo;<code>"</code>&rdquo; as
+grouping symbols (both an apostrophe within doublequotes and a doublequote
+within apostrophes are considered as plain chars).  Obviously, this
+parameter's content is almost always created using
+<a href="thalcgi_pages.html#request_args">request arguments</a>.
+</p>
+<p>The command name, as usual with <code>execve</code>(3) argument,
+<em>may</em> be an absolute path, a relative path and a short name &mdash;
+if it contains no slashes &ldquo;<code>/</code>&rdquo;, the <code>PATH</code>
+environment variable will be searched for the binary to run.  However,
+<strong>it is strongly recommended <em>not</em> to use short names
+here</strong>, even if the <code>thalassa</code> binary is &ldquo;installed&rdquo; in
+yor system (in a directory like <code>/usr/local/bin</code>) and is
+available through the <code>PATH</code>.
+</p>
+
+
+<h2 id="comment_add_form">New comment form<p></h2>
+</p>
+<p>The <code>comment_add</code> action lets the user to add a new comment on
+your site.  The action accepts one argument, the ID of the comment we're
+replying to.  In case the argument is not present or empty, it is assumed
+the user adds a new &ldquo;top-level&rdquo; comment, that is, replies to
+the text of the page, not to another comment.
+</p>
+<p>This action expects two or three input field values and one optional
+&ldquo;flag&rdquo; value.  The <code>subject</code> input (containing the
+title for the new comment) and <code>cmtbody</code> input (containing the
+body) are expected always, and the <code>name</code> input is only expected
+if the user is not logged in, otherwise the input is not extracted (it is
+ignored in case it is present), and the user's <em>visible name</em> is
+used instead.  The &ldquo;flag&rdquo; input value is named
+<code>preview</code>, it is supposed to be sent by an alternative submit
+button (labelled &ldquo;Preview&rdquo; or the like); if it is present
+<strong>and</strong> has the value <code>yes</code>, the CGI program
+assumes the user requested a comment preview instead of posting the
+comment.
+</p>
+<p>If preview is requested, the program initializes the values returned by the
+<a href="#cmtpreview_macro">%[cmtpreview:]</a> macro and composes the page
+to be sent to the client in the same way as for the <code>GET</code>
+request; the <a href="#cmtpreview_if_func">%[cmtpreview:if:]</a>
+conditional checker should be used in the configuration file to determine
+this situation and to display the comment preview together with the comment
+submission form.
+</p>
+<p>If it is not a preview request, the program tries to save the submitted
+comment.  The permissions are checked; the user must have the
+<code>post</code> permission in order to post comments.  In case the user
+is not permitted to bypass the premoderation (doesn't have the
+<code>post_visible</code> permission), the comment is added with flags
+<code>hidden</code> and <code>premod</code>, and the comment is added to
+the premoderation queue.  Otherwise, the CGI programs invokes the static
+content generator (the <code>thalassa</code> program) to regenerate the
+page of the site where the new comment is to appear.
+</p>
+<p>The operation fails if either the title or the body isn't present or is
+present but empty, as well as if the user visible name was expected but is
+not specified.  In this case, the request result page with the appropriate
+message is sent to the user.  The page should perhaps be configured to
+contain the contents of the fields the user managed to fill in, so that the
+user's information is not lost on an accidentally made mistake.
+</p>
+
+
+<h2 id="comment_edit_form">Comment text and status modification form<p></h2>
+</p>
+<p>The <code>comment_edit</code> action lets the user (provided that the user
+has the appropriate permissions) to edit a comment, delete a comment, hide
+and unhide a comment, and to remove comments from the premoderation queue.
+The action accepts one mandatory argument, which is the ID of the comment
+to be altered.
+</p>
+<p>This webform is multifunctional, so it is assumed to have several submit
+buttons.  Thalassa CGI extracts and handles input field values according to
+the following procedure.
+</p>
+<p>First of all, the <code>moderation</code> input field is checked.  If it is
+present, its value must be one of &ldquo;<code>regenerate</code>&rdquo; (just
+regenerate the page), &ldquo;<code>hide</code>&rdquo; (hide the comment),
+&ldquo;<code>unhide</code>&rdquo; (make the comment visible) or
+&ldquo;<code>dequeue</code>&rdquo; (remove the comment from the premoderation queue,
+not changing its visibility).  For all these values except
+&ldquo;<code>dequeue</code>&rdquo;, the page is regenerated after the comment file is
+saved with new flags.  The form handling is stopped after this, no more
+input fields are checked.
+</p>
+<p>In case the <code>moderation</code> input field is absent, the
+<code>delete</code> input field is checked.  If it is present, its value
+must be &ldquo;<code>yes</code>&rdquo;, otherwise an error will be reported to the
+user.  Furthermore, there must also be the <code>really</code> input field,
+and its value must be &ldquo;<code>really</code>&rdquo; (the form should let the user
+type &ldquo;<code>really</code>&rdquo; into the form field to confirm the action is
+intended).  If the checks are successful, the comment is deleted (which
+means its source file is literally deleted from the content database), and
+the page is regenerated.  The form handling is stopped after this.
+</p>
+<p>The last possibility is that neither <code>moderation</code> nor
+<code>delete</code> are present.  In this case the <code>subject</code>
+input (containing the title for the new comment) and the
+<code>cmtbody</code> input (containing the body) are expected; the comment
+is saved with new content, and in case it is visible, the page is
+regenerated.  Please note the present version of Thalassa doesn't allow to
+change the &ldquo;visible&rdquo; user name for a comment through the web interface,
+this can only be done by editing the comment source files in the database
+manually.
+</p>
+
+
+<h2 id="comment_related_macros">Comment-related macros<p></h2>
+</p>
+
+   <h3 id="discuss_macro">The <code>%[discuss:&nbsp;]</code> macro<p></h3>
+</p>
+<p>The <code>%[discuss:&nbsp;]</code> macro provides access to properties of
+the text being replied to (either a comment or a page) and the comment
+being edited.  Actually, it is possible to access any of the comments on
+<em>the current page</em> with this macro, as the comment ID is passed to
+the macro as one of its arguments.
+</p>
+<p>It is important to understand that the notion of the <em>current page</em>
+is implemented by parameters of the
+<a href="#comments_section"><code>[comments]</code> ini section</a>,
+primarily the <a href="#comments_subdir_parameter"><code>subdir</code>
+parameter</a> &mdash; having its value and the comment ID, the macro can
+access all the comment's properties.  For the case when the macro is
+requested to access the page's properties (in contrast with properties
+of a comment on the page), it uses either the <code>page_source</code>
+parameter, or the <code>page_html_file</code> and
+<code>page_html_marks</code> parameters (see the
+<a href="#cmt_origpage">Original page text display</a> section for
+details).
+</p>
+<p>Furthermore, some functions of the <code>%[discuss:&nbsp;]</code> macro
+provide direct access to the <code>[comments]</code> section parameters'
+values.
+</p>
+<p>The macro accepts at least two arguments; the first argument is the name of
+the desired function, and the second argument (for all functions) is the
+comment ID, or an empty string in case the properties of the page, not a
+comment on it, are requested.  Conditional checkers accept two additional
+arguments, the <em>then</em> and the <em>else</em> values, and all the
+other functions need only the two arguments.  Some functions ignore the
+second argument, but nevertheless accept it.  The list of the macro's
+functions follows:</p>
+<ul>
+
+
+<li><code>%[discuss:iffound:]</code> checks if both the page and the
+comment are found;</li>
+
+<li><code>%[discuss:ifenabled:]</code> checks if comments are enabled on
+the <em>current page</em>;</li>
+
+<li><code>%[discuss:ifhidden:]</code> checks if the comment is hidden;
+in case the comment ID is not specified, the condition is assumed false;</li>
+
+<li><code>%[discuss:ifanon:]</code> &mdash; checks if the comment has the
+<code>anon</code> flag; the result is unspecified if the commend ID is not
+given;</li>
+
+<li><code>%[discuss:ifparent:]</code> &mdash; checks if the comment has a
+parent comment; missing commend ID is considered false condition;</li>
+
+<li><code>%[discuss:parent:]</code> &mdash; the comment's parent ID;
+returns empty string for all situations where there's no parent;</li>
+
+<li><code>%[discuss:title:]</code> &mdash; the comment's or page's title;
+in case the comment ID is not specified and the page's text is retrieved
+from its HTML file (not the source file), this function returns an empty
+string;</li>
+
+<li><code>%[discuss:body:]</code> &mdash; the comment's or page's body;</li>
+
+<li><code>%[discuss:bodysrc:]</code> &mdash; the <em>source</em> of the
+comment's body, that is, the body, as retrieved from the comment's source
+file, passed throug the encoding converter if necessary, but not passed
+through the format converter; this function is used to let the user edit
+the comment's source;</li>
+
+<li><code>%[discuss:user:]</code> &mdash; the user ID (login name) for the
+comment; returns an empty string both when there's no comment ID and when
+the comment is anonymous;</li>
+
+<li><code>%[discuss:username:]</code> &mdash; the user's visible name
+(empty string if there's no comment ID);</li>
+
+<li><code>%[discuss:unixtime:]</code> &mdash; the Unix time (as a decimal
+number) for either the comment or the page;</li>
+
+<li><code>%[discuss:flags:]</code> &mdash; the space-separated list of
+flags set for the comment, or empty string if there's no comment ID;</li>
+
+<li><code>%[discuss:page_url:]</code> &mdash; the original page URI, as
+defined by the <a href="#cmd_backlinks"><code>page_url</code> parameter</a>
+of the <code>[comments]</code> section;</li>
+
+<li><code>%[discuss:orig_url:]</code> &mdash; the original page URI, as
+defined by the <a href="#cmd_backlinks"><code>orig_url</code> parameter</a>
+of the <code>[comments]</code> section.</li>
+
+<p></ul>
+</p>
+
+
+
+
+   <h3 id="cmtinfo_macro">The <code>%[cmtinfo:&nbsp;]</code> macro<p></h3>
+</p>
+<p>The <code>%[cmtinfo:&nbsp;]</code> macro is primarily intended to be used
+handling the moderation queue, where it is often necessary to access
+properties of comments <strong>not</strong> from the <em>current page</em>,
+and, furthermore, the current page (the one being commented) may be
+undefined just because the user didn't try to leave a new comment nor to
+modify an existing one.
+</p>
+<p>The macro accepts arguments, and the first of them, as usual, must be a
+supported function name.
+</p>
+<p>The <code>%[cmtinfo:tags]</code> and <code>%[cmtinfo:attrs]</code>
+functions both take no arguments; they return space-separated lists
+containing allowed HTML tags / tag attributes as configured in the
+<a href="#format_section"><code>[format]</code> section</a>.
+</p>
+<p>The <code id="cmtinfo_topics_func">%[cmtinfo:topics]</code> function takes
+no arguments; it returns a space-separated list of existing <em>comment
+topics</em>, which means all currently existing values for the
+<a href="#comments_subdir_parameter"><code>subdir</code> parameter</a>.
+Technically, in the present version the macro traverses recursively the
+comment base directory (the one specified as the
+<a href="#comments_dir_parameter"><code>dir</code> parameter</a>), pics
+directories that have no subdirectories, and returns the list of their
+paths relative to the base directory.
+</p>
+<p>The
+<code>%[cmtinfo:iftopic:<em>PageID</em>:<em>THEN</em>:<em>ELSE</em>]</code>
+function accepts three arguments: <em>PageID</em>, which is effectively used
+instead of the
+<a href="#comments_subdir_parameter"><code>subdir</code> parameter</a>
+value (a.k.a. <em>topic id</em>), <em>THEN</em> and <em>ELSE</em>; it
+checks if the topic for the given page ID exists and returns
+<em>THEN</em> or <em>ELSE</em> accordingly.
+</p>
+<p>The <code>%[cmtinfo:list:<em>PageID</em>]</code> function needs only one
+argument, <em>PageID</em>.  The function returns the list of comment IDs
+for the given page (comment topic), space-separated, sorted, leading zeroes
+stripped.
+</p>
+<p>The rest of the functions accept at least two additional arguments, first
+being the <em>PageID</em> just like for the <code>iftopic</code> and
+<code>list</code> functions, and the other being the comment ID.
+Conditional checkers accept two additional arguments, for the <em>then</em>
+and the <em>else</em> values.  The list of the functions follows: </p>
+<ul>
+
+<li><code>iffound</code> checks if the comment exists;</li>
+
+<li><code>ifhidden</code> checks if the comment has the <code>hidden</code>
+flag; </li>
+
+<li><code>ifanon</code> checks if the comment has the <code>anon</code>
+flag; </li>
+
+<li><code>ifparent</code> checks if the comment has a parent comment; </li>
+
+<li><code>user</code> returns the user id (login name) for the comment, or
+an empty string if the comment is anonymous; </li>
+
+<li><code>username</code> returns the <em>visible user name</em> for the
+comment; </li>
+
+<li><code>unixtime</code> returns the Unix time for the comment (as a
+decimal number); </li>
+
+<li><code>parent</code> returns the parent comment's ID, or empty string if
+the comment is a &ldquo;top-level&rdquo; (actually, it returns the value of the
+<code>parent:</code> header field from the source file, so if you for some
+reason let comments with &ldquo;<code>parent:&nbsp;0</code> exist, it will
+return that <code>0</code>); </li>
+
+<li><code>title</code> returns the comment's title; </li>
+
+<li><code>flags</code> returns a space-separated list of the comment's
+flags.</li>
+
+<p></ul>
+</p>
+<p>In the present version of Thalassa, the <code>cmtinfo</code> macro doesn't
+provide access to the comment's body, because no need for that ever arose.
+This can be more or less easily changed, so in case you really need it,
+contact the author.
+</p>
+
+
+   <h3 id="cmtpreview_macro">The <code>%[cmtpreview:&nbsp;]</code> macro<p></h3>
+</p>
+<p>The <code>%[cmtpreview:&nbsp;]</code> macro is only intended to be used in
+the <a href=#comment_add_form">new comment form</a>; it allows to check
+whether the user requested to preview the comment (instead of posting it),
+and if so, provides access to the comment's properties needed to display
+the preview.
+
+The preview request is detected by the
+<code id="cmtpreview_if_func">if</code> conditional checking function
+(<code>%[cmtpreview:if:<em>THEN</em>:<em>ELSE</em>]</code>).  You might
+want to use it within the <code>selector</code> parameter of your comment
+page configuration.  All the other functions of the macro only work if it
+is the preview request, otherwise they pretend they don't exist (which
+effectively means that the macro call is left unchanged).  The functions are
+as follows:<ul>
+
+<li><code>user</code> returns the user id (login name) for the comment, or
+an empty string if the comment is anonymous;</li>
+
+<li><code>username</code> returns the <em>visible user name</em> for the
+comment;</li>
+
+<li><code>title</code> returns the comment's title;</li>
+
+<li><code>body</code> returns the comment's body.</li>
+
+</ul>
+
+The visible user name, the title and the body are returned in the form to
+be displayed within the preview, that is, after doing all necessary
+conversions.
+
+
+
+
+
+   <h3 id="ifperm_macro">The <code>%[ifperm:&nbsp;]</code> macro</h3>
+
+The <code>%[ifperm:&nbsp;]</code> macro is used to check if the current
+user has a certain permission.
+
+<code>%[ifperm:post:<em>THEN</em>:<em>ELSE</em>]</code> checks whether the
+current user (or the anonymous, in case there's no logged in user) is
+permitted to post comments.
+
+<code>%[ifperm:seehidden:<em>USER</em>:<em>THEN</em>:<em>ELSE</em>]</code>
+checks if the current user can see hidden comments left by the given
+<em>USER</em> (of if the current user can see <em>all</em> hidden comments,
+in case the <em>USER</em> argument is left empty).
+
+<code>%[ifperm:moderate:<em>THEN</em>:<em>ELSE</em>]</code> checks if the
+current user is allowed to perform moderation, that is, to change comments'
+visibility status and to remove the comments from the moderation queue.
+The &ldquo;<code>moderation</code>&rdquo; function name is a synonymous for
+&ldquo;<code>moderate</code>&rdquo;.
+
+<code>%[ifperm:edit:<em>USER</em>:<em>TIME</em>:<em>THEN</em>:<em>ELSE</em>]</code>
+checks if the current user can edit a comment left by the given
+<em>USER</em> at the given <em>TIME</em>.  If the <em>TIME</em> argument is
+empty, the function checks if the current user can edit comments left by
+the given <em>USER</em> regardles of when they were left.  If both
+<em>USER</em> and <em>TIME</em> are empty, the check is performed if the
+current user has the right to edit <em>all</em> existing comments.
+
+
+It is important to understand that the respective <code>POST</code> action
+implementations do (on their own) perform checks for permissions needed to
+perform each action.  The <code>ifperm</code> macro is only used to decide
+what content to display to the user &mdash; it allows to display different
+things depending on what permissions the user has.
+
+
+
+   <h3 id="justposted_macro">The <code>%[justposted:&nbsp;]</code> macro</h3>
+
+Whenever a new comment is successfully posted, it is a good idea to send
+the user (as a response to the successful <code>POST</code> request) a page
+that provides some information regarding the comment.  The
+<code>%[justposted:&nbsp;]</code> macro provides such information.
+
+<code>%[justposted:if:<em>THEN</em>:<em>ELSE</em>]</code> checks whether we
+really have the &ldquo;just successfully posted a new comment&rdquo; situation.
+The &ldquo;<code>ifhave</code>&rdquo; function name is a synonymous for
+&ldquo;<code>if</code>&rdquo;.
+
+<code>%[justposted:ifhidden:<em>THEN</em>:<em>ELSE</em>]</code> checks
+if the new comment has the <code>hidden</code> flag (which basically means
+is is placed to the premoderation queue).
+
+<code>%[justposted:comment]</code> returns the comment ID for the new
+comment.
+
+
+
+
+   <h3 id="commentmap_macro">The <code>%[commentmap:&nbsp;]</code> macro</h3>
+
+As it was discussed earlier, the <code>thalassa</code> program generates
+<a href="page_sets.html#comment_maps">comment maps</a> for &ldquo;pages&rdquo; that end
+up generated as several HTML files because of the number of comments.
+The <code>%[commentmap:&nbsp;]</code> macro is used to access the data from
+these map files.
+
+The macro is called as follows:
+
+<pre>
+  %[commentmap:<em>PATH</em>:<em>CmtID</em>:<em>DEFAULT</em>]
+</pre>
+
+where <em>PATH</em> is the map file path, which should be relative to the
+CGI location (well, it can be an absolute path as well, but in a sane
+environment you won't need to use an absolute path); <em>CmtID</em> is the
+comment ID, without leading zeroes; and <em>DEFAULT</em> is the value to
+return in case either the map file or the comment ID within the file aren't
+found.
+
+The value returned by the macro is the local part of the URL (well, URI) of
+the HTML file, always starting with the&nbsp;&ldquo;<code>/</code>&rdquo;.  It can be
+used both as a part of the <code>href</code> attribute and as a path to a
+file, relative to your web tree root (despite of the
+leading&nbsp;&ldquo;<code>/</code>&rdquo;).
+
+
+   <h3 id="sess_macro">Premoderation-related functions of the
+                       <code>%[sess:&nbsp;]</code> macro</h3>
+
+We already explained most of the <code>%[sess:&nbsp;]</code> macro's
+functions, related to
+<a href="thalcgi_sessions.html#sess_macro">sessions</a> and
+<a href="thalcgi_user_accounts.html#sess_macro">user accounts</a>.  The
+last group of its functions, related to handling of the premoderation
+queue, follows.
+
+<code>%[sess:premodq]</code> returns the
+<a href="#premod_queue">premoderation queue</a> content.  The result is a
+space-separated list of elements, each of them being a triple consisting of
+a realm ID, page ID (within the realm) and comment ID, joined by the
+&ldquo;<code>=</code>&rdquo; char, as it was <a href="#premodq_triples">explained</a>
+in the section on premoderation queue; actually, these triples are just
+file names of the symlinks found within the premoderation queue directory.
+See also the <a href="#splitpremodq_macro">splitpremodq macro</a>
+description to get an idea what to do with these triples.
+
+<code>%[sess:pqprev:<em>RealmID</em>=<em>PageID</em>:<em>CmtID</em>]</code>
+and
+<code>%[sess:pqnext:<em>RealmID</em>=<em>PageID</em>:<em>CmtID</em>]</code>
+return, respectively, the previous and the next item of the premoderation
+queue, or an empty string if either the current (given) item isn't found or
+there's no previous/next item for it.
+
+<p class="remark">It might look weird that one has to pass the first two
+elements of the triple (<em>RealmID</em> and <em>PageID</em>) as a single
+argument, while splitting off the third element of the same triple and
+passing it separately.  However, this is for a reason; it is possible that
+in future version of Thalassa, these premoderation queue elements will no
+longer have to be triples.</p>
+
+
+
+   <h3 id="splitpremodq_macro">The <code>%[splitpremodq:&nbsp;]</code>
+                               macro</h3>
+
+Once the premoderation queue is retrieved with
+<code>%[sess:premodq]</code>, it needs to be handled somehow, and, in
+particular, these triples must be split down to values of the realm ID,
+page ID and the comment ID.  This is done with the
+<code>%[splitpremodq:&nbsp;]</code> macro.
+
+The macro accepts a variable number of arguments.  The first argument is
+considered a name of a macro, typically it is
+<a href="thalcgi_baseconf.html#html_section"><code>html</code></a>.  The
+macro will be <em>called</em> to produce the result.  Then, an arbitrary
+amount of arguments follow; these are to be passed to the macro as they
+are.  The last argument must be a premoderation queue triple; it will get
+split, and each of its elements will be passed to the macro as an
+additional argument.
+
+For example, <code>%[splitpremodq:html:foo:bar:buzz:pages=pg37=233]</code>
+will call the <code>html</code> macro as if the following expression
+expanded: <code>%[html:foo:bar:buzz:pages:pg37:233]</code>.
+
+"></div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_contact_form.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_comments" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="setup_apache.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

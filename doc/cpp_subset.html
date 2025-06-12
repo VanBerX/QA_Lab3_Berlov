@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="banned_techniques.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#cpp_subset" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="coding_style.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">The C++ and plain C subsets used for Thalassa</a></h1>
+    <div class="page_body">
+<p>Contents:
+</p>
+<ul>
+  <li><a href="#preamble">Preamble</a></li>
+  <li><a href="#include">#include"" vs. #include&lt;&gt;</a></li>
+  <li><a href="#cplusplus">Restrictions for C++</a></li>
+  <ul>
+    <li><a href="#nostdlib">No C++ standard library</a></li>
+    <li><a href="#nokeywords">No standard-invented &ldquo;features&rdquo;</a></li>
+    <li><a href="#novarinfor">No loop var definition within for head</a></li>
+    <li><a href="#noexcept">No exception handling</a></li>
+    <li><a href="#nortty">No RTTI nor dynamic_cast</a></li>
+    <li><a href="#nomemberptrs">No member pointers</a></li>
+    <li><a href="#nognuextensions">No GNU extensions</a></li>
+    <li><a href="#defaultargvals">Default argument values</a></li>
+    <li><a href="#templates">Templates are okay, but not for containers</a></li>
+  </ul>
+  <li><a href="#plainc">Restrictions for plain C</a></li>
+  <ul>
+    <li><a href="#noc99">No features from C99 and later "standards"</a></li>
+    <li><a href="#libc_subset">Allowed subset of the standard library</a></li>
+    <li><a href="#nognuextensions">No GNU extensions</a></li>
+  </ul>
+  <li><a href="#conlcusion">Conclusion</a></li>
+  
+<p></ul>
+</p>
+
+<h2 id="preamble">Preamble<p></h2>
+</p>
+<p>Technical standards are used to be commitee-made.  From the other hand, it
+is well-known that commitees, by their very nature, are unable to produce
+anything useful.  In the very best case, commitee-made things are useless,
+but far more often they are seriously harmful.
+</p>
+<p>Speaking particularly about programming languages, the commitees are used
+to issue a <em>command</em> to the whole world &mdash; from now on, the
+language that people know becomes totally different and everyone must
+agree.
+</p>
+<p>It looks obvious that no one in the world can have powers to command to the
+whole world.  No one, never ever.  If governments let various &ldquo;standard
+bodies&rdquo;, such as ISO, do what they do, this only means the governments
+went far beyond the limits of acceptable.
+</p>
+<p>C99 and later &ldquo;standards&rdquo; explain languages which are totally different,
+and they has nothing to do with the C language; only C90 was more or less
+close to what the C language is.  The same is true for the C++ language,
+but starting with the very first &ldquo;standard&rdquo;, issued in 1998.  None of the
+so-called &ldquo;C++ standards&rdquo; ever had anything in common with what C++
+really is.
+</p>
+<p>Honest behaviour would be to give these specifications different names.
+There are examples of such well behaviour in history, such as the language
+named Scheme, despite everyone understand it is just another Lisp dialect.
+Even C++ itself is an example of a more or less honest naming: although the
+name obviously suggests that it is the same C but better, it is still a
+different name, and Stroustrup never tried to convince the world that plain
+C is from now on obsoleted and C++ should be used instead.
+</p>
+<p>Having said this, it becomes clear that what standard commitees do is,
+plainly speaking, <em>fraud</em>.  Industry is conservative, and it is very
+hard to convince it to adopt a completely new language; so the commitees
+use the names of well-known languages to endorse what they create.
+</p>
+<p>BTW, even if we take these standards simply as specifications for new
+languages, they are horrible.  It's because the commitee members hold no
+responsibility for what they do.  They even don't have to implement their
+own ideas, they only need to vote for it, and other people will have no
+other choice but to implement what the commitee voted for.
+</p>
+<p>We can't stop the commitees, at least right now.  We've got no power to
+scatter them.  But there's one thing we can do right now: namely, we can
+boycott everyhting the damn commitees do.  So, let's do at least what we
+can.
+</p>
+
+
+<h2 id="include">#include"" vs. #include&lt;&gt;<p></h2>
+</p>
+<p>Before the commitees touched all this with their dirty hands, the
+difference between <code>#include&nbsp;""</code> and
+<code>#include&nbsp;&lt;&gt;</code> was obvious: the form
+<code>#include&nbsp;""</code> was used for the headers that belong to your
+program itself, while <code>#include&nbsp;&lt;&gt;</code> was for the
+header files external to your program, that is, headers from
+<em>libraries</em>, no matter whether it is the so-called &ldquo;standard&rdquo;
+library or any other.
+</p>
+<p>In particular, for Thalassa, all the libraries included within the source
+tarball <em>are still libraries</em>, so their headers MUST be included
+with </code>#include&nbsp;&lt;&gt;</code>.
+</p>
+<p>The <code>#include&nbsp;""</code> form is only to be used for headers that
+reside within the <code>cms/</code> subdirectory.
+</p>
+
+<h2 id="cplusplus">Restrictions for C++<p></h2>
+</p>
+  <h3 id="nostdlib">No C++ standard library<p></h3>
+</p>
+<p>The so-called standard library of C++ must not be used in any form.  Simply
+speaking, you <strong>must not</strong> include any header files that have
+no &ldquo;.h&rdquo; suffix <em>and</em> you must not use any names from that damn
+&ldquo;namespace std&rdquo;, neither with explicit <code>std::</code> prefix, nor
+with the <code>using namespace</code> directive (as we'll see in the next
+section, the <code>using</code> directive is prohibited as such, because
+namespaces themselves are prohibited).
+</p>
+<p>Compilers usually provide &ldquo;legacy&rdquo; headers such as
+<code>iostream.h</code>, <code>vector.h</code> and the like.  These are
+prohibited, too.
+</p>
+<p>Definitely it is strictly forbidden to include &ldquo;plain C compatibility&rdquo;
+headers such as <code>cstdio</code>, <code>cstring</code> and so on.  As it
+will be mentioned <a href="#libc_subset">later</a>, some header files from
+the plain C standard library are not allowed, but many of them are allowed
+&mdash; and they <strong>must</strong> be included exactly as you would do
+it in plain C.
+</p>
+<p>People often ask one (stupid) question: <em>okay, but what to use instead
+of the standard library?</em>  Sometimes it is possible to answer this
+question correctly.  Instead ot iostream, either plain C &ldquo;high-level&rdquo;
+input-output may be used (that is, the functions and types declared in
+<code>stdio.h</code>), or you can use i/o system calls such as open, close,
+read, write etc. directly.  Instead of the (very stupid and ugly)
+<code>string</code> class, the particular project (Thalassa CMS) uses the
+class named <code>ScriptVariable</code>, defined by <code>scriptpp</code>
+library.
+</p>
+<p>It is very important to understand (and accept!) that <strong>no
+replacement for STL templates (containers and algorithms) allowed</strong>,
+neither from other libraries, nor written by yoursef.  Data structures are
+built exactly the same way as in plain C, manually, for every particular
+task.  There is no such thing as &ldquo;generic&rdquo; data structures.  Period.
+</p>
+
+
+  <h3 id="nokeywords">No standard-invented &ldquo;features&rdquo;<p></h3>
+</p>
+<p>Actually, none of the &ldquo;features&rdquo; introduced by the so-called
+&ldquo;standards&rdquo; is allowed here.  Just to start with, your code <strong>must
+not</strong> contain any of the following keywords: <code>using</code>,
+<code>namespace</code>, <code>typename</code> (the <code>class</code>
+keyword is to be used in template arguments that represent types),
+<code>nullptr</code> (the numerical <code>0</code> must be used to denote
+the null address), <code>auto</code> (damn if you feel you need it, you're
+wrong: don't prevent the compiler from detecting your errors!),
+<code>constexpr</code>, <code>consteval</code>, <code>constinit</code>,
+<code>noexcept</code>, <code>final</code>, <code>override</code>,
+<code>import</code>, <code>module</code>, <code>requires</code>,
+<code>export</code>, <code>co_yield</code>, <code>co_return</code>,
+<code>co_await</code>, <code>wchar_t</code>, <code>char8_t</code>,
+<code>char16_t</code>, <code>char32_t</code>, <code>alignas</code>,
+<code>alignof</code>, <code>register</code>, <code>static_assert</code>,
+<code>thread_local</code>...
+</p>
+<p>Something may be missing from this list, but you've got the idea: if a new
+keyword is &ldquo;added&rdquo; by another damn &ldquo;standard&rdquo; or its meaning changed,
+then the keyword is prohibited here.
+</p>
+<p>Not only keywords are prohibited; all the &ldquo;concepts&rdquo; introduced in these
+&ldquo;standards&rdquo; are prohibited, too.  Don't even think about all these
+lambdas, coroutines, structured bindings, move semantic (it is when a type
+for constructor's argument is declared with <code>&&</code>), variadic
+templates etc.
+</p>
+<p>Once again: everything that comes from C++ &ldquo;standards&rdquo; is prohibited.
+Period.
+</p>
+
+  <h3 id="novarinfor">No loop var definition within for head<p></h3>
+</p>
+<p>Please don't do this:
+</p>
+<pre class="wrongcode">
+    for (int i = 0; i &lt; 10; ++i) {
+<p></pre>
+</p>
+<p>Instead, define your loop variable right before the loop head, like this:
+</p>
+<pre>
+    int i;
+    for (i = 0; i &lt; 10; i++) {
+<p></pre>
+</p>
+
+  <h3 id="noexcept">No exception handling<p></h3>
+</p>
+<p>This is a decision made for this particular project.  Actually, exceptions
+don't come from &ldquo;standards&rdquo;, and despite their terrible inefficiency,
+sometimes it is okay to use them as they really allow to save a lot of
+programmers' time.  However, in Thalassa CMS exceptions are not used.
+</p>
+
+  <h3 id="nortty">No RTTI nor dynamic_cast<p></h3>
+</p>
+<p>Those are not from standards, too, but RTTI is too monstrous, and
+dynamic_cast is too slow.  Don't use them both.
+</p>
+
+  <h3 id="nomemberptrs">No member pointers<p></h3>
+</p>
+<p>There is absolutely nothing wrong with member pointers, except for one
+thing: if you really need a member pointer, then your class (or structure,
+heh?) is overcomplicated.  Instead of member pointers, better try to
+refactor your classes and methods so that they stop being
+<strong>that</strong> complicated.
+</p>
+
+  <h3 id="nognuextensions">No GNU extensions<p></h3>
+</p>
+<p>Well, do we really have to mention that horrible things like nested
+functions, VLAs and lots of other monsters that gcc supports as
+&ldquo;extensions&rdquo; are not to be used?  Heh, actually they are so ugly that
+even damn standard commitees don't want to adopt them.
+</p>
+
+  <h3 id="defaultargvals">Default argument values<p></h3>
+</p>
+<p>Default values for arguments of functions and methods are discouraged but
+still allowed.  However, we restrict what can serve as the default value.
+The standards are too liberal on this.  Within Thalassa code, only explicit
+compile-time constants may be used in this role.  These include explicit
+numerical, char and string literals, macros that are known to expand to
+such literals, and enum constants.  Nothing else is allowed.
+</p>
+
+  <h3 id="templates">Templates are okay, but not for containers<p></h3>
+</p>
+<p>Many similar guides prohibit templates altogether.  This might surprize
+you, but here we disagree: within Thalassa CMS, templates as such are
+allowed.  What is not allowed is using templates to create generic
+container classes and &ldquo;algorithms&rdquo; for them, like STL does.
+</p>
+<p>People often ask smth. like "hey, but what <em>else</em> templates can be
+used for?!"  Okay, if you don't know the answer, then simply don't use
+templates at all.  However, once you encounter a small task where
+templates can make things better (<strong>not</strong> being used to create
+another damn generic container), then, well, recall this section.
+</p>
+
+
+<h2 id="plainc">Restrictions for plain C<p></h2>
+</p>
+<p>Thalassa CMS is mainly implemented in C++, with only some smaller modules
+written in plain C.  However, there actually <strong>is</strong> some plain
+C code, so we have to explain what's okay and what's not okay in such code.
+</p>
+<p>There's one trivial thing we must always remember: C and C++ are two
+different programming languages.
+</p>
+
+  <h3 id="noc99">No features from C99 and later "standards"<p></h3>
+</p>
+<p>First of all, it is prohibited to use VLAs.
+</p>
+<p>Once again, it is prohibited to use VLAs.
+</p>
+<p>For those who didn't understand: it is prohibited to use VLAs.
+</p>
+<p>But, well, VLAs are not the only thing to be prohibited.  As a rule,
+<strong>C99 is not&nbsp;C</strong>, and all the later crap such as C14 or
+C23 has nothing to do with the C language at all; if we write in C, then
+let's write in&nbsp;C.
+</p>
+<p>There are no "line" comments in C, those that start with &ldquo;//&rdquo;.  In plain
+C, <strong>only</strong> <code>/* ... */</code> comments are allowed.
+</p>
+<p>A variable or a type in plain C can only be defined (or even just declared)
+either in global space or at the very start of a block; no declarations and
+definitions may come after a statement.  So, in particular, this is
+illegal:
+</p>
+<pre class="wrongcode">
+  int f(int n)
+  {
+      int *a;
+      a = malloc(n);
+      int x;
+      /* ... */
+  }
+<p></pre>
+</p>
+<p>This is because the variable <code>x</code> is defined <em>after</em> the
+<em>statement</em> (the one which contains <code>malloc</code>).  No
+more declarations are allowed in the block once at least one statement is
+encountered.
+</p>
+<p>Well, remember we're discussing <strong>plain C</strong> now.  In C++,
+declarations may be placed wherever you want, but plain C is not C++.
+</p>
+<p>Certainly, all these ugly things like complex numbers, wide chars,
+L-strings, are not allowed.
+</p>
+<p>However, there are not so obvious limitations.  First of all, <strong>there
+is no <code>bool</code> type in plain C</strong>.  Arithmetic zero stands
+for false, any arithmetic non-zero is true, and in case you need to
+explicitly specify boolean truth, use <code>1</code>.
+</p>
+<p>Please don't even think about using various &ldquo;optimization hints&rdquo; such as
+the <code>restrict</code> keyword and also these <code>likely</code> and
+<code>unlikely</code> macros.  Simply forget about them.
+</p>
+<p>Also, in plain C <strong>there are no designated initializers, nor compound
+literals</strong>.  So, in the following code everything is wrong:
+</p>
+<pre class="wrongcode">
+  struct mystr s1 = { .name = "John", .count = 5, .avg = 2.7 };
+  s2 = (struct mystr) { .name = "John", .count = 5, .avg = 2.7 };
+<p></pre>
+</p>
+<p>You may feel pity for these as they are convenient.  The problem is that
+they come from &ldquo;standards&rdquo;.
+</p>
+<p>And one more thing: there are no <code>inline</code> functions in C.
+</p>
+
+
+  <h3 id="libc_subset">Allowed subset of the standard library<p></h3>
+</p>
+<p>If something is included into the standard C library, this doesn't
+automatically mean you should use it.  Tendencies are that one day we'll
+have to create our own library to be used instead of the &ldquo;standard&rdquo; one,
+and the less we use of the libc now, the less effort it will take to get
+rid of it.
+</p>
+<p>Unfortunately, it is a bit hard to give a complete answer on what is okay
+and what is not okay here; may be such answer will be given later.  As of
+now, the following is definitely allowed:</p>
+<ul>
+
+<li>system call wrappers and their infrastructure such as constant
+definitions;</li>
+
+<li>library functions of the <code>exec*</code> family;</li>
+
+<li>the higher-level input/output functions declared in
+<code>stdio.h</code>, except for <code>fread</code> and <code>fwrite</code>
+which are senseless (use syscalls instead), and the <code>gets</code>
+function which must never be used for obvious security reasons;</li>
+
+<li>the <code>errno</code> variable;</li>
+
+<li>the functions <code>malloc</code>, <code>free</code>,
+<code>getenv</code>, <code>setenv</code>, <code>unsetenv</code>,
+<code>exit</code> and <code>_exit</code> from the <code>stdlib.h</code>
+header file;</li>
+
+<li>the string manipulation functions declared in the <code>string.h</code>
+header file;</li>
+
+<li>the math functions declared in the <code>math.h</code>
+header file and available with <code>-lm</code>.</li>
+
+<p></ul>
+</p>
+
+
+<p>From the other hand, the following is definitely not allowed:</p>
+<ul>
+
+<li>any &ldquo;extensions&rdquo; such as GNU extensions;</li>
+
+<li>everything that depends on locales, such as functions from the
+<code>ctype.h</code> header file; we have to make an exception for the
+<code>[fvs]printf</code> function family here, and that's a problem, but
+perhaps our own version of these functions will not depend on locales;</li>
+
+<li>everything that ruins the possibility to build statically, such as
+<code>getpwnam</code> and the company;</li>
+
+<li>everything that uses or depends on threads;</li>
+
+<li>functions invented specially to support threads, usually named with the
+<code>_r</code> suffix, such as <code>strtok_r</code>.</li>
+
+<p></ul>
+</p>
+
+<p>For all the features not included into either of these lists, the situation
+is subject to discussion.  For features that &ldquo;formally&rdquo; appear on both
+lists, such as the <code>strtok_r</code> function which is also &ldquo;a
+function from string.h&rdquo;, the list of prohibitions has the precedence.
+</p>
+
+
+
+  <h3 id="nognuextensions">No GNU extensions<p></h3>
+</p>
+<p>We already discussed this for C++, and we have to repeat it for plain C,
+too: horrible things like nested functions and lots of other monsters
+invented by gcc team as &ldquo;extensions&rdquo; are not to be used: they are so ugly
+that even damn standard commitees don't want to adopt them.
+</p>
+
+
+
+
+
+
+<h2 id="conlcusion">Conclusion<p></h2>
+</p>
+<p>This text is <strong>not an invitation for any discussion</strong>.  If you
+think we're wrong, feel free to keep that opinion, but please don't waste
+your and our time trying to convince us.  Actually, we tend to consider any
+attempt to do so as a reason for immediate and permanent ban.
+</p>
+<p>Furthermore, the list of prohibitions given here is thought of as
+incomplete, which means more restrictions can be added to it in future.
+From the other hand, none of the restrictions will ever be removed.
+</p>
+<p>Having said all this, we warmly welcome typo reports <strong>and</strong>
+corrections for the language this text is written in.  The author is not a
+native English speaker, so any feedback on particular wording, grammatics,
+all these tenses etc. is appreciated, specially when it comes from native
+English speakers.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="banned_techniques.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#cpp_subset" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="coding_style.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

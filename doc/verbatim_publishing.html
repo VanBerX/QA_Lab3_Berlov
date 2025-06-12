@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="simple_pages.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#verbatim_publishing" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="generic_files.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Placing existing files on your site</a></h1>
+    <div class="page_body"><p>Contents:
+</p>
+<ul>
+<li><a href="#publish_methods">Publishing methods</a></li>
+<li><a href="#binary_section">The <code>[binary <em>NNN</em>]</code>
+      section group</a></li>
+<li><a href="#collection_section">The <code>[collection <em>NNN</em>]</code>
+      section group</a></li>
+<p></ul>
+</p>
+
+<p>Thalassa CMS is not designed to generate binary files, and is not capable
+of it; hence, in case you need any non-textual objects, there's only one
+option: to copy it into your site's tree from somewhere else.  And this is
+a thing Thalassa can do for you.  Certainly, you can use it to copy text
+files as well, if you want so.
+</p>
+
+<h2 id="publish_methods">Publishing methods<p></h2>
+</p>
+<p>Let's first make a note that we hereinafter use the term
+&ldquo;<em>publishing</em>&rdquo; to denote <em>any action which results in making a
+file or a directory that exists somewhere to be available within the tree of
+the site being generated</em>.  The simplest such action is just to
+copy the file or directory into the tree, but this is not the only way,
+because a hard link or a symbolic link may be created as well.  In case you
+generate your content right on the server machine, this really will be
+<em>publishing</em>, but if you prefer to generate everything elsewhere and
+copy the generated content to the server, formally the term becomes
+incorrect.  Despite that, we don't make any difference between the two
+situations, so the term <em>publishing</em> is used from now on for placing
+files into the generated tree, no matter whether the tree is really public
+or not.
+</p>
+<p>Besides the choice whether the file in question should be copied, linked or
+symlinked to the target location, there are other questions to decide on,
+specially if not a single file but a whole directory (or a part of it) is
+to be published.  Should hidden files (those with names starting with a
+dot) be ignored or published?  Should symlinks be &ldquo;followed&rdquo; and handled
+as normal files, or copied as is, or ignored?  Should subdirectories be
+published recursively with all their content, or ignored, or (if symlink is
+selected as the publishing method) symlinked?  Finally, shouldn't anyting
+happen with the <em>file mode</em>, that is, with access rights for the
+published file?
+</p>
+<p>The <code>thalassa</code> program is able to perform publishing for single
+files, as determined by
+<a href="#binary_section"><code>[binary&nbsp;]</code> configuration
+section</a>, as well as for directories, configured by
+<a href="#collection_section"><code>[collection&nbsp;]</code> sections</a>.
+Besides that, the same procedure is done for additional files during
+generation of a page that belongs to a
+<a href="generation_objects.html#pageset">page set</a>.  For all these
+situations, the similar set of questions is to be answered regarding how
+exactly the files are to be published, and this is determined by the same
+set of parameters:</p>
+<ul>
+
+<li><code>publish_method</code> controls whether files are to be copied,
+linked or symlinked; the possible values are <code>copy</code>,
+<code>link</code> and <code>symlink</code>, case insensitive; <strong>if
+the value is not one of these words, publishing for the whole object will
+be silently skipped;</strong></li>
+
+<li><code>publish_symlinks</code> determines what is to be done with
+symbolic links if they are found in the directory being published;
+recognized values are <code>follow</code>, <code>preserve</code> and
+<code>ignore</code>; in case the value is empty or not recognized, the
+default <code>ignore</code> behaviour is assumed; <code>follow</code> means
+symbolic links don't need any special handling, so the files referenced to
+by them are processed as if they were found right in the traversed
+directory, without any links; <code>preserve</code> means that in the
+target directory, a symbolic link will be created with exactly the same
+name and value; finally, <code>ignore</code> (or any other value) means
+symbolic links will be ignored as if they didn't exist at all;</li>
+
+<li><code>publish_hidden</code> and <code>publish_recursive</code> control
+whether hidden files should be published or not, and whether subdirectories
+should be recursively traversed (and their contend published) or not; both
+are boolean values, which means that the only recognized value is
+<code>yes</code>, and anything else, including empty and absent value, are
+taken to be &ldquo;no&rdquo;; in this particular case, anything but <code>yes</code>
+means the publishing procedure will ignore hidden files or subdirectories,
+respectively;</li>
+
+<li><code id="chmod">chmod</code> forces a particular mode (access rights)
+to be set
+on files being published; the mode must be given as an octal number (see <a href="simple_pages.html#chmod">discussion related to simple pages</a> where
+the same parameter is used); please note this parameter <strong>only
+affects regular files being copied</strong>; it is ignored for symbolic
+links and directories, as well as for <em>publish_method</em>s
+other than <code>copy</code>.</li>
+
+<p></ul>
+</p>
+<p>It is a good idea to remember that:</p>
+<ul>
+<li>hard link can not be made across filesystem borders;</li>
+<li>directories can not be hard-linked at all.</li>
+<p></ul>
+</p>
+<p>Macroprocessing is not done in any of these parameters' values, at least in
+the present version of Thalassa.
+</p>
+
+<h2 id="binary_section">The <code>[binary <em>NNN</em>]</code> section group<p></h2>
+</p>
+<p>Sections of the <code>[binary <em>NNN</em>]</code> group are designed to
+publish a single existing file; despite the name, files are not obliged to
+be binaries, the name &ldquo;<code>binary</code>&rdquo; should be taken as
+standing for the files that <em>may</em> be binaries.
+</p>
+<p>Parameters recognized in these sections are <code>source</code> (the name
+of the original file), <code>dest</code> (the name and path for the file
+inside your generated tree), and all parameters enumerated in the
+<a href="#publish_methods">section discussing publish methods</a>, such as
+<code>publish_method</code>, <code>chmod</code> etc.
+</p>
+<p>Both <code>source</code> and <code>dest</code> default to the section name,
+so the most minimalistic <code>[binary&nbsp;]</code> may look like this:
+</p>
+<pre>
+  [binary logo.jpg]
+  publish_method = copy
+<p></pre>
+</p>
+<p>There is no default for the <copy>publish_method</copy> parameter, and
+empty sections are ignored anyway, so perhaps one can't make this more
+minimalistic.
+</p>
+<p>The <code>source</code> value may either be an absolute path, or a relative
+one, in which case it is taken relative to the working directory of
+<code>thalassa</code> (typically the root of your site sources).  In
+contrast, the <code>dest</code> value is always taken to be relative to
+the
+<a href="general_configuration.html#general_rootdir_parameter">rootdir</a>,
+even if it starts with a slash.
+</p>
+<p>Please note <strong>the <code>dest</code> parameter must contain the file
+name</strong>, it can't be just a directory to place the file in.
+</p>
+<p>In case you always set both <code>source</code> and <code>dest</code>
+explicitly, you can use any arbitrary identifier as the name of the
+section; only make sure you use different names for different sections, so
+that sections are not
+<a href="ini_basics.html#joining_sections">joined</a>.
+</p>
+<p>Both <code>source</code> and <code>dest</code> are passed through the
+macroprocessor to make
+<a href="general_configuration.html#options">options</a> available.
+</p>
+
+
+
+<h2 id="collection_section">The <code>[collection <em>NNN</em>]</code> section group<p></h2>
+</p>
+<p>The term &ldquo;<em>collection</em>&rdquo; is used in Thalassa CMS for a set of files
+to be published as they are; basically it is a directory containing files.
+</p>
+<p>Collections are defined with configuration sections named <code>[collection
+<em>NNN</em>]</code>, which contain parameters <code>sourcedir</code> (the
+collection's origin), <code>destdir</code> (where to place the files inside
+your site's tree), and all parameters enumerated in the
+<a href="#publish_methods">publish methods</a> section, such as
+<code>publish_method</code>, <code>publish_hidden</code> etc.
+</p>
+<p>Both <code>sourcedir</code> and <code>destdir</code> default to the section
+name (that <code>NNN</code> thing).  There is no default for the
+<copy>publish_method</copy> parameter, so it must be given explicitly.  See
+the <a href="#publish_methods">publish methods</a> section for a discussion
+how files are published.
+</p>
+<p>The <code>sourcedir</code> value may be both an absolute or a relative
+path, (relative to the working directory of <code>thalassa</code>,
+typically the root of your site sources).  The <code>destdir</code> value is
+always taken to be relative to the
+<a href="general_configuration.html#general_rootdir_parameter">rootdir</a>,
+even if it starts with a slash.  Set the <code>destdir</code> to
+&ldquo;<code>/</code>&rdquo; to place files right in the root directory of your site.
+</p>
+<p>If the <code>publish_recursive</code> is set to <code>yes</code> and there
+are subdirectories in your collection source directory, the same directory
+subtree will be created inside your web tree, even if the
+<code>publish_method</code> is &ldquo;<code>link</code>&rdquo; (please remember that
+directories can not be hardlinked).  Furhtermore, the same will happen for
+the &ldquo;<code>symlink</code>&rdquo; method; if you want your subdirectories to be
+symlinked rather than making the same tree, set
+<code>publish_recursive</code> to <code>no</code>.
+</p>
+<p>Please note there's no way to really ignore subsirectories in the
+<code>symlink</code> publish mode, as symbolic links to directories
+technically don't differ from symlinks to regular files.
+</p>
+<p>In case you always set both <code>sourcedir</code> and <code>destdir</code>
+explicitly, you can use any arbitrary identifier as the name of the
+collection, but make sure you use different names for different
+collections.
+</p>
+<p>Both <code>sourcedir</code> and <code>destdir</code> are passed through the
+macroprocessor to make
+<a href="general_configuration.html#options">options</a> available.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="simple_pages.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#verbatim_publishing" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="generic_files.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

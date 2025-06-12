@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="index_bars.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalassa_cmdline" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_overview.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">thalassa program invocation and command line options</a></h1>
+    <div class="page_body">
+<p>Contents: </p>
+<ul>
+<li><a href="#common_options">Available commands and common options</a></li>
+<li><a href="#builtin_texts">Printing built-in texts</a></li>
+<ul>
+    <li><a href="#help_command">The <code>help</code> command</a></li>
+    <li><a href="#show_command">The <code>show</code> command</a></li>
+</ul>
+<li><a href="#gen_command">Content generation (the <code>gen</code>
+           command)</a></li>
+<ul>
+    <li><a href="#generation_modes">Choosing the generation mode</a></li>
+    <li><a href="#target_spec">Target specification</a></li>
+    <li><a href="#spooler">Spool directory</a></li>
+</ul>
+<li><a href="#list_command">Listing configured objects</a></li>
+<li><a href="#content_manipulation">Content database manipulation</a></li>
+<ul>
+    <li><a href="#inspect_command">The <code>inspect</code> command</a></li>
+    <li><a href="#update_command">The <code>update</code> command</a></li>
+    <li><a href="#db_file_specification">File specification parameter</a></li>
+</ul>
+<p></ul>
+</p>
+
+<h2 id="common_options">Available commands and common options<p></h2>
+</p>
+<p>Generally, the <code>thalassa</code> program invocation has the following
+form:
+</p>
+<pre>
+  thalassa [<em>common_options</em>] &lt;<em>command</em>&gt; [<em>options</em>]
+<p></pre>
+</p>
+<p>where <code><em>command</em></code> is one of:</p>
+<ul>
+
+<li><code>help</code> &mdash; get help;</li>
+<li><code>show</code> &mdash; show the program's properties;</li>
+<li><code>gen</code> &mdash; generate content;</li>
+<li><code>list</code> &mdash; list configured/existing objects (PARTIALLY IMPLEMENTED);</li>
+<li><code>update</code> &mdash; update a page or comment file;</li>
+<li><code>inspect</code> &mdash; show a page or comment file's content.</li>
+<p></ul>
+</p>
+<p>The following <code><em>common options</em></code> are recognized:</p>
+<ul>
+
+<li><code>-c <em>dir</em></code> &mdash; change to the given directory
+before start;</li>
+
+<li><code>-o <em>selector</em></code> &mdash; force option selector
+(overrides the
+<a href="general_configuration.html#opt_selector"><code>opt_selector</code>
+parameter</a>);</li>
+
+<li><code>-i <em>ini_file</em></code> &mdash;  load the given ini file;
+the &ldquo;<code>-i</code>&rdquo; option may be given multiple times; in case none
+given, the default &ldquo;<code>thalassa.ini</code>&rdquo; will be used.</li>
+
+<p></ul>
+</p>
+<p>Command-specific options are described together with each command, below.
+</p>
+<p>Being run with no arguments, <code>thalassa</code> prints the same message
+as <code>thalassa&nbsp;help</code> does, but to <code>stderr</code> rather
+than <code>stdout</code>.
+</p>
+
+<h2 id="builtin_texts">Printing built-in texts<p></h2>
+</p>
+<p>The <code>help</code> and <code>show</code> commands don't actually do
+anything, they only print text messages built into the
+<code>thalassa</code> binary.  <em>Common options</em> are still accepted
+but fully ignored by these commands; being run with one of the commands,
+<code>thalassa</code> doesn't attempt to load any <code>ini</code> (nor any
+other) files.
+</p>
+
+    <h3 id="help_command">The <code>help</code> command<p></h3>
+</p>
+<p>Being invoked without additional arguments, <code>thalassa&nbsp;help</code>
+prints the program name, version and the general help message, which
+includes information on <a href="#common_options">available commands and
+common options</a>.
+</p>
+<p>The command accepts exactly one additional argument &mdash; a command name;
+being run with such argument, like <code>thalassa&nbsp;help&nbsp;gen</code>, it
+displays the command-specific help text.
+</p>
+
+    <h3 id="show_command">The <code>show</code> command<p></h3>
+</p>
+<p>Being run with no additional arguments, the command displays the same help
+message as <code>thalassa&nbsp;help&nbsp;show</code> does.  Two subcommands
+are recognized:</p>
+<ul>
+
+<li><code>thalassa&nbsp;show&nbsp;version</code> prints version
+information;</li>
+
+<li><code>thalassa&nbsp;show&nbsp;encodings</code> (or just
+<code>enc</code>) displays supported encoding names and aliases.</li>
+
+<p></ul>
+</p>
+
+
+<h2 id="gen_command">Content generation (the <code>gen</code> command)<p></h2>
+</p>
+<p><code>thalassa&nbsp;gen</code> does what <code>thalassa</code> is made for
+&mdash; generates the site's content.  Command-specific options are
+required for the <code>gen</code> command; being run with no additional
+arguments, <code>thalassa&nbsp;gen</code> prints an error message, displays
+the command-specific help text (the same as for
+<code>thalassa&nbsp;help&nbsp;gen</code>, but to stderr instead of stdout)
+and exits.
+</p>
+
+    <h3 id="generation_modes">Choosing the generation mode<p></h2>
+</p>
+<p>One and only one of the following options must be given:</p>
+<ul>
+
+<li><code>-a</code> (for <em>all</em>) &mdash; generate everyting;</li>
+
+<li><code>-r</code> &mdash; <strong>r</strong>egenerate the site;</li>
+
+<li><code>-g <em>target_list</em></code> &mdash; generate the given
+targets; see the <a href="#target_spec">Target specification</a> section
+below.</li>
+
+<p></ul>
+</p>
+<p>For both the <code>-a</code> and <code>-g</code> modes, generated content
+is placed into the target directory as configured, and is written over
+existing files if any, without any warnings; however, as existing files
+within the target tree are not checked in any way, all files not
+(re)written by <code>thalassa</code> remain unchanged.  This means, in
+particular, that if you change your <code>ini</code> files and/or the
+content database so that some of previously-existing content is no longer
+to be generated, it will remain in the target directory (from previous
+generator runs).  If this is not what you want, use the <code>-r</code>
+mode instead.
+</p>
+<p>For the <code>-r</code> mode, a temporary directory is created in the same
+upper-level directory where the configured target directory resides, and
+all the content is generated into this temporary directory.  After that,
+the target directory is renamed to have a suffix <code>.1</code>; if a
+directory with this suffix already exists, it is in turn renamed to have
+the <code>.2</code> suffix, and so on.  Finally, the temporary directory is
+renamed to the name configured as the target.
+</p>
+<p>Using the <code>-r</code> is strongly recommended for running sites, as it
+reduces the time of possible unavailability and content inconsistencies to
+the absolute possible minimum (the time between two subsequent
+<code>rename</code> syscalls).
+</p>
+<p class="remark">
+In the present version, both <code>-a</code> and <code>-g</code> modes
+write all files they generate in the most straight-forward way: the files
+are open with <code>O_WRONLY|O_CREAT|O_TRUNC</code> flags and then written
+with the <code>write</code> syscall.  In theory, this leaves the
+possibility for the HTTP server to see either an empty file, or a
+partially-generated version of it.  This shouldn't really be a problem for
+low-load sites, but the higher the load is, the higher becomes the
+probability of such inconsistencies.  This problem will likely be fixed in
+future versions of <code>thalassa</code> by generating every file under a
+temporary name and then renaming it to the desired name.
+<p></p>
+</p>
+<p>The following two additional options are recognized by the <code>gen</code>
+command:</p>
+<ul>
+
+<li><code>-t <em>target_dir</em></code> overrides the target directory
+configured in the ini files;</li>
+
+<li><code>-s</code> turns on the <em>spool directory</em> use and the
+locking (see the <a href="#spooler" />spool directory</a> section
+below).</li>
+
+<p></ul>
+</p>
+
+
+    <h3 id="target_spec">Target specification<p></h3>
+</p>
+
+<p>For the <code>-g</code> generation mode, a space- and/or comma-separated
+list of individual targets is accepted.  Be sure to use quotes to make it a
+single argument if you use spaces.
+</p>
+<p>Each individual target specification consists of a target type, target ID
+and (optionally) the item spec, separated by &ldquo;<code>=</code>&rdquo;.  Some
+examples follow:</p>
+<ul>
+
+<li><code>set=nodes=n35</code> means to generate the page <code>n35</code>
+defined in the pageset named <code>nodes</code>;</li>
+
+<li><code>set=blog</code> means to generate all pages of the
+<code>blog</code> pageset;</li>
+
+<li><code>list=videos</code> &mdash; generate the whole list named
+<code>videos</code> (both list pages and item pages, if/as configured);</li>
+
+<li><code>list=videos=v1</code> for the <code>videos</code> list, generate
+the item page <code>v1</code> only (list pages are not generated at
+all).</li>
+
+<p></ul>
+</p>
+<p>The following target types are supported: <code>list</code>,
+<code>set</code>, <code>page</code>, <code>collection</code>,
+<code>genfile</code>, <code>binary</code>, <code>aliases</code>.  Also
+<code>pageset</code> is recognized as an alias for <code>set</code>, and
+<code>bin</code> may be used instead of <code>binary</code>.
+</p>
+<p>Target type alone means to generate all targets of the type
+(e.g. all lists, or all collections).
+</p>
+<p>For the <code>page</code>, <code>genfile</code> and <code>binary</code>
+types, no item specification is allowed because they don't contain any
+items; each <code>aliases</code> section is only generated as a whole,
+too.  In the present version of <code>thalassa</code>, an item
+specification for a <code>collection</code> is allowed, but is completely
+ignored; this is subject to change in future versions.
+</p>
+
+
+    <h3 id="spooler">Spool directory<p></h2>
+</p>
+<p>Whenever the <a href="thalcgi_overview.html">Thalassa CGI program</a>
+needs to regenerate any of the site's pages, it launches the
+<code>thalassa</code> program, usually with the <code>-g</code> key, so
+that only the pages that has really changed, actually get regenerated.
+The problem is that users may change the same page (e.g., adding comments
+to it) so that two copies of <code>thalassa</code> will try regenerating
+it.
+</p>
+<p>In order to avoid conflicts, locking can be used.  This is what the
+<code>-s</code> flag does.
+</p>
+<p>If this flag is used together with the <code>-g</code>,
+<code>thalassa</code> acts as follows.  First, it adds all targets from the
+<code>-g</code>'s parameter to the spool directory; this doesn't require
+any mutual exclusion, because every target is added as a separate file, and
+the file creation operation is atomic.  After that, <code>thalassa</code>
+tries to lock the spool directory by creating a lock file in it.  In case
+the lock can't be set, the program simply exits; the targets should then
+get processed either by the instance that locked the directory, or by
+another instance that will run later.
+</p>
+<p>In case locking is successful, <code>thalassa</code> does its best to
+process all the targets found in the spool directory; even if any new
+targets are added by other instances during this process, chances are
+(although there's no guarantee) they'll get processed as well.
+</p>
+<p>The <code>-s</code> key may also be used together with both <code>-a</code>
+and <code>-r</code>.  For <code>-a</code>, things are relatively simple:
+<code>thalassa</code> tries to lock the spool directory, and exits with the
+error message in case of failure.  If the lock is successfully set, the
+program performs the requested full content regeneration, then it
+<em>processes also the targets from the spool directory</em>, if any, and
+only after that it releases the lock.
+</p>
+<p class="remark">
+It may look a bit stupid to process any targets when the site has just been
+fully regenerated; however, the problem is that <em>other instances</em> of
+<code>thalassa</code> could add some targets to the spool directory
+<em>after</em> the corresponding pages were processed in the cource of the
+full regeneration.
+<p></p>
+</p>
+<p>For the <code>-r</code> mode, the process is a bit more complicated.
+First, <code>thalassa</code> creates the temporary directory and generates
+all the content, placing it there.  This doesn't require any locking.
+The program tries to establish the lock only right before it starts with
+directory renaming, and in case acquiring the lock fails, the program quits
+with the appropriate error message.  <strong>Please note the temporary
+directory is not cleared</strong> in this case; it remains where the program
+created it, so you might want to remove it manually.
+</p>
+<p>In case the locking is successful, <code>thalassa</code> performs all the
+directory renaming as necessary, then <em>processes also the targets from
+the spool directory</em> (just like it does so for the <code>-a</code>
+case) and releases the lock.
+</p>
+
+
+
+<h2 id="list_command">Listing configured objects<p></h2>
+</p>
+<p><strong>The <code>thalassa&nbsp;list</code> command is not yet fully
+implemented, so don't expect much from it.</strong>
+</p>
+<p>We intentionally don't document it here as it is obviously not ready for
+practical use.  This situation is to be fixed in the near future.
+</p>
+
+
+
+<h2 id="content_manipulation">Content database manipulation<p></h2>
+</p>
+<p><a href="headed_text.html">Headed text files</a> used in the
+<a href="components_and_data.html">content database</a> can always be
+edited manually, with your favorite text editor (well, we like
+<a href="https://en.wikipedia.org/wiki/Vim_(text_editor)">vim</a>,
+what about you?)  However, it is convenient to have a tool to fill up the
+fields like <code>id:</code>, <code>unixtime:</code> and specially
+<code>teaser_len:</code> for you; also it is often needed to set or remove a
+tag, a label or a flag, individually or in bulk, and sometimes things like
+this are to be performed from a script.
+</p>
+<p>This is what the <code>inspect</code> and <code>update</code> commands are
+for.
+</p>
+
+    <h3 id="inspect_command">The <code>inspect</code> command<p></h3>
+</p>
+<p>The <code>thalassa&nbsp;inspect</code> command prints a headed text file header and
+optionally some lines of its body.  The command is used like this:
+</p>
+<pre>
+    thalassa [...] inspect &lt;filespec&gt; [&lt;options&gt;]
+<p></pre>
+</p>
+<p>The <code>&lt;<em>filespec</em>&gt;</code> argument is mandatory and may be
+either a file path or a Thalassa object specification; see the
+<a href="#db_file_specification">File specification parameter</a> section
+below for the parameter's description.
+</p>
+<p>The command recognizes the following options:</p>
+<ul>
+
+<li><code>-b <em>N</em></code> &mdash; show the first <em>N</em> lines of
+the body;</li>
+
+<li><code>-B</code> &mdash; show the whole body;</li>
+
+<li><code>-v</code> &mdash; output verbose messages.</li>
+
+<p></ul>
+</p>
+
+
+    <h3 id="update_command">The <code>update</code> command<p></h3>
+</p>
+<p>The <code>thalassa&nbsp;update</code> command allows to make some changes
+to the header field values of a headed text file.  The command is used like
+this:
+</p>
+<pre>
+    thalassa [...] update &lt;filespec&gt; [&lt;options&gt;]
+<p></pre>
+</p>
+<p>The <code>&lt;<em>filespec</em>&gt;</code> argument is mandatory and may be
+either a file path or a Thalassa object specification; see the
+<a href="#db_file_specification">File specification parameter</a> section
+below for the parameter's description.
+</p>
+<p>If no options are given, the command does the following:</p>
+<ul>
+
+<li>sets the <code>id:</code> field value according to the
+<code>&lt;<em>filespec</em>&gt;</code> argument; this may not be done only
+in case the program can't guess the ID value from the path you gave, but
+it is a rare situation;</li>
+
+<li>checks for the <code>unixtime:</code> field and <em>if it is not there
+or has the zero value</em>, sets it to the current time.</li>
+
+<p></ul>
+</p>
+
+<p>The following options are recognized:</p>
+<ul>
+
+<li><code>-n</code> &mdash; dry run: show what would be done but don't do;</li>
+
+<li><code>+T &lt;tag&gt;</code> &mdash; add the tag;</li>
+<li><code>-T &lt;tag&gt;</code> &mdash; remove the tag;</li>
+<li><code>+F &lt;flag&gt;</code> &mdash; add the flag;</li>
+<li><code>-F &lt;flag&gt;</code> &mdash; remove the flag;</li>
+<li><code>+L &lt;label&gt;</code> &mdash; add the label;</li>
+<li><code>-L &lt;label&gt;</code> &mdash; remove the label;</li>
+
+<li><code>-D &lt;unixtime&gt;</code> &mdash; use the &lt;unixtime&gt;
+instead of the current time;</li>
+
+<li><code>-d</code> &mdash; update the &ldquo;<code>unixtime:</code>&rdquo; field even
+if it is already there;</li>
+
+<li><code>-t</code> &mdash; update the &ldquo;<code>teaser_len:</code>&rdquo; field
+(see below);</li>
+
+<li><code>-i</code> &mdash; suppress updating of the &ldquo;<code>id:</code>&rdquo;
+field;</li>
+
+<li><code>-b &lt;suffix&gt;</code> &mdash; set the backup file suffix
+(default: &ldquo;<code>~</code>&rdquo;);</li>
+
+<li><code>-B</code> &mdash; don't create backup files;</li>
+
+<li><code>-v</code> &mdash; print verbose messages.</li>
+
+<p></ul>
+</p>
+<p>The &ldquo;<code>teaser_len:</code>&rdquo; update works as follows.  If the
+&ldquo;<code>descr:</code>&rdquo; field is set and is not empty, the
+&ldquo;<code>teaser_len:</code>&rdquo; header field is removed if it was there,
+nothing else is done.  If there's no &ldquo;<code>descr:</code>&rdquo; field or it is
+empty, the body of the file is searched for the
+&ldquo;<code>&lt;!--break--&gt;</code>&rdquo; string (literally that, no extra spaces
+or anything else is allowed) and its position is used as the new value for
+the &ldquo;<code>teaser_len:</code>&rdquo; field.  In case the string isn't found
+within the body, the field is set to the length of the body.
+</p>
+
+
+    <h3 id="db_file_specification">File specification parameter<p></h3>
+</p>
+
+<p>Both <code>inspect</code> and <code>update</code> commands require the file
+to be specified either by its path, or as a Thalassa object.
+</p>
+<p>The <code>&lt;<em>filespec</em>&gt;</code> may be either a file path or a
+Thalassa object specification.  In case the argument contains at least one
+&ldquo;<code>/</code>&rdquo;, it is taken as a path to an existing file; the Thalassa
+database is not even loaded in this case.  If the argument contains at
+least one &ldquo;<code>=</code>&rdquo;, it is considered to be a Thalassa object
+specification, which must either specify a pageset page ID, or a comment ID
+for either a list item page, or a pageset page.  In case there's neither a
+&ldquo;<code>/</code>&rdquo; nor a &ldquo;<code>=</code>&rdquo; in the argument (which is not
+recommended, it is better to use <code>./name</code> for files and
+<code><em>setID</em>=<em>pgID</em></code> for pageset pages), Thalassa will
+first try a file in the current working directory, and if there's no such
+file or it is not a regular file, will try to load the database and use the
+given name as a pageset page ID (which only works if you've got exactly one
+pageset).
+</p>
+<p>Thalassa object specifications have the form
+</p>
+<p><code>
+    [&lt;type&gt;=[&lt;realmID&gt;=]]&lt;pageID&gt;[=&lt;commentID&gt;]
+</code>
+</p>
+<p>where <code><em>&lt;type&gt;</em></code> is one of &ldquo;<code>list</code>&rdquo;,
+&ldquo;<code>set</code>&rdquo; or &ldquo;<code>pageset</code>&rdquo; (the latter two are
+equal), but is in most cases simply omitted;
+<code><em>&lt;realmID&gt;</em></code> is an ID of either a list or a
+pageset; <code><em>&lt;pageID&gt;</em></code> is either a pageset page ID,
+or an item ID within a list with item pages;
+<code><em>&lt;commentID&gt;</em></code> is, well, the comment ID.  Please
+note that in case the <code><em>&lt;commentID&gt;</em></code> is omitted,
+then the type must not be &ldquo;<code>list</code>&rdquo; and the
+<code><em>realmID</em></code> must not be a list ID because list item pages
+don't have source files, and both <code>update</code> and
+<code>inspect</code> only work with headed-text source files.  The
+<code><em>&lt;realmID&gt;</em></code> may only be omitted in case you only
+have one realm: either exactly one pageset and no lists, or no pagesets and
+exactly one list.  If you specify a pair like
+<code><em>XXX</em>=<em>YYY</em></code>, it is considered to be
+<code><em>pageID</em>=<em>commentID</em></code> if and only if you have
+exactly one realm, otherwise it is interpreted as
+<code><em>setID</em>=<em>pageID</em></code>.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="index_bars.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalassa_cmdline" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_overview.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

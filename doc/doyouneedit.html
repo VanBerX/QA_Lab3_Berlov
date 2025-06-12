@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="principles.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="index.html#doyouneedit" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="overview.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">When you do and when you don't need Thalassa CMS</a></h1>
+    <div class="page_body">
+<p>Just like any other tool, Thalassa CMS has its own strong sides and its own
+boundaries.  Here they are.
+</p>
+<h2>100% no-goes<p></h2>
+</p>
+<p>You will be definitely unable to use Thalassa CMS if at least one of the
+following is true for you:
+</p>
+<ol>
+
+<li>you use Windows and don't know how to deal with Unix-like OSes;</li>
+
+<li>you don't know HTML, even basics of it;</li>
+
+<li>you hate to edit configuration files;</li>
+
+<li>terms such as <em>command line</em>, <em>macroprocessor</em>,
+<em>relative path</em> and the like nearly make you panic;</li>
+
+<li>you believe a splendid presentation in PowerPoint may in some cases be
+more important than the subject it is devoted to;</li>
+
+<li>when it comes to IT, you suppose the newer is always the better.</li>
+
+<p></ol>
+</p>
+<p>Really, this list can save you a lot of time.  We strive
+to be honest.
+</p>
+
+<h2>&ldquo;Wrong choice&rdquo; cases<p></h2>
+</p>
+<p>Thalassa CMS is perhaps not what you need if:</p>
+<ul>
+
+<li>Your site is going to consist of exactly one page.  Or even of two
+pages.  With three pages, Thalassa might be worth trying.</li>
+
+<li>You are going to create a real monster, like, well, another facebook
+&mdash; or something else with millions of pages, billions of comments and
+zillions of requests per second.  As of now, the largest site made with
+Thalassa has only about 300 pages, less than 4000 comments and several
+hundreds unique visitors a day; we've got no idea where its limits really
+are.  (From the other hand, what on Earth can be more efficient than
+content stored and served as static HTML files?  Thalassa does exactly
+this, but, once again, we never tested it with huge sites)</li>
+
+<li>It is critical for you to create and edit pages on your site
+through a web interface (or maybe let others do).  In the present version,
+Thalassa only gives web-based access to comments, which means its CGI
+program allows to leave new comments, edit existing comments and perform
+moderation; but that's all.  Regular pages are still to be created,
+modified and deleted by means of editing files; Thalassa only takes the
+responsibility to generate all common things such as headers, footers,
+menus and the like.</li>
+
+<li>You'd like a lot of random people to have access to your site's content
+manipulation (except for comments).  For example, you want to create
+another &ldquo;platform&rdquo; for people to write their own blogs.
+Later versions
+might have features for this, but the present version doesn't.</li>
+
+<li>You need visitors to be able to login using their accounts registered
+somewhere else, such as social media accounts, google accounts etc.</li>
+
+<li>You're sure you need to keep detailed track of what a visitor does at
+your site.</li>
+
+<p></ul>
+</p>
+
+
+<h2>Closer matches<p></h2>
+</p>
+<p>Here are some cases Thalassa may serve you good:</p>
+<ul>
+
+<li>you need a relatively small site, like a personal blog, or a site
+devoted to an exotic hobby &mdash; with or without user comments;</li>
+
+<li>you only need a bunch (well... 10 to 1000, or even 3 to 100'000) of
+HTML pages with similar appearance;</li>
+
+<li>you've got a Unix machine on Internet, running an MTA like Exim or
+Postfix, and you wanna have a web form that allows visitors to send emails
+to you and maybe several others;</li>
+
+<li>you're short of resources (like RAM and CPU) on your server.</li>
+
+<p></ul>
+</p>
+
+
+<h2>&ldquo;Bingo!&rdquo; cases<p></h2>
+</p>
+<p>Finally, here are the cases when Thalassa CMS may be not just the only
+possible choice, but may even appear to be the thing you were many years
+waiting for:</p>
+<ul>
+
+<li>you are tired of all these "no problem" ecosystems of Perl, Python,
+Ruby and the like, devouring your time like piranhas;</li>
+
+<li>you've got more than enough of these "simple and reliable" SQL engines,
+which are, well, very easy to operate and certainly never fail;</li>
+
+<li>someone just told you that CMS you chose for your site several years
+ago becomes unsupported now, and there's no way to keep all your content
+migrating to something newer; or, maybe, nobody actually told you so but
+you've once seen it in a nightmare;</li>
+
+<li>you're familiar with git (or any other distributed versioning tool) and
+you'd like to deploy an exact copy of your site on your local computer with
+next to no effort;</li>
+
+<li>you hate JavaScript (and, broadly speaking, the idea of executing
+anything inside the visitor's browser) at least half as strong as we
+do;</li>
+
+<li>every time when another damn &ldquo;modern&rdquo; site tells you that your
+browser is &ldquo;outdated&rdquo; or the like, you feel you'd love to sentence its
+creators to death penalty;</li>
+
+<li>today's morning you were pissed off by another site your browser hanged
+trying to show;</li>
+
+<li>you've just read the whole page until this point.</li>
+
+<p></ul>
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="principles.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="index.html#doyouneedit" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="overview.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

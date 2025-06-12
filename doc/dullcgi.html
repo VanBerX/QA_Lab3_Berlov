@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="scriptpp.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#dullcgi" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">The dullcgi framework</a></h1>
+    <div class="page_body">
+
+
+<p>Contents:</p>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#getting_started">Getting started</a></li>
+<li><a href="#config_file">Configuration file</a></li>
+<li><a href="#macros">Macros</a></li>
+<li><a href="#dullcgi_class">Using the <code>DullCgi</code> class object</a></li>
+<ul>
+<li><a href="#config_access">Accessing the configuration file</a></li>
+<li><a href="#macroprocessor_control">Controlling the macroprocessor</a></li>
+<li><a href="#sending_response">Sending the response to the client</a></li>
+</ul>
+<p></ul>
+</p>
+<h2 id="overview">Overview<p></h2>
+</p>
+<p>The dullcgi framework consists of some (but not all) modules from the
+<code>thalcgi.cgi</code> program, accompanied with the dedicated module
+named <code>dullcgi.o</code>, and is intended to ease creation of
+additional (custom) CGI programs for Thalassa-based web sites.  Basically
+it enables the user to create a CGI program, which uses its own
+configuration file (in <a href="ini_basics.html">ini format</a>) as well as
+the <a href="macro_intro.html">macroprocessor</a>.
+</p>
+<p>In the present version, dullcgi only allows to handle GET requests; also it
+doesn't provide access to the session information and user accounts.  This
+will likely change in future versions.
+</p>
+<p>Dullcgi is a <em>framework</em>, not a library in the classic sense.  It
+provides its own <code>main</code> function, and expects the user to
+provide a function named <code>dullcgi_main</code> and two globally visible
+constants of the type <code>const&nbsp;char&nbsp;*</code>, named
+<code>dullcgi_config_path</code> and <code>dullcgi_program_name</code>.
+</p>
+<p>Facilities provided by the framework are mainly accessed through an object
+of the <code>DullCgi</code> class; the object is created by the framework,
+and its address is passed to the user-supplied function as its only
+parameter.
+</p>
+<p>The framework is built as a static library archive file (one with the
+``<code>.a</code>'' suffix), in which all necessary object files are
+placed, not only those from Thalassa own codebase (the
+<code>$thalassa/cms/</code> directory), but also all the necessary
+libraries from the <code>$thalassa/lib/*</code> subdirectories.  The
+archive is named simply <code>dullcgi.a</code>, without the usual
+<code>lib</code> prefix, to make it clear <strong>it is not a
+library</strong> despite the file is in the static library format.
+</p>
+
+
+<h2 id="getting_started">Getting started<p></h2>
+</p>
+<p>It might be a good idea to take the <code>$thalassa/examples/testcgi</code>
+directory's content as a kind of starting point.  Well, the user module in
+this example is perhaps the simplest thing possible, here is it:
+</p>
+<pre>
+#include &lt;dullcgi.hpp&gt;
+int dullcgi_main(DullCgi *cgi)
+{
+    cgi->SendPage("default");
+    return 0;
+}
+const char *dullcgi_config_path = "test.ini";
+const char *dullcgi_program_name = "TEST";
+<p></pre>
+</p>
+<p>As you might guess, the <code>dullcgi_config_path</code> constant's value
+sets the name for the configuration file the framework must read.  The
+<code id="progname">dullcgi_program_name</code> constant is a more or less
+arbitrary name for your CGI program; it is only used as a part of the
+default error page, which is displayed only in case the framework couldn't
+read the configuration file.
+</p>
+<p>The <code>dullcgi_main</code> function in this (perhaps the simplest
+possible) version causes the framework to unconditionally send to the
+client the HTML page configured by the <code>[page default]</code> section
+within the configuration file.  Please note the function
+returns&nbsp;<code>0</code>; the value it returns is then returned by the
+framework from its <code>main</code> function, so it becomes the exit code
+for the whole CGI program.  You should only return a non-zero value in case
+everything went so wrong that you don't want even an error message to be
+sent back to the requesting client; well, hardly you'll ever need it.
+</p>
+<p>A really simple configuration
+example is provided in the <code>dumb.ini</code> file (yes, it's not the
+default version), here is the full contents of the file:
+</p>
+<pre>
+[page default]
+
+template = &lt;?xml version="1.0" encoding="us-ascii"?&gt;
++&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
++             "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;
++&lt;html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"&gt;
++  &lt;head&gt;
++    &lt;meta http-equiv="Content-Type" content="text/html; charset=us-ascii" /&gt;
++    &lt;title&gt;Simple test CGI program with dumb configuration&lt;/title&gt;
++  &lt;/head&gt;
++  &lt;body&gt;
++    &lt;h1&gt;It WORKS!&lt;/h1&gt;
++  &lt;/body&gt;
++&lt;/html&gt;
++
+<p></pre>
+</p>
+<p>The simplest version of the CGI program doesn't detect any errors on its
+own, only the errors detected by the framework are processed, so it is more
+or less acceptable to have no custom error page.  The default page in this
+example is configured in the simplest possible way &mdash; its full text is
+given, with no calls to macros.  If you decide to follow this way in your
+own configuration, please <strong>keep in mind that the percent char
+&ldquo;<code>%</code>&rdquo; is used by the macroprocessor to recognize
+macro calls</strong>, so in case you need the &ldquo;<code>%</code>&rdquo;
+char in your text, the char must be doubled.
+</p>
+<p>To build your CGI program, first make sure the <code>dullcgi.a</code> file
+is ready for use; it builds by default if you just order your Thalassa
+sources to build with a simple ``<code>make</code>'' command.  Then, a
+command like
+</p>
+<pre>
+   THAL=path/to/your/thalassa/directory \
+      g++ -Wall -g -I${THAL}/cms -I${THAL}/lib mycgi.cpp \
+      ${THAL}/cms/dullcgi.a -o mycgi.cgi
+<p></pre>
+will do the thing.
+</p>
+<p>You might want to authomate the things a bit, using a
+<code>Makefile</code>.  A reasonable simplistic example of such file is
+provided in the same directory.
+</p>
+
+
+
+<h2 id="config_file">Configuration file<p></h2>
+</p>
+<p>The first thing the dullcgi framework does after the CGI program start is
+reading and parsing the configuration file.  In case this fails, the
+framework emits its default (hardcoded) error page and quits; the
+user-supplied function doesn't even get the control.
+</p>
+<p>Normally, the configuration file, which has the
+<a href="ini_basics.html">ini format</a>, should contain: </p>
+<ul>
+
+<li>one or more <code>[page&nbsp;<em>NNN</em>]</code> sections (where
+<code><em>NNN</em></code> is an internal page identifier, intended for the
+user-supplied code to identify the desired page);</li>
+
+<li><code>[html]</code> section which contains snippets and templates;</li>
+
+<li><code>[errorpage]</code> that defines the error page template;</li>
+
+<li><code>[redirectpage]</code> that defines the page sent to the client
+along with a redirect directive.</li>
+
+<p></ul>
+</p>
+<p>The very minimum here is a single <code>[page&nbsp;<em>NNN</em>]</code>
+section, as it is shown in the <a href="#getting_started">getting
+started</a> section.  Parameters recognized within each of the
+configuration sections are documented below.
+</p>
+<p>Besides the configuration sections and parameters recognized by the dullcgi
+framework, the configuration file may contain any information specific for
+a particular CGI program.  The <code>DullCgi</code> class provides a method
+to access such custom parameters.
+</p>
+<p>The present version of dullcgi recognizes exactly one parameter, named
+<code>template</code>, for each of the page-defining sections
+(<code>[page&nbsp;<em>NNN</em>]</code>, <code>[errorpage]</code> and
+<code>[redirectpage]</code>).  The parameter's value is passed through the
+macroprocessor to make the full page text.
+</p>
+
+<p><span id="context_specific_macros"></span>
+In the <code id="errorpage_section">[errorpage]</code>
+<code>template</code> parameter's value, three additional macros are
+recognized:</p>
+<ul>
+
+<li><code>%progname%</code> expands to the <em>program name</em> as set by
+the <a href="#progname"><code>dullcgi_program_name</code></a>
+constant;</li>
+
+<li><code>%errcode%</code> expands to the HTML error code for the error to
+be reported, like <code>404</code>, <code>500</code> etc.;</li>
+
+<li><code>%errmessage%</code> expands to the HTML error message, like
+<code>page not found</code>.</li>
+
+<p></ul>
+</p>
+<p>In the <code id="redirectpage_section">[redirectpage]</code>
+<code>template</code> parameter's value, the framework recognizes one
+additional macro, named <code>url</code>, which expands to the target URL
+for the redirection being processed.
+</p>
+<p>The <code>[html]</code> section of the configuration file, introduced to
+contain text snippets and simple templates, works exactly the same way as
+<a href="general_configuration.html#html_section"><code>[html]</code>
+sections</a> for both static content generator and the
+<code>thalcgi.cgi</code> program (use the link for details).
+</p>
+
+
+<h2 id="macros">Macros<p></h2>
+</p>
+<p>The dullcgi framework makes all <a href="common_macros.html">common
+macros</a> available in the configuration file.  Besides that, the
+following macros are made available by the framework and work exactly the
+same way as for the <code>thalcgi.cgi</code> program:</p>
+<ul>
+
+<li><a href="thalcgi_baseconf.html#req_macro"><code>%[req: ]</code></a></li>
+<li><a href="thalcgi_baseconf.html#getenv_macro"><code>%[getenv: ]</code></a></li>
+<li><a href="thalcgi_baseconf.html#html_section"><code>%[html: ]</code></a></li>
+
+<p></ul>
+</p>
+<p>Some <a href="#context_specific_macros">context-specific macros</a> may
+also be in effect within certain configuration parameters.
+</p>
+<p>Besides that, the user-supplied (that is, your) module can introduce
+additional macros using the <code>DullCgi</code> class methods.
+</p>
+
+
+<h2 id="dullcgi_class">Using the <code>DullCgi</code> class object<p></h2>
+</p>
+<p>The function <code>dullcgi_main</code>, which your module must provide, is
+called by the framework with the address of <code>DullCgi</code> class
+object as its argument.  All features of the framework are mostly accessed
+through this object.
+</p>
+<p>Before we go on with the object's methods documentation, please note the
+classes provided by the <a href="scriptpp.html">Scriptpp library</a> are
+heavily used by these methods.  Be sure to take a look at the brief
+overview of the library (follow the link for it) before reading the
+<code>DullCgi</code> class interface documentation, or else you're at risk
+not to understand anything.
+</p>
+<p>To be really short, let's remind that <code>ScriptVariable</code> is a
+class representing strings, <code>ScriptVector</code> represents a
+(resizeable) vector of strings.  The Scriptpp library also provides
+implementation for the macroprocessor used by Thalassa CMS; the
+macroprocessor itself is represented by the
+<code>ScriptMacroprocessor</code> class (or its descendant), and every
+macro is implemented by a subclass of the (abstract) class
+<code>ScriptMacroprocessorMacro</code>.
+</p>
+<p>It is also useful to keep in mind that <code>ScriptVariable</code> provides
+a converting constructor for <code>const&nbsp;char*</code>, so for all
+arguments of type <code>const&nbsp;ScriptVariable&amp;</code> you can use
+simple string literals (in doublequotes).
+</p>
+
+
+   <h3 id="config_access">Accessing the configuration file<p></h3>
+</p>
+<p>It is highly likely you'll want your configuration file to hold some
+parameters specific to your very particular CGI program.  From within the
+<code>dullcgi_main</code> function, as well as from any other (your)
+function you passed the <code>DullCgi</code> object pointer to, you can
+access the configuration file contents with the following method:
+</p>
+<pre>
+    ScriptVariable GetConfigValue(const ScriptVariable &amp;sectgrp,
+                                  const ScriptVariable &amp;sect,
+                                  const ScriptVariable &amp;param,
+                                  const ScriptVariable &amp;specifier,
+                                  bool expand_macros) const;
+<p></pre>
+</p>
+<p>The first four parameters determine what information you'd like to access,
+while the last one (<code>expand_macros</code>) tells the framework whether
+should the information extracted from the config file get passed through
+the macroprocessor before it will be returned to you.
+</p>
+<p>To understand the first four parameters, suppose you have something like
+</p>
+<pre>
+  [foo bar]
+  manager:friday = John
+  manager = Alice
+<p></pre>
+in your configuration file.  Then, to get that name <code>John</code>, you
+should use code like this:
+</p>
+<pre>
+  ScriptVariable manager_name =
+      cgi->GetConfigValue("foo", "bar", "manager", "friday", true);
+<p></pre>
+(use <code>manager_name.c_str()</code> after that to get the C string).
+Please note that the parameter value given with no
+<a href="ini_basics.html#parameter_specifiers">specifier</a>
+(<code>Alice</code>) serves as a kind of default, so it will be
+returned for any value of the <code>specifier</code> argument other than
+<code>"friday"</code>.  You can use <code>0</code> (which produces
+&ldquo;invalid&rdquo; <code>ScriptVariable</code>) if you just need the
+default value.
+</p>
+<p>In case the section you're trying to access is not a part of a group, that
+is, its name consists of only one word, then the second argument for the
+method must be left zero, too.  So, if you've got smth. like
+</p>
+<pre>
+  [abra]
+  cadabra = blah-blah
+<p></pre>
+then use
+</p>
+<pre>
+      cgi->GetConfigValue("abra", 0, "cadabra", 0, true);
+<p></pre>
+to get that <code>"blah-blah"</code> value.
+</p>
+<p>Sometimes these <a href="ini_basics.html#sectiongroups">section groups</a>
+can be used to define a kind of an array, or a list, or whatever else you
+actually don't know the number of elements nor their names in advance;
+actually, Thalassa CMS heavily uses this capability, e.g., to create
+<a href="lists.html#ini_based_lists">ini-based lists</a>.  If you do
+something like that in your configuration file, you might want to be able
+to figure out which sections there are in a given section group.  This is
+done by the
+</p>
+<pre>
+    int GetSectionNames(const ScriptVariable &amp;group_id,
+                        ScriptVector &amp;names) const;
+<p></pre>
+method.  Suppose your configuration file contains the following:
+</p>
+<pre>
+  [item foo]
+  enable = yes
+
+  [item bar]
+  enable = yes
+
+  [item bazz]
+  enable = yes
+<p></pre>
+(it is critical to have at least one non-empty parameter in each of the
+sections).  Then, you can act like this:
+</p>
+<pre>
+      ScriptVector names;
+      int count;
+      count = cgi->GetSectionNames("item", names);
+<p></pre>
+After that, the <code>count</code> variable will contain the
+number&nbsp;<code>3</code>, and the <code>name</code> object will hold
+three strings: <code>"foo"</code>, <code>"bar"</code> and
+<code>"bazz"</code>.
+</p>
+
+
+   <h3 id="macroprocessor_control">Controlling the macroprocessor<p></h3>
+</p>
+<p>The framework creates the macroprocessor object on its own, filling it with
+the <a href="#macros">predefined macros</a>.  You can control the
+macroprocessor to some extent.  To work with it, you will perhaps need to add
+</p>
+<pre>
+  #include &lt;scriptpp/scrmacro.hpp&gt;
+<p></pre>
+to your module.
+</p>
+<p>To add your own macro, specific to your CGI program, either derive
+a class from
+<a href="scriptpp.html#macro_class"><code>ScriptMacroprocessorMacro</code></a>,
+or use one of the predefined classes, such as
+<code>ScriptMacroConst</code> or <code>ScriptMacroScrVar</code>.
+Make an object with operator <code>new</code> and pass the pointer to the
+framework using the method
+</p>
+<pre>
+    void AddMacro(ScriptMacroprocessorMacro *p);
+<p></pre>
+Please note the ownership over the object is considered to be transferred
+here, that is, once you called this method, the macro object from now on
+belongs to the macroprocessor and will be deleted by its destructor.
+That's why it <strong>must</strong> be created with <code>new</code> and in
+no other way.
+</p>
+<p>You can set the vector of
+<a href="scriptpp.html#positionals"><code>positionals</code></a> for the
+macroprocessor using metod
+</p>
+<pre>
+    void SetPositionals(const ScriptVector &amp;v);
+<p></pre>
+</p>
+<p>Sometimes it may be necessary to add some macros locally, perform some
+transformations, then forget the macros.  This may be achieved by creating
+a temporary (local) clone of the macroprocessor.  The <code>DullCgi</code>
+class provides the following two methods for that:
+</p>
+<pre>
+    ScriptMacroprocessor *MakeMacroprocessorClone() const;
+    static void DisposeMacroprocessorClone(ScriptMacroprocessor *p);
+<p></pre>
+Please keep in mind that objects of macros you pass to the local clone will
+belong to the clone and will be deleted once you dispose the clone object.
+</p>
+
+
+
+   <h3 id="sending_response">Sending the response to the client<p></h3>
+</p>
+<p>Once you're done with all preparations and other things your CGI might need
+to complete, you must tell the framework what actually to send to the
+client.  To do so you must call exactly one of the following methods:
+</p>
+<pre>
+    void SendPage(const ScriptVariable &amp;pgid);
+    void SendErrorPage(int code, const ScriptVariable &amp;cmt);
+    void SendRedirect(const ScriptVariable &amp;url);
+<p></pre>
+</p>
+<p>The <code>SendPage</code> method is used in case everything is Ok, so your
+program should just send a web page to the client.  The page must be
+configured in the <a href="#config_file">configuration file</a> using a
+<code>page</code> section, like this:
+</p>
+<pre>
+  [page mypage]
+  template = ...
+<p></pre>
+</p>
+<p>To instruct the framework that this page is the one to be sent, simply use
+a statement like this:
+</p>
+<pre>
+    cgi->SendPage("mypage");
+<p></pre>
+</p>
+<p>The text taken from the respective <code>template</code> parameter will be
+passed through the macroprocessor, and the result will be sent to the
+client with the &ldquo;success&rdquo; code (<code>200</code>).
+</p>
+<p>In case something went wrong, you might want to call the
+<code>SendErrorPage</code> instead of <code>SendPage</code>, like this:
+</p>
+<pre>
+    cgi->SendErrorPage(404, "page not found");
+<p></pre>
+</p>
+<p>or even
+</p>
+<p><span id="teapot"></span>
+</p>
+<pre>
+    cgi->SendErrorPage(418, "i'm a teapot");
+<p></pre>
+</p>
+<p>(to have an idea what's the matter with teapots here, please read
+<a href="https://en.wikipedia.org/wiki/Hyper_Text_Coffee_Pot_Control_Protocol#Save_418_movement">this
+Wikipedia article</a>).
+</p>
+<p>The page sent to the client will be generated using the
+<a href="#errorpage_section"><code>[errorpage]</code> section</a> of the
+configuration file.
+</p>
+<p>Please note that, although the framework really tries to set the error code
+in the <code>Status</code> field of the response, in most cases the HTTP
+server has its own idea what to send to the client in that field.
+</p>
+<p>The last possibility is to request the client to redirect the user to some
+other place.  It is done like this:
+</p>
+<pre>
+    cgi->SendRedirect("http://www.example.com/place/to/go");
+<p></pre>
+</p>
+<p>Together with the redirect response, a &ldquo;backup&rdquo; page is usually
+sent, which informs the user what's going on and provides a link to click
+in case something went wrong with the browser's ablility to redirect
+authomatically.  The dullcgi framework generates a page for this purpose
+using the <a href="#redirectpage_section"><code>[redirectpage]</code>
+section</a>.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="scriptpp.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#dullcgi" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

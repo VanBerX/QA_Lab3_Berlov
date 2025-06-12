@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="aliases.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#blocks" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="menus.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Blocks</a></h1>
+    <div class="page_body">
+<p>Contents: </p>
+<ul>
+<li><a href="#whatfor">What blocks and block groups are and what
+                       they are for</a></li>
+<li><a href="#blockgroup_section">The <code>[blockgroup&nbsp;]</code>
+                       section</a></li>
+<li><a href="#block_section">The <code>[block&nbsp;]</code> section</a></li>
+<li><a href="#blocks_macro">The <code>%[blocks:&nbsp;]</code> macro</a></li>
+<p></ul>
+</p>
+
+<h2 id="whatfor">What blocks and block groups are and what they are for<p></h2>
+</p>
+<p>When a site has a lot of pages, there almost always are some little things
+you want to display on every page, like a common header, and actually
+that's what static generators are all about.  With Thalassa, this is
+achieved easily because all pages are generated using a limited number of
+templates, and, furthermore, these templates, despite they may differ, may
+be (and usually are) built on common HTML snippets.  So, it is easy to
+insert some content into <em>all</em> your pages.
+</p>
+<p>Things become a little more complicated when you've got some content to
+display on <em>many</em> pages but not on <em>all</em> of them.  This is
+what blocks are for.
+</p>
+<p>First of all, define one or more <em>block groups</em>, each one
+corresponding to a place in your page layout where you want some common
+pieces of content to appear.  For example, you can define a group for your
+side panel (well, should you have both left and right side panels on your
+site, you'll need two block groups, but you don't have two side panels, do
+you?), another group for your ceiling, one more group to have some
+microblocks within your site's header &mdash; well, you've got the idea.
+Technically a block group is a named object that consists of three
+templates: for the begin and the end of the code that displays the group,
+and for blocks themselves.
+</p>
+<p>Once your groups are ready, insert them into your templates that define
+layout of your pages; this is done by calling the
+<code>%[blocks:&nbsp;]</code> macro.
+</p>
+<p>The next step is to define your blocks.  Each block has a name, consists of
+a title and a body, and may also have a <em>tag</em>; you can assign
+<em>weight</em> values to your blocks to arrange them within their block
+group (the more the weight is, the later that block appears within its
+group).
+</p>
+<p>Finally, take care about what blocks appear on each of your pages.  If a
+block has no tag, it will appear in every existing instance of the group it
+belongs to.  If the tag is set, the block will only appear on pages where
+this tag is either specified for the page itself (by the <code>tags:</code>
+header field of a page set item source, or by the <code>tags</code>
+parameter within a list item ini section), or given in the third argument
+passed to the <code>%[blocks:&nbsp;]</code> macro call.
+</p>
+
+
+<h2 id="blockgroup_section">The <code>[blockgroup&nbsp;]</code> section<p></h2>
+</p>
+<p>Block groups are defined by ini file sections of the
+<code>blockgroup</code> section group, with section headers like
+</p>
+<pre>
+  [blockgroup <em>NAME</em>]
+<p></pre>
+</p>
+<p>&mdash; where <em id="blockgroup_name">NAME</em> is the block group name.
+The name is used in block definitions to bind blocks to groups, and as the
+second argument in <a href="#blocks_macro"><code>%[blocks:&nbsp;]</code>
+macro</a> calls to identify the group.
+</p>
+<p>Three parameters are recognized within these sections:</p>
+<ul>
+
+<li><code>begin</code> &mdash; defines the HTML code snippet that starts
+the block group;</li>
+
+<li><code>end</code> &mdash; defines the HTML code snippet that ends
+the block group;</li>
+
+<li><code>block_template</code> &mdash; defines the template used to
+generate HTML code for every block in the group.</li>
+
+<p></ul>
+</p>
+<p>All parameters are passed through the macroprocessor; within the
+<code>block_template</code> parameter's value, an additional
+macro named <code>blk</code> is available to provide
+access to the title and the body of the block being generated.
+In the present version of Thalassa this macro has four functions:</p>
+<ul>
+
+<li><code>%[blk:title]</code> returns the block's title;</li>
+
+<li><code>%[blk:body]</code> is replaced with the block's body;</li>
+
+<li><code>%[blk:id]</code> returns the block's ID (the name of the
+corresponding <code>[block&nbsp;]</code> section);</li>
+
+<li><code>%[blk:tag]</code> returns the tag set for the block, or empty
+string if the block has no tag.</li>
+
+<p></ul>
+</p>
+
+<h2 id="block_section">The <code>[block&nbsp;]</code> section<p></h2>
+</p>
+<p>Ini file sections of the <code>block</code> section group are used
+to define individual blocks; so, a block definition starts with a header of
+the form
+</p>
+<pre>
+  [block <em>ID</em>]
+<p></pre>
+</p>
+<p>Be sure to give each block a distinct <em>ID</em>.  Being distinct is in
+fact the only role for these <em>ID</em>s; they can be accessed from
+within the <code>block_template</code> parameter of the corresponding
+<code>blockgroup</code> ini section, but it is not necessary to use them
+this way, and there are no other ways at all.
+</p>
+<p>The following parameters are recognized:</p>
+<ul>
+
+<li><code>title</code> &mdash; the title of the block (the text to be
+returned by <code>%[blk:title]</code>);</li>
+
+<li><code>body</code> &mdash; the body of the block (the text to be
+returned by <code>%[blk:body]</code>);</li>
+
+<li><code>group</code> &mdash; the name of the block group this block is to
+belong to;</li>
+
+<li><code>tag</code> &mdash; the tag; may be omitted or left empty, which
+means the block will be displayed in all instances of its group;</li>
+
+<li><code>weight</code> &mdash; the integral number (negatives are okay),
+which determines the position of the block within its group (the more the
+weight is, the later the block appears).</li>
+
+<p></ul>
+</p>
+<p>Only the values of <code>title</code> and <code>body</code> are passed
+through the macroprocessor; the rest of the parameters aren't.
+</p>
+
+
+
+
+<h2 id="blocks_macro">The <code>%[blocks:&nbsp;]</code> macro<p></h2>
+</p>
+<p>The <code>%[blocks:&nbsp;]</code> macro is intended to be used within
+templates that form your pages' layout.  The macro accepts two arguments;
+first of them is the <a href="#blockgroup_name">name</a> of the block group
+to be displayed, and the second is a comma-separated list of tags, possibly
+empty.
+</p>
+<p>Being called, the macro composes the requested block group and returns the
+resulting HTML code.  Each block of these belonging to the given group is
+displayed if either its <em>tag</em> is empty, or it is found in the list
+passed as the third parameter, or the macro is being called from within
+a context where a <em>list item</em> is available (that is, the page being
+generated is either a <a href="page_sets.html">page set item</a>, or a
+<a href="lists.html#list_item_pages">list item page</a> for an ini-sourced
+list), and the block's tag is in the list item's array of tags.
+</p>
+
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="aliases.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#blocks" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="menus.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

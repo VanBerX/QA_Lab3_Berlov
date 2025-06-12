@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_overview.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_baseconf" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_pages.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Thalassa CGI configuration basics</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ul>
+<li><a href="#conf_file">Configuration file</a></li>
+<li><a href="#macros">CGI-specific macros</a></li>
+<li><a href="#global_conf">Configuring global parameters</a></li>
+<li><a href="#html_section">HTML snippets and templates</a></li>
+<li><a href="#error_page">The error page</a></li>
+<li><a href="#special_pages">Special pages</a></li>
+<p></ul>
+</p>
+
+<h2 id="conf_file">Configuration file<p></h2>
+</p>
+<p>There's one thing you should keep in mind configuring the CGI program.  The
+web server runs CGIs in directories where they are, so whenever the CGI
+receives control, its current working directory is the directory where the
+binary resides.  This fact is actively used from the very start:
+<strong>the program expects to find its configuration file
+(<code>thalcgi.ini</code>) in its current working directory, which
+effectively means it must be placed in the same directory with the
+<code>thalcgi.cgi</code> binary itself</strong>.
+</p>
+<p>As usual, the file is in the <a href="ini_basics.html">ini format</a>.
+</p>
+<p>In the present version, the configuration file name is hardcoded.  If you
+<strong>really</strong> need it to either have another name or be located
+elsewhere, then either edit the file <code>thalcgi.cpp</code> (see the
+<code>THALASSA_CGI_CONFIG_PATH</code> macro near the start of the file) and
+rebuild, or simply build with
+<code>-DTHALASSA_CGI_CONFIG_PATH="your/path/file.ini"</code>.
+</p>
+<p><strong>WARNING: the configuration file must be kept private as it contains
+a secret for checking the captcha.</strong>  Okay, the most serious harm
+you can get by leaking your <code>thalcgi.ini</code> is that someone
+circumvents your captcha, well, unless you place something more sensitive
+in your configuration file on your own, but you don't, do you?   Anyway,
+please don't underestimate the possible consequences.  Unfortunately
+enough, the file has to be placed inside your web space, so certain care
+must be taken in order not to expose it to arbitrary people through your
+web server.  It is strongly recommended to use <code>suexec</code> so that
+your CGIs are executed under UID/GID other than your web server's, and keep
+the configuration file readable to its owner only (e.g., mode
+<code>0600</code>).
+</p>
+<p class="remark">The CGI program even performs a check at every start.
+In case the current UID differs from the UID of the configuration file's
+owner, it assumes there's no <code>suexec</code> (perhaps we're running
+under the UID of the HTTP server) and aborts the check letting the things
+go.  It doesn't mean everything's fine, but hardly the simple program can
+do anything about it.  If, however, the UIDs are equal, the program checks
+if there are any permissions for the configuration file for
+<em>others</em>, and refuses to continue if so.  A built-in error page is
+sent to the client.  In case you see it, do something like
+<code>chmod&nbsp;o-rwx&nbsp;thalcgi.ini</code> to fix the problem.  If you
+place your <code>thalcgi.ini</code> into your web space with the help of
+the <code>thalassa</code> program (e.g., as a <a href="verbatim_publishing.html#binary_section">binary object</a>), which is
+recommended, be sure to place &ldquo;<code>chmod&nbsp;=&nbsp;600</code>&rdquo; into
+the binary configuration section.<p></p>
+</p>
+
+
+<h2 id="macros">CGI-specific macros<p></h2>
+</p>
+<p>Just like the <code>thalassa</code> program, the CGI program actively uses
+<a href="macro_intro.html">macros</a> in its configuration file.  Besides
+the <a href="common_macros.html">common macros</a>, there are some
+CGI-specific macros, only available in the <code>thalcgi.ini</code> file,
+and, certainly, in some contexts there are context-specific macros as well.
+</p>
+<p>Some of these are directly related to particular features such as pages,
+sessions, comments and so on; such macros will be documented along with the
+respective features.  However, some of the CGI-specific macros don't fall
+into any of the feature-specific categories.  To keep the picture
+consistent, we'll document them right here.
+</p>
+<p><span id="req_macro"></span>
+The <code>%[req:&nbsp]</code> macro provides access to certain properties
+of the HTTP request being handled.  As usual, its first parameter must be
+the name of a <em>function</em>; the following functions are supported:
+</p>
+<ul>
+
+<li><code>%[req:method]</code> returns the request method, which is either
+<code>GET</code> or <code>POST</code>; other request methods s are not
+supported by the Thalassa CGI program, so the control will not reach the
+program parts that expand this macro;</li>
+
+<li><code>%[req:document_root]</code> is the filesystem path to the
+server's <em>Document Root</em>, as it is thought of by your HTTP
+server;</li>
+
+<li><code>%[req:host]</code>, <code>%[req:script]</code> and
+<code>%[req:path]</code> return the respective parts of the URL from the
+request being served; e.g., if the user requests something like
+<code>http://www.example.com/cgi/thalcgi.cgi/foo/bar</code>, then the three
+functions will return <code>www.example.com</code>,
+<code>/cgi/thalcgi.cgi</code> and <code>/foo/bar</code>, respectively;</li>
+
+<li><code>%[req:port]</code> returns the TCP port number being used,
+usually this is 80 for HTTP and 443 for HTTPS, but not necessarily, because
+any TCP server, including a web server, technically can be run on any TCP
+port;</li>
+
+<li><code>%[req:param:<em>NAME</em>]</code> returns the &ldquo;query parameter&rdquo;
+of the given name, or an empty string if there's no such parameter;</li>
+
+<li><code>%[req:cookie:<em>NAME</em>]</code> returns the given cookie's
+value or an empty string if there's no such cookie; note that Thalassa CMS
+only sets and handles one cookie, named <code>thalassa_sessid</code>, but
+this function still can be useful in case you run other CGI scripts on your
+site and they set/handle something else.</li>
+
+<p></ul>
+</p>
+<p><span id="getenv_macro"></span>
+The <code>%[getenv:&nbsp]</code> macro gives access to the environment
+variables; actually it is just a wrapper for a well-known
+<code>getenv</code> function from the standart C library.  It accepts
+exactly one argument, the name of the variable, and returns the respective
+value, or an empty string in case the variable is empty or unset; there's
+no way to tell these apart.  As the CGI protocol makes heavy use of the
+environment, this macro becomes an important tool, specially in case some
+information you need for some reason is not available through the
+<code>%[req:]</code> macro.
+</p>
+
+
+<h2 id="global_conf">Configuring global parameters<p></h2>
+</p>
+<p>The global parameters are set within the <code>[general]</code> section.
+As of the present, three parameters are expected:
+<code>userdata_dir</code>, <code>post_content_limit</code> and
+<code>post_param_limit</code>.
+</p>
+<p>The <code>userdata_dir</code> sets the path to the
+<a href="thalcgi_overview.html#database">database directory</a>, where
+sessions, user accounts and other dynamic information is stored.
+The path must be either absolute (not recommended), or relative to the
+CGI's working directory (which is, let's repeat it, the directory where the
+CGI binary is placed).
+</p>
+<p>It's better to place the database directory outside of your web tree, so
+the path will start with one or more &ldquo;<code>../</code>&rdquo;.  Make sure the
+directory is available for &ldquo;write&rdquo; and &ldquo;execute&rdquo; for the CGI program
+(that is, for the UID/GID under which the CGI runs).  The directory itself
+must exist, which means you must make it, the program won't do this for
+you; however, it will create all necessary subdirectories and all work
+files inside.
+</p>
+<p>The other two parameters, <code>post_content_limit</code> and
+<code>post_param_limit</code>, are intended to limit the size of what the
+client can send within a POST request; both parameters set the default
+value which can be overriden on a per-page basis (with parameters with the
+same name within the <code>[page&nbsp;]</code> configuration section), and
+both are given as integers, in kilobytes (damn, a kilobyte is 1024 bytes,
+don't trust anyone who tries to convince you otherwise).  The
+<code>post_content_limit</code> is the maximum size of the POST request
+body, which means that in case the value of the <code>CONTENT_LENGTH</code>
+environment variable is greater than this value times 1024, the CGI refuses
+to work and displays the respective error page.
+</p>
+<p>The funny thing about the <code>post_param_limit</code> is that it is
+completely ignored by the current Thalassa CGI version, because the present
+version doesn't handle the <code>multipart/form-data</code> POST body
+format (which is used for forms that upload files).
+</p>
+
+
+<h2 id="html_section">HTML snippets and templates<p></h2>
+</p>
+<p>Just like the <code>thalassa</code> program configuration, the
+<code>thalcgi.ini</code> can (and perhaps <em>should</em>) contain the
+<code>[html]</code> section, in which HTML snippets and simple templates
+are defined.  The snippets and templates can be accessed by
+<code>%[html:<em>snippet_name</em>]</code> macro calls.
+</p>
+<p>Both the ini file section and the macro work exactly the same way as in the
+<code>thalassa</code> program; please refer to the
+<a href="general_configuration.html#html_section"><code>[html]</code>
+section description</a> for details and examples.
+</p>
+
+
+<h2 id="error_page">The error page<p></h2>
+</p>
+<p>In case something goes wrong, the CGI program has to display an <em>error
+page</em>.  For the case there are problems with the configuration file,
+e.g., it doesn't exist, unreadable or is in wrong format, the program uses
+a built-in template for the error page.  The same is true for the case you
+didn't specify your custom template for the error page, but it is strongly
+not recommended to rely on that.
+</p>
+<p>The custom error page template is set by creating a
+<code>[errorpage]</code> section, which is presently supposed to contain
+only one parameter, named <code>template</code>.  The parameter's value is
+passed through the macroprocessor to make the actual HTML code.  Two
+context-specific macros are available within the template:
+<code>%errcode%</code> expands to the 3-digit error code (like 404 for
+&ldquo;page not found&rdquo;), and <code>%errmessage%</code> expands to the error
+message, as composed by the program.
+</p>
+<p>In the present version all messages are hardcoded, which is likely to
+change in the future.
+</p>
+
+
+<h2 id="special_pages">Special pages<p></h2>
+</p>
+<p>Error page is one of the three <em>special pages</em> supported by
+Thalassa.  In contrast to ordinary pages, special pages are not bound to
+particular paths; by they nature, they can be displayed in place of any
+other page in case Thalasa CGI can't (or is not allowed to) display what the
+user requests.  The two other special pages are
+<code>[nocookiepage]</code>, which is displayed instead of the requested
+page in case the page requires a work session to be active but the user
+doesn't have one, and <code>[retrycaptchapage]</code>, displayed when the user
+tried to solve the CAPTCHA test but failed.  Both pages are supposed to
+contain the CAPTCHA test challenge and the input form to submit the answer.
+The two pages will be documented along with session handling.
+</p>
+
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_overview.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_baseconf" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_pages.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

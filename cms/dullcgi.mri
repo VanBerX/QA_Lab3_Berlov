@@ -1,0 +1,6 @@
+create dullcgi.a
+addmod dullcgi.o xcgi.o basesubs.o cgicmsub.o imgsize.o fnchecks.o urlenc.o xrandom.o
+addlib ../lib/scriptpp/libscriptpp.a
+addlib ../lib/inifile/libinifile.a
+save
+end

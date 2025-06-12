@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> &nbsp;&nbsp; <a href="userdoc.html#components_and_data" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="ini_basics.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Components of the CMS and their data sources</a></h1>
+    <div class="page_body">
+<p>Thalassa CMS consists of two programs (executable binaries):</p>
+<ul>
+<li> <code>thalassa</code>, which is effectively a static HTML content
+generator;</li>
+<li> <code>thalcgi.cgi</code>, a CGI program implementing (fully
+server-side) interactive functions of the site.</li>
+<p></ul>
+</p>
+<p>The CGI program runs the generator program whenever it is necessary to
+rebuild (renew) certain parts of the site; in the present version, this
+happens when a user comment is added, edited, or its status is changed
+using the web interface; only the page containing the comment is rebuilt.
+</p>
+<p>Both programs are configured using user-editable configuration files (in <a href="ini_basics.html">ini format</a>).  The main configuration file for
+the generator (<code>thalassa</code>) is by default named
+<code>thalassa.ini</code> (this may be overriden with command line
+options); additional ini files can be (and usually are) specified both at
+command line and within the main ini file.
+</p>
+<p>Besides that, <code>thalassa</code> is able to use the so-called
+<em>content database</em>, which is effectively a <strong>directory tree
+with text files</strong>, one file per HTML page to be generated and one
+file per each user comment.  The content database is intended to be
+modified by the CGI program, but in the present version, only user comments
+are modifiable this way, while page source files are to be edited manually.
+</p>
+<p>Content database is optional; HTML pages can also be completely specified
+within ini files.  Using the database is only necessary for the user
+comments, so in case you don't need them, the content database can be
+omited completely, although using it may make your site maintenance more
+convenient.  And remember, the &ldquo;database&rdquo; is actually just a directory
+with text files, nothing special nor requiring running daemons nor
+performing maintenance.
+</p>
+<p>The CGI program (<code>thalcgi.cgi</code>) is configured with exactly one
+ini file, which is named <code>thalcgi.ini</code> and must reside in the
+same directory with the CGI program itself.  The ini file must only be
+readable for the CGI program; the program checks whether the file is only
+readable for its owner, and refuses to work otherwise.  <strong>It is
+critical to keep the ini file's content private.</strong>  Please consider
+using <code>suexec</code> to run the CGI program, so it runs under a UID
+different from the http server's uid; if for any reason you can't use
+suexec, make sure your web server is configured to never ever disclose the
+content of the <code>thalcgi.ini</code> file.
+</p>
+<p>Besides the ini file, the CGI program uses the so-called <em>session
+database</em>, which is another directory tree, used to store current
+sessions, account details for registered users, information regarding email
+addresses and domains, and the moderation queue.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> &nbsp;&nbsp; <a href="userdoc.html#components_and_data" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="ini_basics.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="headed_text.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#generation_objects" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="general_configuration.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">What objects Thalassa is able to generate</a></h1>
+    <div class="page_body"><p>Contents:</p>
+<ul>
+<li><a href="#baselevel">Generated files, existing files and aliases</a></li>
+<li><a href="#pages">Stand-alone HTML pages and other text files</a></li>
+<li><a href="#pagesets">Page sets</a></li>
+<li><a href="#lists">Lists</a></li>
+<li><a href="#aliases">Aliases</a></li>
+<li><a href="#additionals">Additional objects</a></li>
+<p></ul>
+</p>
+<h2 id="baselevel">Generated files, existing files and aliases<p></h2>
+</p>
+<p>A web site generated with Thalassa CMS is almost entirely static (it can
+even be fully static if you don't use interactive features), and a static
+web site is essentially a directory tree with files.  Some of these files
+are text, primarily the web pages themselves, represented with HTML; but
+your site can contain (and serve upon requests via the HTTP(S) protocol)
+binary files as well, and most of existing sites contain at least images
+(photos, pictograms and the like) represented as binaries.
+</p>
+<p>The <code>thalassa</code> program can basically do three kind of things:</p>
+<ul>
+<li>generate text files (containing anything you want, not only HTML);</li>
+<li>publish existing files verbatim, as they are &mdash; that is, copy
+existing files into you web site's tree, or link them instead of copying,
+or make symlinks to them; both binary and text files can be published,
+essential here is that they must already exist somewhere,
+<code>thalassa</code> only makes them available within the web tree;</li>
+<li>make symlinks inside your web site's tree, thus creating kind of
+&ldquo;aliases&rdquo;.</li>
+<p></ul>
+</p>
+<p>For publishing existing files, not too many variants exist: you can instruct
+<code>thalassa</code> to publish a single file (this is called
+<code>binary</code>, but certainly you can publish a text file this way as
+well) or to publish an entire directory (a <code>collection</code>).  For a
+&ldquo;collection&rdquo;, you can choose to publish subdirectories recursively or to
+ignore them, to follow symlinks, ignore symlinks or make exactly the same
+symlinks, to ignore &ldquo;hidden&rdquo; files (that is, files with names starting
+with a dot &ldquo;<code>.</code>&rdquo;) or to publish them as well.  Actually, it
+doesn't seem a lot of other things can be invented for the purpose of
+<a href="verbatim_publishing.html">verbatim publishing</a> (use the link to
+learn more).
+</p>
+<p>For text files' generation, there are a lot of different features, and it's
+clear why: actually, that's what <code>thalassa</code> is made for.
+</p>
+
+
+<h2 id="pages">Stand-alone HTML pages and other text files<p></h2>
+</p>
+<p>The simplest thing you can do is just to generate a single stand-alone HTML
+page, or even an arbitrary text file.  BTW, we actively &ldquo;abuse&rdquo; this
+feature to generate these <code>.htaccess</code> files for Apache;
+sometimes we even generate configuration files for the
+<code>thalcgi.cgi</code> program.  Also it is relatively easy to make an
+RSS feed (which is technically just an XML file) with what Thalassa is
+capable of, and the stand-alone page facility fits this need the best.
+</p>
+<p>A page (or, generally, a file) to
+generate may be entirely defined by a single <code>[page]</code> section in
+<a href="ini_basics">ini files</a>, or you can create a
+<code>[template]</code> section and then let several <code>[page]</code>
+sections use it.  The detailed description is found on the page devoted to
+<a href="simple_pages.html">creating simple pages</a>.
+</p>
+<p>Besides that, <code>thalassa</code> features generation of arbitrary text
+files outside of your web tree.  This may be useful, e.g., to create
+configuration files for some third-party software, using options and other
+values defined in your ini files written for <code>thalassa</code>.
+This feature is called <em>genfile</em> (for <em>generic file</em>), and is
+configured with a <code>[genfile]</code> section.  See the
+<a href="generic_files.html">generic files</a> page for the description.
+</p>
+
+
+<h2 id="pagesets">Page sets<p></h2>
+</p>
+<p>A more advanced approach to HTML pages generation is so called
+<a href="page_sets.html">page sets</a>.  In your source tree, a page set is
+essentially a directory containing one <em>object</em> per each page you
+want to generate; the object may be either a text file in the <a href="headed_text.html">headed text format</a>, or a directory containing
+such a file (in this case, additional files, like images, may be added).
+Within ini files, a set is defined by a <code>[pageset]</code> section; to
+add more pages, you just place more files or directories into the set
+source directory, and on the next run of the generator they all become
+pages of your site.
+</p>
+<p>It is useful to remember that sets as such are unordered.  From the other
+hand, a set can serve as a source for a so-called <em>list</em>, or even
+for several lists.
+</p>
+
+
+<h2 id="lists">Lists<p></h2>
+</p>
+<p>The <a href="lists.html">lists</a> are perhaps the hardest-to-explain
+concept behind Thalassa, but they are extremely useful and, surprisingly,
+are in fact quite easy to use, once you understood what they are.
+</p>
+<p>To start the explanation, let's say that a list is, well, a list &mdash; an
+ordered list of items.  Every item may (but not necessarily do) correspond
+to a page to be generated; if this is the case, adding another item to your
+list causes <code>thalassa</code> to generate one more HTML file, called
+<em>list item page</em> (not to be confused with <em>list pages</em>).  The
+<em>list item</em> itself (in contrary to the item page) is (intended to
+be) a relatively small piece of text, usually HTML.
+</p>
+<p>List items (again, not to be confused with list item pages) can be put
+together in either direct or reverse order, thus forming, well, the list as
+such.  You can choose to generate a single <span id="list_pages">list
+page</span> (and once again, not
+to be confused with list item pages), or an array of list pages, having
+your choosen amount of items per page.  Furthermore, you can mark the list
+as <em id="embedded_lists">embedded</em>; in this case no list pages will
+be generated at all, and the list itself will be available wherever you
+want via a macro call.
+</p>
+<p>If you need to understand better what is this all about, imagine a classic
+blog (not a microblog, it's important) or a news line.  Every
+<em>item</em>, be it a blog entry or a news article, is represented both as
+its own page and as a short summary made for inclusion in various lists so
+that people can take a look and find the items interesting for them.  These
+lists often tend to grow rapidly so a clear need arises to break the single
+very long list down to pages, showing a certain amount (say, 20 or the
+like) items per page.  Such a blog or a news line is exactly what Thalassa
+lists are designed for (but they can be used for other purposes as well).
+</p>
+<p>A list is defined by a <code>[list&nbsp;]</code> section in the ini files, but
+this is only the very beginning of the story, because such a section only
+defines the list as a whole object, and one needs some way to define the
+<em>items</em> as well.  In the present version, there are two
+possibilities.
+</p>
+<p>First, you can introduce your own
+<a href="ini_basics.html#sectiongroups">section group</a> in your ini
+files for this purpose; for example, if you want to create a blog, the word
+<code>blog</code> may serve as a good name for such a section group, so
+individual entries in your blog will be defined by sections whose headers
+have the form <code>[blog&nbsp;<em>ENTRY_ID</em>]</code>, like
+<code>[blog&nbsp;20230207_my_birthday]</code>,
+<code>[blog&nbsp;20230401_fools]</code> etc; well, actually you can have
+any IDs you want, and they will turn into file names, like
+<code>20230207_my_birthday.html</code>, <code>20230401_fools.html</code>
+and so on.
+</p>
+<p>The second possibility is that you can use an existing <a href="#pagesets">page set</a>, or any subset of it, as the source for your
+list; actually one page set can serve as a source for several different
+lists.  Page sets are by their nature unordered, so using them as list
+sources involves additional files that explicitly enumerate page set items
+to be included into a particular list, in the order they should appear in
+the list.
+</p>
+<p>Besides the main intended use (for blogs, news lines and other similar things),
+lists can be conveniently used for some other purposes.  For instance, if you
+need to create some similar pages, but don't want to have a separate file
+for each of them (or, may be, you just want to use <a href="macro_intro.html">Thalassa macroprocessor</a> in their source texts,
+which is impossible within <a href="headed_text">headed text files</a> used
+for page sets), you can use for this purpose a list with ini file sections
+as its source.  List item pages will serve your need, while the list itself
+in this case is most probably unneeded.  To suppress generation of the list
+pages (you don't confuse them with list item pages, do you?), the list may
+be declared &ldquo;embedded&rdquo;.
+</p>
+<p>In contrast, lists that use page sets as their item sources usually don't
+have item pages, because pages are in fact already there &mdash; they get
+generated as pages of the page set.  So, likely for such a list you'll need
+only the list itself, not item pages.  However, Thalassa list facility allows
+even this: you can instruct it to generate for your list its own item
+pages, which may look different from those generated for the set.
+</p>
+<p>One more interesting thing about lists is that a single source can serve
+more than one lists.  For example, if you have a news line on your site,
+but it has its own page, not the main page of your site, then you might
+want to have something like &ldquo;last news&rdquo; list on the main page.  This can
+be done easily just by creating another list on the same source as your
+news.  And one more list for the same source can be used to generate an RSS
+feed (which is technically just an XML file) for your news.
+</p>
+<p>As usual, see the <a href="lists.html">page devoted to lists</a> for more
+information.
+</p>
+
+
+<h2 id="aliases">Aliases<p></h2>
+</p>
+<p class="remark">If you don't need these bloody aliases, you can easily
+<a href="#end_of_aliases">skip this section</a>.  This must be true if you
+are going to create a new site from scratch; we strongly recommend not to
+involve any aliases until you absolutely have to.<p></p>
+</p>
+<p>Aliases are used when a single HTML page (or other object served via
+HTTP(S) from your site) for any reason should be accessible with more than
+one local URI.  For example, suppose you have a real (that is, existing)
+file named <code>foo/drink/drive.html</code> within your web tree, so it
+has a full URL like <code>http://www.example.com/foo/drink/drive.html</code>,
+and (for any reason we don't want to know) you want it also to be
+accessible as <code>foo/smoke/fly.html</code>, which means the full URL
+<code>http://www.example.com/foo/smoke/fly.html</code> should return the
+same content.
+</p>
+<p>For a static site there are basically two approaches to achieve this.  The
+simpler one is just to create <code>foo/smoke</code> directory and put
+there the appropriate symbolic link, which for this example would be named
+<code>fly.html</code> and must point to <code>../drink/drive.html</code>.
+</p>
+<p>This is exactly what <a href="aliases.html">Thalassa CMS aliases</a> do.
+Objects configured for this purpose are known as &ldquo;alias groups&rdquo;; you can
+have several of them, although more than one is rarely needed.  An alias
+group is defined by an <code>[aliases <em>ID</em>]</code> section in your
+ini files.  In the simplest case, such a section will have just one
+parameter, which is also named <code>aliases</code> and contains a list of
+pairs &lt;alias&nbsp;+&nbsp;original&gt;.  For every pair, Thalassa will
+compute the shortest possible symbolic link and create it.
+</p>
+<p>Unfortunately, sometimes this is not sufficient to do what you need,
+specially when you're moving an existing and well-established site from a
+&ldquo;traditional&rdquo; CMS like Drupal or Joomla, and want to keep all your URIs
+working so that no links on third party sites get broken.  Such sites are
+usually served in a fully-dynamic manner, which effectively means you don't
+have any real files nor directories there, hence your visible URIs are not
+bound by any filesystem-related reality.  When there are no bounds, the
+so-called &ldquo;webmasters&rdquo; often create URI trees very difficult to reproduce
+with a filesystem path tree.
+</p>
+<p>Suppose you need <code>foo/smoke/fly.html</code> to point to one (real)
+document, and <code>foo/smoke</code> to point to another one.
+</p>
+<p>Well, <strong>do your best to avoid such nonsense as long as you
+can</strong>.
+</p>
+<p>However, if you really have no other choice, then the second approach to
+aliases has to be involved, and it is to instruct your HTTP server (e.g.
+Apache) to do some alchemy on URIs before actually serving the request.
+</p>
+<p>It is possible to put an <code>.htaccess</code> file into your web root
+directory and place there as many <code>RewriteRule</code>s as you need to
+fully match what is needed.  Well, you can even generate this
+<code>.htaccess</code> file as a <a href="#pages">stand-alone page</a>, but
+Thalassa will not help you to generate the appropriate &ldquo;rules&rdquo;, you'll
+have to do it on your own.  But you can end up with such an amount of
+&ldquo;rules&rdquo; that you'll have to decide this is not the way to go.
+</p>
+<p>What Thalassa can actually help is to try hybrid approach, using symbolic
+links as mush as possible and only leaving unresolvable cases to your HTTP
+server.  In the example above, you can still add two pairs to your list of
+aliases:
+</p>
+<pre>
+    foo/smoke/fly.html:foo/drink/drive.html
+    foo/smoke:foo/bur/buzz.html
+<p></pre>
+</p>
+<p>&mdash; but, knowing perfectly this can't work, you can <em>in the same
+<code>[aliases&nbsp;]</code> section</em> specify explicitly that
+<code>foo/smoke</code> contains other links and hence has to be a real
+directory, not a symbolic link.  After that you can also instruct Thalassa to
+generate a file inside each of such directories, set the name for the file,
+and specify a template for its content, where a local macro will be
+substituted with the target URI (taken from the list).  Most probably the
+name will be <code>.htaccess</code>, and the file will contain the
+appropriate redirect directive.
+</p>
+<p>Detailed instructions are found at the <a href="aliases.html">page devoted
+to aliases</a>.  If you really need them, well, we wish you good luck.
+</p>
+<p><div id="end_of_aliases"></div>
+</p>
+
+
+
+<h2 id="additionals">Additional objects<p></h2>
+</p>
+<p>Additional objects are something which is not generated as separate files
+within your site's tree; instead, they are certain pieces of HTML code
+inserted here and there in your generated files.
+</p>
+<p>Of what we have discussed already, <a href="#embedded_lists">embedded
+lists</a> make a good example of additional objects.  Besides that,
+Thalassa supports <a href="blocks.html">blocks</a>, <a href="menus.html">menus</a>, <a href="index_bars.html">index
+bars</a> and <a href="comment_sections.html">user comment sections</a>.
+</p>
+<p><strong>Block</strong> is simply an HTML code snippet; it doesn't even have
+to look like a &ldquo;block&rdquo;; in most cases it does, but generally it may be
+anything you want.  Every block belongs to a <em>block group</em>, and each
+block group is a thing accessible via a macro call.  The idea behind a
+block group is to represent something you want to appear on all (or many)
+of your pages, like a side panel, bottom or even something within or near
+the header of every page.  Each block may have an associated <em>tag</em>,
+and the macro which generates a block group accepts an additional argument,
+allowing to pass a list of tags; a particular block will appear on the
+particular page (within the group) either if the block has no tag (which
+effectively means &ldquo;show me everywhere&rdquo;), or its tag is found in the set
+passed to the macro, or among the tags the page itself has.  See the
+<a href="blocks.html">blocks and block groups page</a> for more info.
+</p>
+<p><strong>Menu</strong> is effectively a list of links you want to appear in
+more than one place of your site (up to the case of every page).  This
+could be achieved by already existing instruments, e.g., embedded lists,
+blocks or even simply <a href="general_configuration.html#html_macro">html
+snippets</a>, but there's one property specific for menus: if a menu
+is displayed on a page to which one of its items points, that particular
+item should be displayed differently (e.g., &ldquo;disabled&rdquo;).  Menus provided
+by Thalassa involve associating a label with every menu item, and the
+macro, which generates the menu, also accepts a label as its argument; if
+the label matches, the corresponding menu item is displayed using
+alternative template.  More information, including detailed instructions,
+is provided at <a href="menus.html">the page devoted to menus</a>.
+</p>
+<p><strong id="index_bars">Index bars</strong> are used for
+<em>arrays of pages</em>, which means there are several automatically
+generated pages, ordered and, more importantly, <em>numbered</em>.  In the
+present version of Thalassa, there are exactly two cases of such
+arrays:</p>
+<ul>
+<li><a href="#list_pages">list pages</a> (not to be confused with
+list item pages) for lists that don't fit on a single page;</li>
+<li>copies of a single page (either list item one, or a page set item)
+generated to display a large amount of user comments in a distributed
+manner.</li>
+<p></ul>
+</p>
+<p>Appearance of index bars is configurable, and the result if available
+by calling a macro.  For details, see the <a href="index_bars.html">page
+devoted to index bars</a>.
+</p>
+<p>The last type of an &ldquo;additional object&rdquo; is a <strong id="comment_sections">user comment section</strong>.  Only
+list item pages and page set items may have comments; stand-alone pages in
+the present version of Thalassa are not suitable for publishing comments.
+In contrast with all the other types of additional objects, comment
+sections are not available through macro calls; instead, templates for
+pages suitable for comments are broken down to two parts, first for the
+page itself, and the second for the &ldquo;page tail&rdquo;; the comment section,
+if it exists, is placed between the page segments expanded from those template
+parts.  Additional pages (with the same content, but containing other
+portions of the comments) are generated automatically, as appropriate.
+</p>
+<p>Comments are configured by comment style ini file sections; <a href="#lists">page lists</a> and <a href="#pagesets">page sets</a> support
+configurable parameters to reference one of the existing configured styles
+and to set some additional options.  Detailed description is on the
+<a href="comment_sections.html">page devoted to comment sections</a>.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="headed_text.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#generation_objects" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="general_configuration.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

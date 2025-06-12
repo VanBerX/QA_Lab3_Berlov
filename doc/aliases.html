@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="lists.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#aliases" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="blocks.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Aliases</a></h1>
+    <div class="page_body">
+<p>First of all, let us repeat the warning we already gave: <strong>don't use
+the aliases feature until you're absolutely forced to</strong>.  For
+instance, if you're working on a brand new site, you shouldn't need
+aliases, and if you think you do, chances are you're doing something
+terribly wrong.
+</p>
+<p>If you decide to continue reading this page, be sure to read
+<a href="generation_objects.html#aliases">the introduction</a> first.  Even
+if you already read it, it might be a good idea to refresh the impression.
+</p>
+
+
+
+Aliases are defined with ini file sections of the <p><code>aliases</code> group,
+e.g.
+</p>
+<pre>
+  [aliases main]
+<p></pre>
+</p>
+<p>The particular section name (<code>main</code> in this example) play no
+real role, so you can pick an arbitrary identifier for this purpose.  The
+only limitation is that in case you need more than one section in the
+<code>aliases</code> group (which is <strong>highly</strong> unlikely), you
+must choose distinct names for them.
+</p>
+<p>The aliases as such must be listed in the <code>aliases</code> parameter.
+Its value is a text consisting of lines, one alias per line.  Every line
+must consist of two strings, delimited with a colon &ldquo;<code>:</code>&rdquo;, the
+first string being the alias, and the second string being the original
+path.  Both are relative to the site's tree root, and both <strong>must
+not</strong> have a leading&nbsp;&ldquo;<code>/</code>&rdquo;.  Leading and trailing
+whitespace is stripped off; empty (and whitespace-only) lines are ignored;
+in the present version all lines that contain no colon are ignored as well,
+but this may change one day.
+</p>
+<p>Thalassa does its best to make shortest possible symlinks, but always make
+them point to relative paths; it also makes directories as necessary.  For
+example, if the following aliases are configured:
+</p>
+<pre>
+  [aliases main]
+  aliases = foo/bar/bur.html    : site/node/burbur.html
+            site/node/abra.html : site/node/cadabra.html
+            foo/bar/star.html   : foo/bur/foobar.html
+<p></pre>
+</p>
+<p>then Thalassa will try to make directories <code>foo</code>,
+<code>foo/bar</code> and <code>site/node</code> (but it looks like it will
+only make the <code>foo/bar</code> as the other two are already there),
+and the following symlinks will be created: <code>foo/bar/bur.html</code>
+(to <code>../../site/node/burbur.html</code>),
+<code>site/node/abra.html</code> (to <code>cadabra.html</code>) and
+<code>foo/bar/star.html</code> (to <code>../bur/foobar.html</code>).  Just
+like both Unix <code>symlink</code> syscall and <code>link&nbsp;-s</code>
+command, Thalassa does not check the target in any way, it just creates the
+requested symlinks, even if they become dangling.
+</p>
+<p>In case you've got a lot of aliases, it might be a good idea to place them
+in a separate file and use smth. like this:
+</p>
+<pre>
+  [aliases main]
+  aliases = %[readfile:aliases.lst]
+<p></pre>
+</p>
+<p>Sometimes aliases may conflict, like this:
+</p>
+<pre>
+  [aliases main]
+  aliases = foo/bar/bur.html : node/a.html
+            foo/bar          : node/b.html
+<p></pre>
+</p>
+<p>Thalassa does not (at least in the present version) try to solve such
+conflicts in any way, it just fails and reports an error; which of the
+aliases will fail depends on their order, i.e., in this example Thalassa
+will fail to create the <code>foo/bar</code> symlink because there is
+already a directory with that name, but if you swap the lines, then
+<code>foo/bar/bur.html</code> will fail because <code>foo/bar</code>
+already exists and is not a directory.
+</p>
+<p>There is a way to solve such a situation, but the solution must be applied
+manually.  First of all, use the <code>force_dirs</code> parameter <em>in
+the same <code>aliases</code> section</em> to supply Thalassa with names
+that must be handled as directories.  The parameter's value is a
+comma-separated list of paths; leading and trailing whitespace for each
+list item is stripped.  Every time Thalassa encounters an alias item whose
+name (the path to the left of the colon) is included into the
+<code>force_dirs</code> list, it makes the corresponding directory instead
+of creating a symlink; then, a text file is generated inside such a
+directory.  The name of the file is set by the <code>dir_file_name</code>
+parameter, and the contents for the file is defined by the
+<code>dir_file_template</code> parameter, in which, besides all usual
+macros, a macro named <code>%target%</code> is supported; it is replaced
+with the target path of the alias being handled this way (the path to the
+right of the colon).  Usually the file is named <code>.htaccess</code>, and
+its text consists of the appropriate <code>RewriteRule</code> directive;
+refer to the Apache documentation for details.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="lists.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#aliases" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="blocks.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

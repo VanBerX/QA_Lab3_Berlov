@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="comment_sections.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#index_bars" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalassa_cmdline.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Index bars</a></h1>
+    <div class="page_body">
+
+
+<p>Index bars in Thalassa are used to navigate in arrays of numbered
+pages; such arrays emerge in two situations:</p>
+<ul>
+
+<li>list pages for lists that consist of more items than the configured
+amount per page, so they don't fit on a single page;</li>
+
+<li>pages with comment sections when there are more comments than the
+configured per-page limit, so several pages have to be generated.</li>
+
+<p></ul>
+</p>
+<p>Index bar is inserted into the HTML code by calling the
+<code>indexbar</code> macro, which accepts two arguments as follows:
+<code>%[indexbar:<em>NAME</em>:<em>ANCHOR</em>]</code>.  The <em>NAME</em>
+identifies the desired <em>style</em>, which is defined with an ini file
+section headed like <code>[indexbar&nbsp;<em>NAME</em>]</code>.  The
+<em>ANCHOR</em> argument may be omitted, but if given, it is used
+both as an <code>id</code> attribute value for the whole index bar, and as
+an anchor part of URIs pointing to other pages of the array from within the
+index bar.  This allows the user to keep the cursor at the index bar when
+switching pages one by one.
+</p>
+<p>When the amount of pages exceeds certain threshold, the bar starts to omit
+some links.  In case the current page is far from both the begin and the
+end of the array, links to the first <em>N</em> pages, last <em>N</em>
+pages and <em>N</em> pages both to the left and to the right from the
+current are displayed; the <em>N</em> is called <em>tailsize</em> and is
+set by the indexbar style.
+</p>
+<p>The <em>index bar style</em> (or, strictly speaking, all the HTML code the
+bar consists of) is defined with an ini section that belongs to the
+<code>indexbar</code> group.  Sections of this group must contain the
+following parameters:</p>
+<ul>
+
+<li><code>begin</code> &mdash; HTML code that starts the index bar;</li>
+<li><code>end</code> &mdash; HTML code that ends the index bar;</li>
+<li><code>link</code> &mdash; template for an active link;</li>
+<li><code>greylink</code> &mdash; template for a disabled link;</li>
+<li><code>curpos</code> &mdash; template to show the current page number;</li>
+<li><code>break</code> &mdash; HTML code to display ellipsis or whatever
+else where some links are omitted;</li>
+<li><code>textprev</code> &mdash; text for the link to the previous page;</li>
+<li><code>textnext</code> &mdash; text for the link to the next page;</li>
+<li><code>textfirst</code> &mdash; text for the link to the first page;</li>
+<li><code>textlast</code> &mdash; text for the link to the last page;</li>
+<li><code>tailsize</code> &mdash; the number <em>N</em>, which controls how
+many links to display at the ends of the bar and around the current page.</li>
+
+<p></ul>
+</p>
+<p>Within the templates, <code>%0%</code> is expanded to the desired text for
+the link, <code>%1%</code> is replaced with the URL for the link, and
+<code>%2%</code> represents the <em>ANCHOR</em> as specified at the
+<code>%[indexbar:]</code> macro call.
+</p>
+<p>Here's an example of an index bar style section:
+</p>
+<pre>
+  [indexbar index1]
+  begin = &lt;div class="index1"%[if:%2%: id="%2%":]&gt;
+  end = &lt;/div&gt;
+  link = &lt;a href="%1%%[if:%2%:#%2%:]" class="idx_link"&gt;%0%&lt;/a&gt;
+  greylink = &lt;span class="idx_grey"&gt;%0%&lt;/span&gt;
+  curpos = &lt;span class="idx_curr"&gt;%0%&lt;/span&gt;
+  break = &lt;span class="idx_break"&gt;...&lt;/span&gt;
+  textprev = &amp;#x2BC7;
+  textnext = &amp;#x2BC8;
+  textfirst = &amp;#x2BC7;&amp;#x2BC7;
+  textlast = &amp;#x2BC8;&amp;#x2BC8;
+  tailsize = 2
+<p></pre>
+</p>
+<p>(These unicode-represented chars look like this: <code>&amp;#x2BC7;</code> is
+&ldquo;&#x2BC7;&rdquo;, <code>&amp;#x2BC8;</code> is &ldquo;&#x2BC8;&rdquo;).
+</p>
+<p>In case you decide not to use anchors, things can be simplified a bit:
+</p>
+<pre>
+  begin = &lt;div class="index1"&gt;
+  end = &lt;/div&gt;
+  link = &lt;a href="%1%" class="idx_link"&gt;%0%&lt;/a&gt;
+  ...
+<p></pre>
+</p>
+<p>We don't recommend to do so but this can be easier to understand.
+</p>
+<p>Refer to various CSS manuals on how to define CSS classes
+<code>index1</code>, <code>idx_link</code>, <code>idx_grey</code>,
+<code>idx_curr</code> and <code>idx_break</code> properly.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="comment_sections.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#index_bars" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalassa_cmdline.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

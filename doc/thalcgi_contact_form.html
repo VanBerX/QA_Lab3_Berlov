@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_user_accounts.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_contact_form" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_comments.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Site contact form</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#feedback_action">The <code>feedback</code> action and the web form</a></li>
+<li><a href="#feedback_section">The <code>[feedback]</code> section</a></li>
+<ul>
+   <li><a href="#categories_conf">Configuring categories</a></li>
+   <li><a href="#envelope_from">The &ldquo;envelope from&rdquo; address</a></li>
+   <li><a href="#feedback_macro">The <code>%[feedback:&nbsp;]</code> macro</a></li>
+   <li><a href="#email_conf">Email composition and sending configuration</a></li>
+</ul>
+<p></ul>
+</p>
+
+
+
+
+<h2 id="introduction">Introduction<p></h2>
+</p>
+<p>Site contact form is a Thalassa CGI feature that lets people to contact the
+site's team by sending email messages to some predefined email addresses.
+Besides the obvious input fields for a sender address, a subject and a
+message body, the user should be provided with the ability to choose a
+<em>category</em> from a predefined list.  More or less good examples of
+categories are &ldquo;technical support&rdquo;, &ldquo;legal questions&rdquo;, &ldquo;vacancies&rdquo;,
+&ldquo;report a typo&rdquo; and the like.
+</p>
+<p>It is also possible to preselect a category using URIs.  This may be useful
+in case a link to the contact form is to be placed somewhere at the site,
+like &ldquo;contact our tech support department for details&rdquo;, so the particular
+category is too obvious to leave the choice to the user.
+</p>
+<p>Each category has its title, intended to be visible for the user; a
+separate email address can be specified for each category, but a default
+address can be set as well, so one can specify the default address and
+specific addresses for <em>some</em> (but not necessarily <em>all</em>)
+categories.
+</p>
+<p>To have a contact form on the site, one first needs to configure
+categories, composing rules and email sending command; this is done with a
+<a href="#feedback_section"><code>[feedback]</code> ini section</a>.
+Besides that, a page (or multiple pages) must be
+<a href="#page_tips">configured</a> to display the feedback webform and
+to accept <code>POST</code> requests with the <code>feedback</code> action.
+</p>
+
+
+<h2 id="feedback_action">The <code>feedback</code> action and the web form<p></h2>
+</p>
+<p>The <a href="thalcgi_webforms.html#list_of_actions">action</a> that
+performs sending feedback messages is named <code>feedback</code>.  Unlike
+all actions we discussed before, this action accepts an optional argument
+&mdash; the name of the preselected feedback category, if there is one.
+It is intended to be used on a
+<a href="thalcgi_pages.html#multipath">multipath page</a>, e.g.:
+</p>
+<pre>
+  [page contact]
+  action = feedback %1%
+<p></pre>
+</p>
+<p>This type of setup intends that at URI like
+<code>/thalcg.cgi/contact</code> a form will appear that allows the user
+to select the feedback category manually, while URIs like
+<code>/thalcg.cgi/contact/legal</code> will display generally the same
+form, but with the &ldquo;category&rdquo; input disabled and the actual category
+(<code>legal</code> in this example) already selected.
+</p>
+<p>This is not necessary though.  If you're really sure you don't need to
+preselect feedback categories by specifying them in the URI, you can use a
+simplified setup, like this:
+</p>
+<pre>
+  [page /contact]
+  action = feedback
+<p></pre>
+</p>
+<p>In this case, the <code>/thalcg.cgi/contact</code> &ldquo;page&rdquo; will have no
+&ldquo;subdirectories&rdquo;, as it is usual for non-multipath pages.
+</p>
+<p>Finally, you can make your URI totally unrelated to the preselected
+feedback category, like this:
+</p>
+<pre>
+  [page /attorneys/contact_the_lawyer.html]
+  action = feedback legal
+<p></pre>
+</p>
+<p>The <code>feedback</code> action expects the following field values:</p>
+<ul>
+
+<li><code>name</code> &mdash; the name of the user, as the user wants to
+self-introduce; Thalassa CGI checks this field for being non-empty;</li>
+
+<li><code>mail</code> &mdash; the email address of the user; this is
+checked to be a <a href="thalcgi_user_accounts.html#valid_email">valid
+email address</a>;</li>
+
+<li><code>category</code> &mdash; the feedback category ID, <em>as selected
+by the user with the form's input object</em> (in contrast with selected by
+the action argument); in the present version it is only used to choose the
+recipient email address, so actually, in case a default email address is
+configured, the client can send any crap here and still pass the
+checks;</li>
+
+<li><code>subject</code> &mdash; the subject string for the message;
+checked for being non-empty;</li>
+
+<li><code>msgbody</code> &mdash; the body of the message;
+checked for being non-empty.</li>
+
+<p></ul>
+</p>
+
+<p>For a multipath feedback page, you might want to define a path predicate,
+like this:
+</p>
+<pre>
+  path_predicate =
+  +%[if:%1%:
+  +   %[if:%2%:no:
+  +      %[ifbelongs:%1%:%[feedback:categories]:yes:no]
+  +      :no
+  +   ] :
+  +   yes
+  +]
+<p></pre>
+</p>
+<p>This predicate allows the 1-token URI (e.g.,
+<code>/thalcg.cgi/contact</code>), disallows URIs with more than two tokens
+(e.g., <code>/thalcg.cgi/contact/alpha/beta</code>) and only allows 2-token
+URIs in case the second token is an ID of an existing (configured) feedback
+category.  The <code>feedback</code> macro is
+<a href="#feedback_macro">discussed below</a>.
+</p>
+
+
+
+<h2 id="feedback_section">The <code>[feedback]</code> section<p></h2>
+</p>
+<p>The <code>[feedback]</code> configuration section contains parameters that
+set up categories (<code>categories</code>, <code>cattitle</code>,
+<code>selected</code>, <code>email</code>) and email composition and
+sending (<code>envelope_from</code>, <code>send_command</code>,
+<code>send_data</code>).  This section is <strong>not</strong> responsible
+for displaying the web form and handling its <code>POST</code> request;
+</p>
+
+   <h3 id="categories_conf">Configuring categories<p></h3>
+</p>
+<p>To configure feedback categories, one needs first to enumerate the
+categories, which is done by setting the <code>categories</code> parameter.
+The parameter's value is a whitespace-separated list of category
+identifiers; the identifiers are used as
+<a href="ini_basics.html#parameter_specifiers">specifiers</a> to other
+parameters, so it is strongly recommended to use only low-case latin
+letters, digits and possibly the underscore in them.  For the
+abovementioned list of category examples, the respective
+<code>categories</code> parameter may be as follows:
+</p>
+<pre>
+  categories = tech_support legal vacancies typo_report
+<p></pre>
+</p>
+<p>Titles for categories are set by the <code>cattitle</code> parameter using
+category IDs as specifiers, like this:
+</p>
+<pre>
+  cattitle:tech_support = Technical support
+  cattitle:legal = Legal questions
+  cattitle:vacancies = Jobs and vacancies
+  cattitle:typo_report = Report a typo on the site
+<p></pre>
+</p>
+<p>Email addresses tp which the feedback should be sent are set by the
+<code>email</code> parameter.  Category IDs may be used as specifiers to
+set email addresses on a per-category basis, like this:
+</p>
+<pre>
+  email:tech_support = support@example.com
+  email:legal = legal@example.com
+  email:vacancies = carrier@example.com
+  email:typo_report = webmaster@example.com
+<p></pre>
+</p>
+<p>It is also possible to have specific addresses for <em>some</em> categories
+and a last-resort address for all the ohers:
+</p>
+<pre>
+  email:tech_support = support@example.com
+  email:typo_report = webmaster@example.com
+  email = info@example.com
+<p></pre>
+</p>
+<p>Certainly, you can direct all your feedback to one common address, not
+using the per-category configuration, like this:
+</p>
+<pre>
+  email = feedback@example.com
+<p></pre>
+</p>
+<p>The last category-related parameter is <code>selected</code>, it allows to
+choose what category is to be selected by default.  To do so, the value for
+this parameter <em>specific for the desired category</em> must be set to
+&ldquo;<code>yes</code>&rdquo;, like this:
+</p>
+<pre>
+  selected:typo_report = yes
+<p></pre>
+</p>
+
+
+   <h3 id="envelope_from">The &ldquo;envelope from&rdquo; address<p></h3>
+</p>
+<p>It might be critical for successful mail delivery to set the <em>envelope
+from</em> email address correctly.  This thing often appears confusing for
+people not familiar with email system, so some explanations may be useful.
+</p>
+<p>The header of a email message is nothing but a part of the message, and it
+plays mostlty a decorative role, in the sense it doesn't affect the message
+delivery process.  This is true for the <code>From:</code> and
+<code>To:</code> headers as well.  One can even put a complete crap there.
+What <strong>really</strong> matters for delivery &mdash; that is, for
+servers (MTAs) that implement the SMTP protocol and actually send and
+receive electronic mail &mdash; are the addresses specified within the SMTP
+session, <strong>outside</strong> of the message itself.  Each message has
+exactly one associated <em>sender address</em> and one or more
+<em>recipient addresses</em>; these addresses don't need to be included in the
+message itself, because servers communicate them separately.  Informally
+these addresses are known as <em>envelope addresses</em>.
+</p>
+<p>The envelope addresses of the recipients aren't a thing to worry about in
+the context of the site contact form; the addresses specified for the
+<code>email</code> parameter (see above) will be used, and as these
+addresses presumably are controlled by the same team as the site itself,
+perhaps everything will be okay.
+</p>
+<p>What's important to note is that the sender's address is entered into the
+form by the user, so its correctness can not be guaranteed nor even
+verified.
+</p>
+<p>Furthermore, SMTP servers nowadays tend to implement various anti-spam
+techniques, and some of them, like SPF, can't do anything useful against a
+professional spammer, but build serious barriers on the way of legitimate
+emails, such as forwarded ones, and ruin correctly maintained mailing lists
+(to which users subscribe on their own using email confirmation mechanism).
+Good or bad, all these techniques can lead to rejection (as &ldquo;spam&rdquo;) of a
+message that comes from a source &ldquo;unexpected&rdquo; for the domain name of the
+sender address.  E.g., if the user specifies an address at Gmail, or Yahoo,
+or whatever the like, mails &ldquo;from&rdquo; such address are &ldquo;expected&rdquo; to come
+from Gmail or Yahoo, <em>not</em> from your poor web server.
+</p>
+<p>The good news is that it is <strong>the &ldquo;envelope from&rdquo;</strong> address
+which is checked in most cases, not the address specified in the
+<code>From:</code> header of the message.  So, the more or less reliable
+setup will be to place into the <code>From:</code> header whatever the user
+entered in the form, but <strong>set the &ldquo;envelope from&rdquo; to an address
+in a domain that you own or at least control</strong>, such as the same
+domain as for your site.  Domain name of the mail system you use to send
+your messages via may work here, too, in case you are too afraid to run a
+first-class SMTP server on your own.  Well... it may appear a far simpler
+thing than you expect, but it's still up to you.
+</p>
+<p>The address you use may either be an unattended address, forwarded right to
+<code>/dev/null</code>, or an address someone reads emails on &mdash; such
+as the webmaster's address.  It is, again, up to you.  In most cases, only
+the domain name matters for all these anti-spam checkers.
+</p>
+<p>The &ldquo;envelope from&rdquo; address is set by the <code>envelope_from</code>
+parameter of the <code>[feedback]</code> section, like this:
+</p>
+<pre>
+  envelope_from = thalassa_master@example.com
+<p></pre>
+</p>
+
+
+   <h3 id="feedback_macro">The <code>%[feedback:&nbsp;]</code> macro<p></h3>
+</p>
+<p>The categories-related part of the feedback configuration, as well as the
+configured &ldquo;envelope from&rdquo; address, are available via the
+<code>feedback</code> macro.  The macro has four functions.  Two of them
+don't need additional arguments: <code>%[feedback:categories]</code>
+returns the space-separated list of categories, as set by the
+<code>categories</code> parameter, and <code>%[feedback:envfrom]</code>
+returns the configured &ldquo;envelope from&rdquo; address.
+</p>
+<p>The <code>cattitle</code> function accepts one additional argument &mdash;
+the category ID &mdash; and returns the title for the given category.
+E.g., for the example given above, <code>%[feedback:cattitle:legal]</code>
+will return the string &ldquo;Legal questions&rdquo; as configured by the
+<code>cattitle:legal</code> parameter.
+</p>
+<p>The <code>ifcatsel</code> function is a conditional checker.  It accepts
+three additional arguments: the category ID, the <em>then</em> value and
+the <em>else</em> value.  In case the given category is set to be
+preselected by the <code>selected</code> parameter, the <em>then</em>
+argument is returned, otherwise the function returns its <em>else</em>
+argument.
+</p>
+<p>The macro is used both in the resting parameters of the
+<code>[feedback]</code> section and in the page template that composes the
+actual feedback webform.
+</p>
+
+
+   <h3 id="email_conf">Email composition and sending configuration<p></h3>
+</p>
+<p>The rest of the <code>[feedback]</code> section are two parameters,
+<code>send_command</code> and <code>send_data</code>.  Within their values,
+the <a href="#feedback_macro"><code>feedback</code> macro</a> should be
+actively used.  Besides that, the context-specific <code>%receiver%</code>
+macro is available.  And, the last but not least, you can use the <a href="thalcgi_baseconf.html#req_macro">%[req:param:&nbsp;] macro
+function</a> to access data from the web form, typed by the user; e.g.,
+<code>%[req:param:mail]</code> should be the user's email, etc.
+</p>
+<p>The <code>send_command</code> parameter is a command line (name and
+arguments) for the external program to launch to send the message;
+arguments are split down to words, using the apostrophe &ldquo;<code>'</code>&rdquo;
+and the doublequote &ldquo;<code>"</code>&rdquo; as grouping symbols (both an
+apostrophe within doublequotes and a doublequote within apostrophes are
+considered as plain chars).  As usual, the message itself will be supplied
+to the command's standard input.  For example:
+</p>
+<pre>
+  send_command = /usr/sbin/sendmail -bm -i
+  +                -f %[feedback:envfrom] '%[receiver]'
+<p></pre>
+</p>
+<p>The <code>send_data</code> parameter is a template for the whole message,
+including the headers and the body.  <strong>Be sure to leave an empty
+line between the header and the body, and not to insert empty lines before
+or in the middle of the header</strong>.  Thalassa CGI doesn't check
+anything here on its own, but the message will likely be rejected by the
+MTA if composed incorrectly.  Here's an example of the template:
+</p>
+<pre>
+  send_data = From: %[req:param:mail]
+  +To: %[receiver]
+  +Subject: %[req:param:subject]
+  +MIME-Version: 1.0
+  +Content-Type: text/plain; charset=us-ascii
+  +Content-Transfer-Encoding: 8Bit
+  +X-Sender-Software: Thalassa CGI script
+  +X-Sender-Form: %[req:host]%[req:script]%[req:path]
+  +
+  += "%[req:param:name]", using the site contact form, wrote:
+  +
+  +%[req:param:msgbody]
+  +
+<p></pre>
+</p>
+
+
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_user_accounts.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_contact_form" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_comments.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

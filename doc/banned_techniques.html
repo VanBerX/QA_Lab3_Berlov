@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> &nbsp;&nbsp; <a href="devdoc.html#banned_techniques" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="cpp_subset.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Techniques, methods and other things banned at the project</a></h1>
+    <div class="page_body">
+
+<p>Before joining the project, please note it is highly likely that some (if
+not all) tools you might be used to, are considered harmful here and hence
+are banned.  Here is our local ban-list:
+</p>
+
+<ul>
+<li><a href="#dependencies">External dependencies, including interpreters
+                      and ecosystems</a></li>
+<li><a href="#clientside">Client-side execution</a></li>
+<li><a href="#xml_et_al">Text-based formats with recursive nesting</a></li>
+<li><a href="#locales">Locales</a></li>
+<li><a href="#unicode">Unicode (limitations)</a></li>
+<ul>
+  <li><a href="#utf8_only">Using utf8 as the only encoding</a></li>
+  <li><a href="#bom_in_utf8">Byte-order mark (BOM) in utf8</a></li>
+  <li><a href="#unicode_encs">Unicode-based encodings other than utf8</a></li>
+  <li><a href="#unicode_diacritics">Unicode diacritical marks</a></li>
+  <li><a href="#unicode_emoji">Unicode emoji</a></li>
+</ul>
+<li><a href="#idn">Internationalized domain names</a></li>
+<li><a href="#multithreading">Multithreading (and shared memory)</a></li>
+<p></ul>
+</p>
+
+<p><hr />
+</p>
+
+<h2 id="dependencies">External dependencies, including interpreters
+                      and ecosystems<p></h2>
+</p>
+
+<p>External dependencies can be build-time and run-time.  So here's the
+rule: </p>
+<ul>
+<li>the only acceptable run-time dependency is the operating system
+kernel;</li>
+<li>the only acceptable build-time dependencies are the compiler, the
+<code>make</code> utility (either GNU make or Posix make, <strong>but not
+cmake</strong>) and &mdash; doubtfully and with limitations, but, well, to
+some extent &mdash; standard libraries.</li>
+<p></ul>
+</p>
+<p>The idea behind the rule is obvious: <strong>the less your program needs
+to build and run, the better</strong>.  However, there's also another idea.
+If you, as the author of a program, by simply choosing what to use and what
+not to use, can solve in advance any problem which either a user of the
+program, or a package maintainer <em>may</em> experience, then you
+<strong>must</strong> do so for any program you're going to let anyone use.
+</p>
+
+
+<p>First of all, forget about interpreted languages that have their
+&ldquo;ecosystems&rdquo;, such as Perl, Python, Ruby and so on.  Interpreted
+execution is only acceptable for scripting and built-in DSL languages, but
+in both cases there must be no damn ecosystem, as the ecosystem will become
+run-time dependency even if the interpreter itself is built-in.  Smaller
+languages such as Tcl are good for built-in interpreters.  Often it even
+makes sense to implement your own language, like another small dialect of
+Lisp or whatever.  So, languages like Perl, Python, Ruby and so on, are not
+acceptable as general-purpose languages because of their interpreted
+execution model (so there's obvious run-time dependency: the interpreter
+itself), and they are not acceptable as built-in languages because of their
+ecosystems.  Actually they have no valid purpose at all, and learning such
+languages is simply waste of time.
+</p>
+<p>All these <em>semi-interpreted</em> languages like Java or C# should not be
+considered for any task as well, because their &ldquo;run-time environments&rdquo;,
+such as JVM, dot-net, mono etc., are run-time external dependencies, too.
+</p>
+<p>Besides that, you must always make sure your program can be built as a
+statically-linked binary.  It is okay to keep dynamic linkage
+<em>possible</em> for cases when the program is transferred to the target
+machine as a source tarball and gets built there, but for all cases of
+binary distribution, including distribution as a package for a particular
+package manager (such as deb, yum, rpm and the like), all executable
+binaries must depend on nothing but the OS kernel.  And no, <strong>packing
+all the &ldquo;shared&rdquo; libs together with the binary is <em>NOT</em> a
+solution</strong>.
+</p>
+
+
+<p>No external libraries are tolerable, at all; the exception we unwillingly
+make for some parts of the C standard library is temporary.  If you think
+you really need a certain library, please consider it carefully: you will,
+first of all, need to put it into the main source tree of the project,
+which effectively means it becomes another piece of code we (you!) have to
+maintain.  And to build every time we decide to do a complete rebuild.
+</p>
+<p>Next thing to remember is that we limit the
+<a href="cpp_subset.html">language subsets</a> used in the project, and all
+parts of the code within the project must obey, including the libraries.
+Also this ban list is in effect, too; chances are that your beloved library
+uses some crap like <code>cmake</code>, <code>autoconf</code> or something
+like that.  You must remove all that crap and make the library build
+without these in order it to be acceptable for the project.
+</p>
+<p>And, last but not least, hardly we agree to tolerate a huge library for one
+or two functions you needed from it.  In most cases it is necessary to
+prepare a subset of a library, which often involves brutally hacking its
+modules.
+</p>
+<p>From the other hand, if the library you want only consists of a single
+small module with a clear interface, written in C90 or K&amp;R&nbsp;C,
+perhaps it is not a problem to add it.
+</p>
+
+
+<p>If your program uses some binary data not intended to be
+supplied by the user, such as icons or other images, you must make sure
+they all are built into the executable.  The most obvious way to do so is
+to convert every such binary into a C module containing a single
+initialized char array, and simply use such generated module in your
+program.
+</p>
+
+
+<p>There are some points to mention about compile-time dependencies, too.
+First of all, forget about autoconf/autotools and the like.  They tend to
+produce problems with portability, instead of solving them.  And don't even
+think about cmake.  Yes, there are systems around where cmake is not
+available by default, so a package maintainer (or, worse, a user) will have
+to build cmake itself in order to build your program.  Furthermore, cmake
+is easy to use for programmers, like, &ldquo;take this bunch of code and create
+a binary for me&rdquo;, but is a real nightmare for package makers.
+</p>
+<p>Another thing is not so obvious: <strong>be extremely discriminating with
+features provided by the so-called &ldquo;standard library&rdquo;</strong>.  Some of
+them may even ruin your capability of building statically (like Glibc's
+<code>getpwnam</code>), some other, like locales, will silently make your
+binary dependent on external data files.  And a lot of them may
+accidentally make your code less portable (this is specially true for GNU
+extensions and functions invented by &ldquo;standards&rdquo;).  Remember one thing:
+the less you depend on, the better.
+</p>
+<p>In particular, please do your best not to suck in all these locale-related
+stuff.  E.g., don't use functions from <code>&lt;ctype.h&gt;</code>, such
+as <code>isspace</code>, <code>isalpha</code>, <code>isdigit</code> and so
+on.  Single thoughtless
+</p>
+<pre class="wrongcode">
+    if (isspace(c)) {
+<p></pre>
+</p>
+<p>instead of just
+</p>
+<pre>
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\r' ) {
+<p></pre>
+</p>
+<p>will ruin everything.
+</p>
+<p>In fact, it is highly likely we'll get rid of the standard library one day,
+completely.  The less parts of it our program will depend on, the less effort
+we'll have to spend doing it, and this should be always kept in mind.
+</p>
+
+
+<h2 id="clientside">Client-side execution<p></h2>
+</p>
+<p>The situation when a code is downloaded from the Internet and then
+immediately executed, is too usual nowadays.  It is not only JavaScript
+executed within the user's browser; automatic software updates are
+effectively the same sh*t.  And all this is not only inappropriate, it is
+horrible.  When you get your code executed on someone else's device, it
+means you take over the control, and this is not the thing to do without
+explicit consent of the device's owner.  In fact, &ldquo;download-and-execute&rdquo;
+is an anti-pattern; well, ideally this should be considered criminal and
+punished by several years in prison; if it is not yet so, it's only because
+all these law-makers don't understand how computers work.
+</p>
+<p>But we do understand, right?
+</p>
+<p>So, as a rule, <strong>any program can be executed on someone's computer
+only after explicit installation performed by the user, and upon explicitly
+given user's well-informed consent</strong>.
+</p>
+<p>Once again: the consent must be given by the user explicitly, for every
+particular case when any new program code is transferred to the user's
+device, before it is actually executed.  All these &ldquo;implicit consents&rdquo;,
+and even some &ldquo;explicit&rdquo; cases like a paragraph in a EULA which noone
+reads, don't work here.
+</p>
+<p>For the particular project &mdash; Thalassa CMS &mdash; this primarily
+means one thing: forget about JavaScript (and, generally speaking, about
+the very idea of executing anything within the browser), once and forever.
+</p>
+<p>Some devil's advocates are likely to ask one question they're sure to be
+smart: hey, HTML is a code, too, and it is interpreted at the user's
+computer, and perhaps formats like jpeg or mp3 are not much different from
+programs, too.  And if these are not programs but simply data, then why
+don't consider JavaScript being just data, not a program, as well?  Where
+is the exact border between programs and data?
+</p>
+<p>The obvious answer here is Turing-completeness of the interpreter, but
+unfortunately this doesn't work against devil's advocates.  Once they hear
+about Turing machine, they always come up with the argument they tend to
+consider killing: all the real-world computers are finite, so they are
+always Turing-incomplete.  Computer scientists often try to argue somehow,
+but the problem is that devil's advocates are not willing to gain any
+knowledge, they merely wish to convince the public (not the opponent) that
+the &ldquo;download-and-execute&rdquo; crime is not really a crime nor even a
+problem, that's all.
+</p>
+<p>So, Turing-completeness doesn't work for us, and here's our answer on
+where's the border: <strong>a format must be considered representing
+programs, not data, in case it allows to make loops of any kind, be it
+explicit loop constructions, an implicit loop made by a jump backwards, or
+a recursion</strong>.
+</p>
+<p>HTML, fortunately, doesn't have anything of these.  Okay, we know about
+these XML entity bombs, but the possibility to create new XML entities is
+disabled in browsers.
+</p>
+<p>Once again: if the data format has features to let a certain portion of
+data to be interpreted more than once, then it's no data, it's a program
+code.
+</p>
+<p>Yes, PDF is no data.  PDF &ldquo;documents&rdquo; are actually programs.  And it is a
+real problem, but fortunately, as long as we discuss Thalassa CMS, it is
+not <em>our</em> problem.
+</p>
+
+
+<h2 id="xml_et_al">Text-based formats with recursive nesting<p></h2>
+</p>
+<p>All these &ldquo;semi-structured&rdquo; formats, primarily SGML and its descenders
+XML and HTML, were initially intended for native language text markup.  The
+mere fact people come up with other markup languages, such as ReST, BBcode,
+various wiki languages, Gemtext etc., clearly demonstrates one thing: HTML
+is a failure.  These &ldquo;angle-bracketed tags&rdquo; are too bad even for the
+purpose they were intended: for native-language document formatting.
+</p>
+<p>As of using XML for machine-readable data (which is not a native-language
+text), it is simply a nonsense, and for healthy-minded people it was clear
+from the very start.  But healthy-minded people are a dying-out species
+nowadays, as clearly shown by the mere fact such an ugly beast as JSON
+appeared long after it became clear nothing like this has any right nor
+even a reason to exist.
+</p>
+<p>So here's the rule: <strong>data formats with recursive nesting are
+forbidden</strong>.
+</p>
+<p>Primarily this applies to text-based formats, namely SGML-based languages
+(XML and HTML) and JSON, but in case you encounter binary format defined to
+have recursive nesting, please remember it is in no way better.
+</p>
+<p>NB: if you think you really need recursive nesting, it means you just don't
+realize something important.  Look, there's theory of databases.  It is a
+well-known fact that relational model is able to solve any database-related
+task.  And the First Normal Form (1NF) &mdash; the simplest one among the
+nine known normal forms &mdash; is, simply speaking, just a requirement for
+all values (elements in any column of any row) to be atomic.
+</p>
+<p>Someone might argue that &ldquo;modern&rdquo; database engines allow non-atomic data
+and even JSON; the answer here is that the modern IT industry is driven by
+idiots who don't bother learning any theory, and, furthermore, never bother
+to think what they do.
+</p>
+<p>Okay, there's one obvious exception from the rule, which is a forced
+measure &mdash; without it, we wouldn't be able to create any CMSes.
+<strong>Recursively nesting data formats are allowed for interoperability
+with external software, provided that they are not used
+internally</strong>.  So, our program can both analyse and compose data in
+such formats, but must never store its own data in these formats.
+</p>
+<p>Well, templates and snippets used to compose HTML data should be stored as
+they are, but this is no violation of our rule: all these snippets and
+templates are just strings from which a larger text is composed.
+</p>
+<p>The last thing to mention specially for devil's advocates: most of
+programming languages allow unlimited recursive nesting.  Well, not for
+everything, e.g., you can't place one program inside another, and for
+statically-compiled languages, you shouldn't try to place one function or
+procedure inside another one, even if it is supported by the compiler.
+Anyway, at least arithmetic equations and control statements allow for
+(formally unlimited) nesting.
+</p>
+<p>Well, programs are not data, they are programs.  Bye.
+</p>
+<p>By the way, MIME is recursively nesting, as you can put one MIME container
+into another.  We have to analyse MIME-formatted stream in exactly one
+situation: for file-uploading webforms.  We never generate anything like
+MIME containers, messages etc; in particular, if we send emails, they are
+in plain text.  Actually, this is not the only (and even not the main)
+reason to ban everything related to MIME.
+</p>
+
+
+<h2 id="locales">Locales<p></h2>
+</p>
+<p>As we already mentioned, locales should be avoided with the best possible
+effort.  Once we need an international program, we should use our own
+system of replaceable message sets, created specifically for the task at
+hands.
+</p>
+
+
+<h2 id="unicode">Unicode (limitations)<p></h2>
+</p>
+<p>Briefly speaking, Unicode is another committee-made bastard.  However, as
+of now, there's no other numbered list of all printable characters known to
+the mankind, so we use it in this role.  However, it is no reason to let
+commitee-made nonsense to slip into our software, hence there are some
+certain limits.
+</p>
+
+
+  <h3 id="utf8_only">Using utf8 as the only encoding<p></h3>
+</p>
+<p>If you don't want to bother with different character encodings, you are at
+your right, but once your program only supports a single character
+encoding, that encoding must be ASCII (or US-ASCII, if you prefer).  If you
+decide to support utf8, then you <strong>must</strong> support other ASCII
+extensions as well, such as latin1, koi8r and the like.
+</p>
+<p>It is hard to have recoding tables for each and every encoding that ever
+was in use in history, so this is not necessary.  What <strong>is</strong>
+obligatory is to support at least some (two? three?) such encodings and
+provide a clear way to add more of them.
+</p>
+<p>BTW, you can even omit the support for utf8 in preference for single-byte
+encodings, if you're brave enough.  But it is strictly prohibited to
+support utf8 as the only encoding.
+</p>
+
+
+  <h3 id="bom_in_utf8">Byte-order mark (BOM) in utf8<p></h3>
+</p>
+<p>BOM is a nonsense for utf8 as utf8 doesn't depend on byte order in any way.
+Hence it is prohibited to emit BOM as a part of utf8 text, and your program
+should (although not required to) produce a warning message if the BOM is
+encountered in utf8 input.
+</p>
+
+
+  <h3 id="unicode_encs">Unicode-based encodings other than utf8<p></h3>
+</p>
+<p>Multibyte character encodings other than utf8, such as UCS-4, UTF-16,
+UTF-32 and their variants, well, <strong>don't exist</strong>.  Period.
+</p>
+
+
+  <h3 id="unicode_diacritics">Unicode diacritical marks<p></h3>
+</p>
+<p>All the code points from the so-called <em>Combining Diacritical Marks</em>
+Unicode block must either be ignored, or displayed and/or otherwise handled
+as completely separate characters, or even produce an error.  Your program
+<strong>must not</strong> even try to handle them according to what damn
+Unicode demands.
+</p>
+<p>Don't waste your time trying to comply to what all these irresponsible
+committees voted for.  For all real-world combinations of a &ldquo;main&rdquo; glyph
+with a diacritical mark, separate code points exist.
+</p>
+
+
+  <h3 id="unicode_emoji">Unicode emoji<p></h3>
+</p>
+<p>These must either be ignored, or filtered off, or rejected, or otherwise
+refused.  All this crap is far beyond all possible limits.
+</p>
+
+
+<h2 id="idn">Internationalized domain names<p></h2>
+</p>
+<p>Internationalized domain names (IDNs) are to be considered non-existing.
+No specific support for them must ever be provided.
+</p>
+<p>It is more or less clear now that this particular nonsense has failed and
+is being slowly pushed out of everyday use.  So, let it just die in peace.
+Don't invest your effort into making this death longer.
+</p>
+
+<h2 id="multithreading">Multithreading (and shared memory)<p></h2>
+</p>
+<p>Yes, multithreading is not allowed.  Furthermore, it is not allowed to
+create any mutable shared memory (there's no problem with sharing a memory
+section in case it is read only for all processes; actually, it is exactly
+what happens with executable code when several processes run the same
+executable binary).
+</p>
+<p>If you're going to explain how efficient it is to use shared memory, then
+don't.  In reality, nobody bothers with any practical demonstration of the
+fact multithreading is really needed for efficiency reasons, and in most
+cases, if not all, from the user's point of view, multithreaded programs
+freeze every now and then, primarily because of cancellation points.
+</p>
+<p>So <strong>no, don't even think about multithreading</strong>.
+</p>
+
+
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> &nbsp;&nbsp; <a href="devdoc.html#banned_techniques" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="cpp_subset.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

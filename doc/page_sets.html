@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="generic_files.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#page_sets" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="lists.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Page sets</a></h1>
+    <div class="page_body">
+<p>Contents: </p>
+<ul>
+<li><a href="#overview">What are page sets</a></li>
+<li><a href="#set_src_dir">Page set source directory and item IDs</a></li>
+<li><a href="#comments">User comments on page set items</a></li>
+<li><a href="#pageset_section">The <code>[pageset&nbsp;]</code>
+                               ini file sections</a></li>
+<li><a href="#header_fields">Header fields having special meaning</a></li>
+<li><a href="#li_macro">The <code>[li:&nbsp;]</code> macro</a></li>
+<p></ul>
+</p>
+
+<h2 id="overview">What are page sets<p></h2>
+</p>
+<p>A <em>page set</em> is basically a directory within your sources (the so
+called <em>page set directory</em>), in which you create a <a href="headed_text.html">headed text file</a> or a subdirectory containing
+such file, and on the next generator run the file becomes an HTML page
+within your site.  Sometimes it may be important that no modifications to
+your configuration files (ini files) is needed to add another page to the
+set; e.g., such addition can easily be done programmatically, without human
+intervention at all.
+</p>
+<p>If a page is represented by a directory (as opposite to file), the
+directory can contain additional files, such as images.  These files will
+be published, much like a
+<a href="verbatim_publishing.html#collection">collection</a>.
+</p>
+<p>There are some limitations for this kind of Thalassa objects, the most
+notable are the following:</p>
+<ul>
+
+<li>pages of the same set are always created in the same directory of your
+site's tree; each page is either created as an HTML file or as a directory
+containing <code>index.html</code> (this name can be changed, but the
+overall structure can not);</li>
+
+<li>from Thalassa's point of view, page sets as such are unordered, so
+there's no possibility to enumerate members of a set in predictable manner;
+building lists of set pages involves additional files and configuration
+objects (well, <a href="lists.html">lists</a> of the &ldquo;set-based source&rdquo;
+kind).</li>
+
+<p></ul>
+</p>
+<p>Set pages may have <a href="comment_sections.html">comment sections</a>.
+</p>
+<p>By default, if a set page's source is a directory, it is generated as a
+subdirectory of the target directory, and if the source is a single file,
+the page itself is generated as a file (without making directories), too.
+This behaviour can be changed; for any particular set it is possible
+to force all its pages to be generated as files right within the target
+directory, or to be generated as subdirectories of the target directory,
+no matter what type of source is used for each page.
+</p>
+
+
+<h2 id="set_src_dir">Page set source directory and item IDs<p></h2>
+</p>
+<p>Thalassa scans the directory which is set as a source for a page set, and
+thus determines what are the set items.  Directory entries with names
+starting with &ldquo;<code>.</code>&rdquo; (dot; the so-called hidden files) and
+&ldquo;<code>_</code>&rdquo; (underscore) are ignored during this scan.
+</p>
+<p class="remark">
+Files with names starting with &ldquo;<code>_</code>&rdquo; residing in the page set
+source directory are used for various service purposes, primarily to form
+<a href="lists.html">lists</a> of set items.
+<p></p>
+</p>
+<p>Entries named starting with anything else are expected to be regular files
+and directories; symbolic links are resolved during the file type
+examination (and furhter actions), so they can point at files and
+directories located elsewhere, if you really need so.  Files of all other
+types (devices, FIFOs and sockets) are silently ignored; regular files and
+directories found in the set source directory (with appropriate names)
+become list items, and their names are taken as item IDs.
+</p>
+<p>In case a particular item in your page set is represented with a directory,
+that directory must contain a file named <code>content.txt</code>; there's no
+way to change the name, in the present version it is hardcoded.  This file
+will play the role of (the real) source for your page.
+</p>
+<p>Suppose, for example, that your source tree is located at
+<code>/home/lizzie/mysite/</code>, and you create a page set with source
+directory named <code>node</code>, so its full path will be
+<code>/home/lizzie/mysite/node</code>.  If, after that, you want your set
+to contain an item named <code>foobar</code>, then you've got two
+possibilities:</p>
+<ul>
+
+<li>either you create a headed text file with full path
+<code>/home/lizzie/mysite/node/foobar</code> (and that's all);</li>
+
+<li>or, you make a <em>directory</em> with full path
+<code>/home/lizzie/mysite/node/foobar/</code>, and inside that directory,
+create a headed text file named <code>content.txt</code>, so its full path
+will be <code>/home/lizzie/mysite/node/foobar/content.txt</code>.  In this
+case you can add more files (e.g., images, or whatever else you want) to
+the directory along with the <code>content.txt</code>, and these files will
+be &ldquo;published&rdquo; into the same place within your site's tree, where the
+generated page will reside.</li>
+
+<p></ul>
+</p>
+<p>There's one more thing you should know: file names starting with
+&ldquo;<code>_</code>&rdquo; are not only ignored in the page set source directory,
+they are also ignored within item directories (where that
+<code>content.txt</code> sits), so if you place such a file there, it will
+not get published.
+</p>
+<p class="remark">
+In the present version of Thalassa this has no particular meaning, but
+files with such names may start playing some special roles later.  As of
+now, think of them as &ldquo;reserved&rdquo;.
+<p></p>
+</p>
+
+<p><strong>The name of the file or directory is taken as the set item
+ID</strong>.  The same ID must be given as the value for the
+<code>id:</code> header field in the item file; it is unspecified what will
+happen in case they don't match (that is, even if in particular version of
+Thalassa nothing happens, this can get changed in future versions).
+</p>
+<p>The set item ID is used in many situations to refer to the particular item,
+and the name of whatever is generated (either an HTML file, or a directory
+within your site's tree) is also derived from the ID somehow.  Please note
+that, unless you intentionally want the dot &ldquo;<code>.</code>&rdquo; to be in the
+ID (and chances are that you don't), you shouldn't use it in the name of
+the source file/directory.  For directories this in most cases doesn't make
+problems as people are not generally used to add &ldquo;<em>extensions</em>&rdquo; to
+directory names; however, for no real reason a lot of people tend to give
+&ldquo;extensions&rdquo; to plain files.  Folks, please note one thing: <strong>in
+Unix systems, there's no such thing as &ldquo;file name extension&rdquo;</strong>,
+and even if you name your file like <code>mypage.txt</code> or
+<code>mypage.src</code>, these <code>.txt</code> and <code>.src</code>
+ain't no damn &ldquo;extensions&rdquo;, they are just parts of names with no special
+meaning of any kind.
+</p>
+<p>Well, yes, you can name the source file of your page set item something
+like <code>mypage.txt</code>, but then the ID of the item will be
+<code>mypage.txt</code>, <strong>NOT</strong> <code>mypage</code>, as many
+people, for whatever odd reasons, expect.  So it is
+<code>mypage.txt</code>, not <code>mypage</code>, what you need to put in
+your <code>id:</code> field.  And the page Thalassa generates for you will
+likely have name <code>mypage.txt.html</code>, not <code>mypage.html</code>
+as you could hope.
+</p>
+<p>So, at least when you create items in a page set, and you want a single
+regular file, not a directory, to be the source of it, <strong>forget about
+extensions</strong>.  No matter if it is a file or a directory, name it
+just <code>mypage</code> (or how you like), but not
+<code>mypage.<em>XXX</em></code>, where <em>XXX</em> is whatever extension
+comes to your mind.
+</p>
+
+
+<h2 id="comments">User comments on page set items<p></h2>
+</p>
+<p>To better understand the rest of this documentation page you should recall
+that <strong>set pages are capable of having
+<a href="comment_sections.html">comment sections</a></strong>.  Comments,
+as well as generation of sections displaying them, will be discussed on the
+dedicated page; however, there's one basic property of comment sections we
+have to mention right now, otherwise it will be hard to get what the most
+of pageset-related configuration parameters are all about.  So, keep in
+mind <strong>there may be more than one comment section</strong> for a
+single published item (be it an item of a page set, or a list page item) in
+case there are more comments than it is desirable to display on one page.
+</p>
+<p>For example, suppose you write another entry of your blog, and it makes your
+readers so much interested that they leave 520 comments, while you
+configured Thalassa to display only 100 comments per page.  Actually, 6
+pages will have to be generated for your single blog entry in this case:
+first 5 of them displaying 100 comments each, and the last displaying 20
+comments.
+</p>
+<p>What Thalassa does in this situation is repeating your item's content, be it a
+blog entry or whatever else, on each of the pages generated for that item.
+So, in the simplest possible case, the first page will contain your entry
+and the first 100 comments, the second page will contain <em>your entry
+again</em> and the comments from 101 through 200, etc.  It is possible to
+tell Thalassa to display the comments in reverse order, newer first, and
+their placement on pages will differ, but the idea is always the same: a
+number of pages to be generated for a single source item, the item's
+content is displayed on every page, and each page has its own range of
+comments.
+</p>
+<p>For the purpose of this, pageset configuration had to be made a bit
+complicated, and it might look confusing on the first glance.  First of
+all, a template used for page generation is broken down to two parts, named
+<code>page_template</code> and <code>page_tail_template</code>.  Every
+generated page consists of three parts: the result of macroprocessing for
+<code>page_template</code>, the comment section and the result of
+macroprocessing for <code>page_tail_template</code>.  These three parts are
+simply concatenated to make the whole page's content.
+</p>
+<p>The second question is how to name the generated files.  This is a bit
+tricky and depends on whether the item being generated has its own
+directory.  For an entry named <code>foobar</code> from our example above,
+there are two possibilities.  In case the item doesn't have its own
+directory, perhaps (relatively to the target directory of the whole set)
+the first (main) file will be named just <code>foobar.html</code>, and
+additional files (containing pages for the same entry, but dfferent
+portions of comments) will be <code>foobar_2.html</code>,
+<code>foobar_3.html</code>, ..., <code>foobar_5.html</code>.  In case of a
+separate subdirectory, the main file will (by default) be
+<code>foobar/index.html</code>, and the additional pages will get names
+<code>foobar/c2.html</code>, <code>foobar/c3.html</code>, etc.  In both
+cases the main page is considered to be Number One, but the number is
+hidden (this changes slightly when the comments are placed in reverse
+order; this will be discussed along with
+<a href="comment_sections.html">comment sections</a>).
+</p>
+<p><span id="comment_maps">One</span>
+more thing to keep in mind is that sometimes programs need to determine
+on which page a particular comment is located.  The <code>thalassa</code>
+program during the process of generation has sufficient information to
+deduce this, but the CGI program sometimes needs to know this too, and it
+has no access to the site sources.  Hence Thalassa generates an additional
+file for every item that turned into several pages because of comments; the
+file is known as a <em>comment map</em>.
+</p>
+<p>Knowing all this, it must be easier to understand what some configuration
+parameters are for.
+</p>
+
+
+
+
+<h2 id="pageset_section">The <code>[pageset&nbsp;]</code> ini file sections<p></h2>
+</p>
+<p>A page set is configured with an ini file section that belongs to
+the <code>pageset</code> group, e.g.
+</p>
+<pre>
+  [pageset node]
+<p></pre>
+</p>
+<p>The name of the section (<code>node</code> in this example) identifies the
+set as a whole.  Both page set source directory and its target directory
+default to the pageset name, but this can be overriden by setting
+respective parameters.  However, even if you don't use these defaults, and
+even if you only have one page set, be sure to give it a good name because
+it will likely appear in many other places of your configuration file.
+</p>
+<p>During the generation period of a set page, Thalassa makes one special
+macro available, which gives access to properties of the page being
+generated, such as its ID, title, text (body), information from the header
+and so
+on.  The macro is named <code>%[li:&nbsp;]</code>, for <em>list item</em>;
+it is named so because exactly the same macro is used in generation of
+<a href="generation_objects.html#lists">list</a> items.  The macro will be
+discussed <a href="#li_macro">later</a>, and as of now, just keep in mind
+that </p>
+<ul>
+
+<li><code>%[li:id]</code> is the ID of the page being generated;</li>
+
+<li><code>%[li:text]</code> is the page's text (well, the body)
+<em>after</em> applying all transformations related to
+<a href="headed_text.html#encodings">encoding</a> and
+<a href="headed_text.html#format">format</a>;</li>
+
+<p></ul>
+</p>
+<p>Now we can discuss parameters that may appear within a
+<code>[pageset&nbsp;]</code> section.
+</p>
+<p>The actual content of generated pages is controlled by two parameters:
+<code>page_template</code> and <code>page_tail_template</code>.
+Their values are passed through the macroprocessor; then, the generator
+concatenates the processing result for <code>page_template</code>, the
+comment section (if it exists for the page being generated) and the
+processing result of <code>page_tail_template</code>.  The
+&ldquo;<code>%[li:&nbsp;]</code>&rdquo; macro must be used to access the content of a
+particular page; at the very least, you hardly can go without
+<code>%[li:text]</code>.
+</p>
+<p><span id="page_templ_spec"></span>
+You can use different page templates in the same page set.  To do so, add
+the &ldquo;<code>type:&nbsp;</code>&rdquo; header to source files of your pages.  For
+example, you can use
+</p>
+<pre>
+  type: blog
+<p></pre>
+</p>
+<p>for blog entries,
+</p>
+<pre>
+  type: news
+<p></pre>
+</p>
+<p>for news articles, etc.  Then, these type identifiers (<code>blog</code>
+and <code>news</code> in the example, or anything else you want) may be
+used as <a href="ini_basics.html#parameter_specifiers">parameter
+specifiers</a> for both <code>page_template</code> and
+<code>page_tail_template</code>.  For example, you can use
+<code>page_template:blog</code> for your blog entries and
+<code>page_template</code> with no specifier for everything else.
+</p>
+<p>The <code>sourcedir</code> parameter sets the path for page set source
+directory; as usual, the path may be either absolute or relative, and
+&ldquo;relative&rdquo; means relative to Thalassa working directory.  This parameter
+defaults to the pageset ID, so if the ID is <code>node</code>, as in our
+example above, the <code>sourcedir</code> parameter is not explicitly
+specified (that is, omitted) and you run <code>thalassa</code> in
+<code>/home/lizzie/mysite/</code>, then it takes items for your set from
+<code>/home/lizzie/mysite/node/</code>.
+</p>
+<p>The <code>setdirname</code> parameter tells <code>thalassa</code> where to
+place the items it generates.  The value is taken relative to your site's
+tree root, even if it begins with a slash &ldquo;<code>/</code>&rdquo;.  Just like
+the previous parameter, <code>setdirname</code> defaults
+to the pageset ID.
+</p>
+<p>The <code>make_subdirs</code> parameter controls whether to make
+subdirectories within the <code>setdirname</code> directory for each item.
+The recognized values are <code>always</code>, <code>never</code> and
+<code>bysource</code>, which is the default.  In case parameter is omitted,
+empty or its value is not recognized, it is taken as if it was
+<code>bysource</code>.  The value is case-insensitive; <code>always</code>
+means to make subdirectories for all items, even for items whose source is
+a single file; <code>never</code> means not to make any subdirs even for
+items whose source is a directory with <code>content.txt</code> (and
+possibly other files) in it, and the default <code>bysource</code> means to
+create subdirs only for items whose source is a directory.
+</p>
+<p><strong>For items generated as a file, without a subdirectory</strong>, the
+<code>pagefilename</code> parameter sets the file name template.  The
+template should usually contain <code>%[li:id]</code> macro call, so that
+the name of the file contains the item ID, but this is not enforced in any
+way, and it is possible (at least in theory) to use other techniques to
+make the files have different names.  Besides all macros defined in
+<code>thalassa</code>, the <code>pagefilename</code> parameter can use the
+<a href="common_macros.html#idx_macros"><em>index macros</em></a>
+(<code>%idx%</code>, <code>%_idx%</code> and <code>%idx0%</code>),
+which reflex <em>index</em> of a comment
+page (generated for the same item).  The &ldquo;main&rdquo; page always has special
+index value &mdash; zero, even if it is considered &ldquo;invisible number
+one&rdquo;.
+</p>
+<p>Parameter defaults to &ldquo;<code>%[li:id]%[_idx].html</code>&rdquo;; you can safely
+omit it in most cases.
+</p>
+<p><strong>For items generated with their own subdirectories</strong>, the
+<code>pagefilename</code> parameter is ignored.  Instead, three other
+parameters are used:</p>
+<ul>
+
+<li><code>pagedirname</code> sets the name for the subdirectory to be
+created for the item; default is &ldquo;<code>%[li:id]</code>&rdquo;;</li>
+
+<li><code>indexfilename</code> sets the name for the HTML file created
+inside the directory to represent the item; default is
+&ldquo;<code>index.html</code>&rdquo; &mdash; please note this is the name of file
+displayed by Apache by default when directory URI is requested;</li>
+
+<li><code>compagename</code> is a template for names of additional HTML
+files, created because of multiple comment sections; index macros work
+within the value of this parameter; default is
+&ldquo;<code>c%idx%.html</code>&rdquo;.</li>
+
+<p></ul>
+</p>
+
+<p>The <code>comments</code> parameter sets the comment sections style, the
+path to the comment tree (the part of the &ldquo;database&rdquo; that holds comments
+for the particular page) and some additional parameters available
+in comment-related templates by macro calls.  This parameter is closely
+discussed along with <a href="comment_sections.html">comment sections</a>.
+By default this parameter's value is empty, which means no comment section
+to be generated.
+</p>
+<p>The <code id="#param_commentmap">commentmap</code> parameter is a template for
+<a href="#comment_maps">comment map file names</a>.  The name is relative
+to your rootdir (the root directory of your site's tree).  As of present
+version, the default is empty, which means not to create map files (for a
+given page set) at all.  However, please note some important functions of
+the CGI program will not work without maps, in case you use comment styles
+that involve a maximum of comments per page (and multiple pages in case
+there are more comments).  Something like
+&ldquo;<code>node/.__%[li:id].map</code>&rdquo; will work; you can also make a
+dedicated directory for all your maps, even outside of your tree (because
+the value may start with &ldquo;<code>../</code>&rdquo; and there's no limitation for
+this), although comment maps don't hold any sensitive information and can
+perhaps be safely left inside your web tree.
+</p>
+<p>If you want the map file names to be constructed differently for the pages
+generated as a directory and the pages generated without directories, you
+can specify <code>commentmap:nodir</code> separately, and it will be used
+for pages without directories, while the value of <code>commentmap</code>
+will in this case be used for separate-dir pages only.
+</p>
+<p>Besides all that, <code>[pageset&nbsp;]</code> sections can contain all
+parameters responsible for
+<a href="verbatim_publishing.html#publish_methods">publishing methods</a>,
+that is, <code>publish_method</code>, <code>publish_symlinks</code>,
+<code>publish_hidden</code>, <code>publish_recursive</code> and
+<code>chmod</code>.  They control how additional files (for the set
+items sourced as directories) are getting into your web tree.  Follow the link
+for the description.
+</p>
+
+
+
+<h2 id="header_fields">Header fields having special meaning<p></h2>
+</p>
+<p>Since every item of a page set is initially represented as a
+<a href="headed_text.html">headed text file</a>, it is important to know
+what header fields are recognized by Thalassa and how they influence on the
+process of generation.
+</p>
+<p>As it is <a href="headed_text.html#structure">mentioned</a> in the general
+description of headed files used in Thalassa, three fields are used by the
+parser internally and are not accessible outside.  These are
+<code>id</code>, <code>encoding</code> and <code>format</code>.
+</p>
+<p>For page set items, the fields <code>unixtime</code>, <code>type</code>,
+<code>flags</code>, <code>comments</code>, <code>teaser_len</code>,
+<code>descr</code>, <code>date</code>, <code>title</code> and
+<code>tags</code> are recognized by Thalassa, which means their processing
+is <em>special</em> in at least some sense.
+</p>
+<p>First of all, the fields <code>unixtime</code>, <code>type</code>,
+<code>flags</code>, <code>comments</code> and <code>teaser_len</code> don't
+get processed by format and/or encoding filters.  Contrary to this, the
+<code>descr</code> field gets full processing, both for encoding and
+format, just like the body of the page.  All the other fields, including
+those not listed, only get processed for encoding, but not for the format.
+</p>
+<p>Please remember that <strong>in case a field is entered by a user, and you
+display it on your pages, it is necessary to pass its contents through a
+filter that strips off all tags and &amp;-entities to avoid HTML
+injections</strong>.  Thalassa won't do that for you authomatically,
+because it doesn't know if a particular field is entered by third parties,
+nor if you're going to display it on a HTML page; but it provides
+<a href="common_macros.html#macro_ltgt">the <code>%[ltgt:&nbsp;]</code>
+macro</a> for this purpose, so be sure to use it.
+</p>
+<p>The <code id="hf_unixtime">unixtime</code> field, if it is present, must be
+an integer representing a date (presumably, the date when the page was
+created), as the well-known Unix Time value (the number of seconds since
+Jan 01, 1970).
+</p>
+<p>The <code id="hf_type">type</code> field, if it is there, should contain an
+identifier used as a <a href="#page_templ_spec">specifier</a> for your
+<code>page_template</code> and <code>page_tail_template</code>.  We'd like
+to repeat it one more time that no encoding transformation is applied to
+this field, and Thalassa itself is mostly codepage-agnostic, so you'd
+better not try using any non-ASCII chars (and, even further, no chars other
+than lowercase latin letters, digits and the underscore) in this field.
+</p>
+<p class="remark">Those familiar with Drupal might notice this field is
+designed to handle these Drupal's <em>node types</em>.  If you never had to
+deal with Drupal, you're, first of all, lucky, and, second, you don't want
+to know more about the <code>type</code> field.<p></p>
+</p>
+<p>The <code id="hf_flags">flags</code> field is designed to contain a
+comma-separated list of identifiers, of which, in the present version, only
+one is used by Thalassa itself.  This flag is <code>hidden</code>, and it
+makes Thalssa simply skip generation of the page.  So, if your source
+file's header contains
+</p>
+<pre>
+  flags: hidden
+<p></pre>
+</p>
+<p>or even something like
+</p>
+<pre>
+  flags: abra, hidden, cadabra, schwabra
+<p></pre>
+</p>
+<p>then your page will not be generated, as if it didn't exist at all.
+</p>
+
+
+<p>The <code>comments</code> field determines whether comments are available
+for this page.  Possible values are <code>enabled</code>
+<code>disabled</code> and <code>readonly</code>, and <code>disabled</code>
+is the default; actually, any other value is silently considered equal to
+<code>disabled</code>.  The <code>thalassa</code> program only tries to
+generate the comment section in case this field contains either
+<code>enabled</code> or <code>readonly</code>, otherwise it concatenates
+the two parts of the page template inserting nothing between them, even if
+your &ldquo;database&rdquo; contains comments for this page.  As of the CGI program,
+if it is configured properly, it will only allow comments for pages that
+have <code>enabled</code> in this field (and if it is not properly
+configured, then chances are it will not allow comments at all, but your
+mileage may vary).
+</p>
+
+<p>The <code id="hf_teaser_len">teaser_len</code> and
+<code id="hf_descr">descr</code> fields are both meant to
+provide a shorter version of the page to be included in lists, be it named
+a <em>description</em> or <em>teaser</em>.  It is a bit tricky to explain
+how exactly they work.  In case the <code>descr</code> field is given and
+isn't empty, the <code>teaser_len</code> field is completely ignored.
+Otherwise Thalassa considers the first <em>N</em> bytes (that's it! not
+characters, but bytes, so utf8 lovers can have a trouble here... well, in
+case they try to compute the value manually, which it was never intended
+for) of the body
+to be the &ldquo;<em>description</em>&rdquo; (or &ldquo;teaser&rdquo;, no matter), where
+<em>N</em> is the integral number given as the value for
+<code>teaser_len</code>.  If this number happens to be greater than the
+body's length, then the whole body is taken as the description.  Some
+obvious troubles can arise in case some HTML tags open within the
+&ldquo;teaser&rdquo; but get closed after its end.
+</p>
+<p>The <code id="hf_date">date</code> field should contain <em>the date</em>
+(presumably, again, the date when the page was created) in some
+human-readable format.  In case it is present, it will be displayed as the
+date; otherwise, Thalassa will <em>somehow</em> convert the
+<a href="#hf_unixtime"><code>unixtime</code></a> field to a human-readable
+form.  Actually, in the present version the rfc2822 date format is used
+(see the <a ref="common_macro.html#macro_rfcdate">rfcdate macro</a> for
+explanation), and it's even impossible to set the timezone, it is always
+UTC.  This is <strong>very likely</strong> to change.
+</p>
+<p>The <code id="hf_title">title</code> field is just that: a title.  If some
+of you prefer the term &ldquo;<em>subject</em>&rdquo;, we're really glad for you.
+</p>
+<p>The <code id="hf_tags">tags</code> field contains a comma-separated list
+of, well, tags.  No special handling is done for them, but there's a macro
+you can use to determine if a particular tag is there or not.
+</p>
+
+
+
+
+
+<h2 id="li_macro">The <code>%[li:&nbsp;]</code> macro<p></h2>
+</p>
+<p>As already mentioned above, <code>li</code> stands for <em>list item</em>,
+which is because it is used with <a href="lists.html">lists</a>, too, and,
+even more, sometimes page set items serve as list items theirselves.  The
+<code>li</code> macro is available during the <em>time period</em> of a
+particular set item generation, which means you can use it in your
+<code>page_template</code> and <code>page_tail_template</code> parameters,
+as well as in all things &ldquo;called&rdquo; from them, like snippets defined in the
+<code>[html]</code> configuration section.
+</p>
+<p>The macro accepts at least one argument, and often more.  The first
+argument determines what you actually want from the macro; we'll call these
+names &ldquo;functions&rdquo;; please note we already know two of the functions:
+<code>id</code> and <code>text</code>.  Let's repeat that
+<code>id</code> returns the set item ID (hereinafter, &ldquo;returns&rdquo;
+effectively means that the macro call <code>%[li:id]</code> or the like is
+replaced with the ID), and <code>text</code> returns your
+item's body.  Until the end of this section, we'll use phrases like
+&ldquo;the <code>mumbo</code> function returns <em>jumbo</em>&rdquo; in the sense that
+macro call <code>%[li:mumbo:&nbsp;]</code> (possibly with more than one
+argument) is macro-expanded to a thing explained by &ldquo;<em>jumbo</em>&rdquo;.
+</p>
+<p>Besides the two, the most obvious functions are (likely):</p>
+<ul>
+
+<li><code>title</code> &mdash; returns the title, as it is set by the
+<a href="#hf_title"><code>title</code></a> header field; are you surprized?
+</li>
+
+<li><code>unixtime</code> returns the
+<a href="#hf_unixtime"><code>unixtime</code></a> field, if it exists and is a
+valid number, oterwise returns an empty string;
+</li>
+
+<li><code>date</code> returns the date in human-readable form, either as
+defined by the <a href="#hf_date"><code>date</code></a> field, or derived
+from the <code>unixtime</code> field;
+</li>
+
+<li><code>descr</code> returns the shorter version of the page text, as set
+by <a href="#hf_teaser_len"><code>teaser_len</code></a> and
+<a href="#hf_descr">descr</code></a> fields;
+</li>
+
+<li><code>tags</code> returns a comma-separated list of tags set by the
+<a href="#hf_tags">tags</code></a> field; this list may differ from the actual
+field's contents <em>as a string</em>, because internally the tags are
+stored separately, and the whole string is reconstructed when requested by
+the macro;
+</li>
+
+<li id="li_func_hf"><code>hf</code>
+(for <em>header field</em>) takes a name of a header
+field as an additional agrument, and returns its value &mdash; that is,
+<code>%[li:hf:<em>NAME</em>]</code> returns the value of the header named
+<em>NAME</em>; please note this only works for header fields not recognized
+by Thalassa itself, which means you can't get the value of your title or
+unixtime this way.
+</li>
+
+<p></ul>
+</p>
+<p>Several functions of the <code>li</code> macro allow to check certain
+condition and choose one of two strings depending on it.  They may accept
+one or more arguments for the condition itself (but most of them don't, as
+the condition is fully defined by the function itself), and two more
+arguments as the alternatives to return (i.e., &ldquo;then&rdquo; and &ldquo;else&rdquo;
+alternative).  For example, <code>ifcomenabled</code> checks whether
+comments are enabled or not on the page, which means the condition is true
+if (and only if) the <code>comments</code> field contains the word
+<code>enable</code>.  So,
+</p>
+<pre>
+  %[li:ifcomenabled:%[html:cmt_form]:&lt;em&gt;comments disabled&lt;/em&gt;]
+<p></pre>
+</p>
+<p>on pages where comments are enabled, will expand to whatever
+<code>%[html:cmt_form]</code> expands to, while on pages where comments are
+not enabled (that is, either disabled or readonly), it will expand to
+the string &ldquo;<code>&lt;em&gt;comments disabled&lt;/em&gt;</code>&rdquo;.
+</p>
+<p><strong>WARNING!  Be sure to read
+<a href="macro_intro.html#eager_and_consequences">the section devoted to
+eager computational model and its consequences</a>.  </strong>
+In this particular example, the <code>%[html:cmt_form]</code> call will be
+expanded in any case, that is, even if comments aren't enabled, it will
+expand anyway, but the result of the expansion will be dropped.  Sometimes
+this isn't a problem, but it is necessary to understand what actually
+happens, or else you'll run into problems, sooner or later.
+</p>
+<p>For the particular example, the obvious solution will be to write
+</p>
+<pre>
+  %[html:%[li:ifcomenabled:cmt_form:com_disabled]]
+<p></pre>
+</p>
+<p>and to define the snippet named <code>com_disabled</code> in your
+<code>[html]</code> configuration section like this:
+</p>
+<pre>
+  [html]
+  com_disabled = &lt;em&gt;comments disabled&lt;/em&gt;
+  cmt_form = ...
+  ...
+<p></pre>
+</p>
+<p>The <code>iffile</code> macro checks if the set item directory contains a
+file with the given name among the files to be published.  It takes three
+arguments, for the file name, &ldquo;then&rdquo; and &ldquo;else&rdquo;.  For example:
+</p>
+<pre>
+  %[li:iffile:photo.png:
+     &lt;img src="photo.png" alt="the photo"/&gt;
+     :
+     &lt;strong&gt;No photo&lt;/strong&gt;
+  ]
+<p></pre>
+</p>
+
+<p>The <code>li</code> macro also supports some functions intended to be used
+with lists; some of them may (in rare curcumstances) be useful in sets that
+don't act as source for any lists, but it would be hard to explain them
+without the lists-related background anyway.  These functions are:
+<code>prev</code>,
+<code>next</code>,
+<code>ifprev</code>,
+<code>ifnext</code>,
+<code>iflong</code>,
+<code>ifmore</code>,
+<code>listarraynum</code>,
+<code>iflistarraynum</code>,
+<code>listidx</code>,
+<code>iflistidx</code>.  We'll discuss them along
+<a href="lists.html#li_macro">with the lists</a>.
+</p>
+<p>If the second argument doesn't match any functions known to the macro, it
+expands to <code>[li:<em>ARG</em>?!]</code>, where <em>ARG</em> it the
+second parameter's value.
+</p>
+
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="generic_files.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#page_sets" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="lists.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>
