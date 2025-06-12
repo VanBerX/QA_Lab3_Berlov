@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="common_macros.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#headed_text" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="generation_objects.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Headed text format</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ul>
+<li><a href="#motivation">Why headed text files</a></li>
+<li><a href="#structure">Structure of the file</a></li>
+<li><a href="#encodings">Character encodings</a></li>
+<li><a href="#formats">Content formats</a></li>
+<p></ul>
+</p>
+
+<h2 id="motivation">Why headed text files<p></h2>
+</p>
+<p>Text files with a clearly separated header are used by Thalassa CMS as a
+source for the following types of content:</p>
+<ul>
+<li>pages of <a href="generation_objects.html#pagesets">page sets</a>;</li>
+<li>user comments.</li>
+<p></ul>
+</p>
+<p>Every file of this type serves as a source for exactly one page, or
+exactly one comment.  In contrast with ini files, a headed file can
+have its own <em>format</em> and may specify its own character encoding.
+<strong>Macroprocessing is NOT performed on the
+content of these files</strong>, and sometimes this may be deadly
+important.
+</p>
+<p>The idea behind these files is that they are intended to be created
+programmatically, rather than written manually, despite that it is easy to
+write them by hands as well.  In particular, this documentation was
+prepared as a set of headed text files, written in a text editor (what
+editor? well, <a href="http://www.vim.org">vim</a>) and processed as a
+<a href="page_sets.html">page set</a>.  From the other hand,
+<em>comments</em> are received with the Thalassa CGI program
+(<code>thalcgi.cgi</code>) and stored as headed text files, so this is
+an obvious case when they are created by a program.
+</p>
+<p>Furthermore, Thalassa CMS was initially written keeping in mind a task of
+saving a particular site, which was initially created in 2009 with Drupal
+(5.* version of it, which was declared end-of-life just a year later).
+After several years, the version of MySQL used for that site was declared
+unsupported as well, and the ancient version of Drupal refused to work with
+later versions of MySQL or MariaDB.  Even the PHP interpreters of newer
+versions started to output warnings trying to run that old Drupal.  After
+working for more than a decade in a virtual box containing older versions
+of all involved software, it became clear for the site owner that the only
+way to keep the site running is to break out of this software slavery,
+built by people who don't care about backward compatibility.
+</p>
+<p>This is how Thalassa was born; the site from this story is
+<a href="http://stolyarov.info">http://stolyarov.info</a>, it is in
+Russian, so unfortunately most of people reading this text will not be able
+to rate it for themselves, but as of the moment of migration to Thalassa, it
+had 200+ pages and 6000+ user comments, and to give up all the content
+would be a catastrophe.  What was actually done is all pages and comments
+were fetched from the MySQL database and stored in files; all these blocks,
+menus and the like, together with page layout and color scheme, were all
+recreated manually.
+</p>
+<p>This makes another example when a set of headed text files was created
+programmatically, this time <em>including</em> the source files for pages,
+not only for comments.  And here's why Thalassa allows these files to be in
+a character encoding different from the one used for ini files (and for the
+generated HTML files, too): the author prefers koi8-r as THE cyrillic
+encoding, while Drupal since ancient times is only capable of utf8, and
+author preferred to store the source information in files exactly how it
+was fetched from the database (in order not to loose anything
+accidentally).
+</p>
+<p>The real objective of these files is to work instead of another damn
+database table, holding both the content (that is, the text of a page or a
+comment, possibly not in the final form) and additional attributes such as
+title, date, tags and the like.  And yes, they perform well.  Actually,
+they work far better than the author expected.
+</p>
+
+
+<h2 id="structure">Structure of the file<p></h2>
+</p>
+<p>The format is much like the well-known since rfc822 <em>email message</em>
+format: headers come first, and every header consists of a name, a colon
+char, a space and a value.  Placing a line starting with whitespace right
+after a header line, one can <em>continue</em> the header line, thus making
+it longer.  The body is separated from the header by an empty line
+(strictly speaking, a line either of a zero lenght, or consisting of
+whitespace chars only).  The most notable difference with rfc822 is that
+header names are case-sensitive, and for Thalassa CMS they are usually
+written all-lowercase.
+</p>
+<p>To get the idea, here's an example:
+</p>
+<pre>
+  id: testpg
+  title: Test page
+  unixdate: 1681890000
+  encoding: us-ascii
+  format: texbreaks
+
+  This is an example of an HTML page created
+  from a source stored as a headed text file.
+
+  BTW, thanks to the format, this phrase will
+  go into a separate paragraph.
+<p></pre>
+</p>
+
+<p>The header fields <code>id</code>, <code>encoding</code> and
+<code>format</code> are used internally and are not accessible directly
+with macros.  Actually, the <code>id</code> (both for a page and for a
+comment) is accessible, but it must be set to the same value as determined
+by the file name (or, for set items represented with a directory, by the
+name of the directory).  It is unspecified what happens in case they don't
+match.
+</p>
+<p class="remark">Actually, it is very possible nothing will happen at
+all.  Please don't rely on that.  In future versions, checks are likely to
+be added.<p></p>
+</p>
+<p>The <code>encoding</code> and <code>format</code> fields determine what
+filters must be applied to the body and <em>some</em> of the header files
+before the content is made available as macro values.  Both can be omitted
+or left blank.  If <code>encoding</code> is not specified explicitly, it is
+assumed to be the same as for the ini files (and for the site), so no
+recoding is needed.  <a href="#encodings">Character encodings</a> are
+discussed later.
+</p>
+<p>If <code>format</code> is not specified, it is assumed to be
+&ldquo;<code>verbatim</code>&rdquo;, so, again, no conversion is needed.  It is
+notably inconvenient to write raw HTML manually; see the
+<a href="#formats">Formats</a> section below for information on available
+formats.
+</p>
+<p>Some of the fields are recognized by Thalassa, but their values are
+available via macros, directly or indirectly.  All information from
+unrecognized fields is extracted and is available directly by the names of
+the fields (via the <code>%[li:&nbsp;]</code> macro for pages, via the
+<code>%[cmt:&nbsp;]</code> macro for comments), so the user can add any
+fields as needed and use their values for site generation.
+</p>
+<p>Some of the recognized fields are not passed through filters at all (e.g.,
+the <code>unixdate:</code> field, as it is just a number), some are passed
+through the same set of filters as the body (as determined by
+<code>format:</code> and <code>encoding:</code>; actually, only the
+<code>descr:</code> fields for pages is converted this way in the present
+version), and for the rest of the fields, including any unrecognized
+fields, only the encoding conversion is applied as appropriate, but no
+format conversion is done.
+</p>
+<p>The exact list of recognized fields and their roles differ for pages
+and comments, so it is discussed along with
+<a href="page_sets.html">page sets</a> and
+<a href="comment_sections.html">comment sections</a>, respectively.
+</p>
+
+
+
+<h2 id="encodings">Character encodings<p></h2>
+</p>
+<p>Thalassa mostly acts in encoding-agnostic manner.  In particular, it
+assumes ini files are written in the same encoding as the site pages should
+be generated, so it never performs any encoding transformations for all
+content that comes from ini files.
+</p>
+<p>Unlike that, headed text files are <a href="#motivation">intended</a>
+to be supplied by other programs, and the author of Thalassa had at least
+one task at hands for which encoding conversion was desired.  Hence
+Thalassa supports encoding conversions for headed text files' content.  To
+activate this feature, the following conditions must be met:</p>
+<ul>
+
+<li>base encoding must be set with the <code>encoding</code> parameter of the
+<a href="general_configuration.html#format_section"><code>[format]</code>
+configuration section;</a></li>
+
+<li>encoding for the particular headed text file must be explicitly
+specified with the <code>encoding:</code> header field;</li>
+
+<li>the two encodings must differ and both must be supported by
+Thalassa.</li>
+
+<p></ul>
+</p>
+<p>If any item in this list is not met, Thalassa will silently decide to do no
+encoding converion.
+</p>
+<p>Currently, only the following encodings are supported:
+<code>utf8</code>,
+<code>ascii</code>,
+<code>koi8-r</code>,
+<code>cp1251</code>.
+Thalassa recognizes the following synonims for the supported encodings:
+<code>utf-8</code>,
+<code>us-ascii</code>,
+<code>koi8r</code>,
+<code>koi8</code>,
+<code>1251</code>,
+<code>win1251</code>,
+<code>win-1251</code>,
+<code>windows-1251</code>.
+Names are case-insensitive.
+</p>
+<p class="remark">
+It is relatively easy to add more encodings; this involves making tables to
+convert from that encoding to unicode and back, and adding them to the
+source code of the <code>stfilter</code> library used by Thalassa.  If you
+need support for an encoding not listed above, please contact the author.
+<p></p>
+</p>
+<p>When a character encountered in the source being converted is not
+representable in the target encoding, Thalassa replaces it with the
+appropriate HTML4 entity, such as <code>&amp;laquo;</code> or
+<code>&amp;mdash;</code>, if there's such entity for the particular
+character in HTML4 (<strong>not HTML5</strong>).  If no appropriate entity
+exists, the character is replaced with HTML hexadecimal unicode entity,
+like <code>&amp;#x42B;</code>.
+</p>
+
+
+<h2 id="formats">Content formats<p></h2>
+</p>
+<p>Thalassa is designed to pass the body of a headed text file through filters
+that somehow adjust the markup, that is, convert the content from one
+format to another.  Format of the body (and possibly some of the header
+fields) is indicated by the <code>format:</code> header field; the value of
+this field is expected to be a comma-separated list of tokens designating
+centain aspects of the format, or, strictly speaking, of the desired
+conversion.
+</p>
+<p>The default format is <code>verbatim</code>, which means the body is
+already in HTML and needs no conversion at all.  No conversion will be
+performed as well in case the <code>format:</code> header is missing,
+empty, or contains no recognized tokens; it is, however, strongly
+recommended to specify the <code>verbatim</code> format explicitly as the
+defaults may change in the future.
+</p>
+<p>The recognized format tokens are <code>verbatim</code>,
+<code>breaks</code>, <code>texbreaks</code>, <code>tags</code> and
+<code>web</code>.
+</p>
+<p>The <code>web</code> token was initially intended to indicate that URLs and
+email addresses encountered in the text should be automatically turned into
+clickable web links.  As of present, <strong>this conversion is not
+implemented</strong>, and the token is silently ignored by Thalassa.
+</p>
+<p>The <code>tags</code> token means that HTML tags must be stripped off the
+text being converted, with exception for the tags explicitly allowed for
+user-supplied content.  The list of allowed tags is set by
+<code>tags</code> parameter in the
+<a href="general_configuration.html#format_section"><code>[format]</code>
+configuration section</a>.
+</p>
+<p>Both <code>breaks</code> and <code>texbreaks</code> turn on conversion of
+newline characters into paragraph breaks, but in different manner.  The
+filter enabled by <code>texbreaks</code> works in TeX/LaTeX style: it takes
+empty lines (or, strictly speaking, lines that contain nothing but possibly
+whitespace) as paragraph breaks, and wraps continuous text fragments (those
+not containing empty lines) with <code>&lt;p&gt;</code> and
+<code>&lt;/p&gt;</code>.  This mode is suitable if you use a text editor
+that wraps long lines, such as vim.  In particular, in all source files of
+this documentation the <code>texbreaks</code> token is used.
+</p>
+<p>The <code>breaks</code> token does essentially the same, but in addition it
+replaces every lonely newline char (that is, a newline char which is not
+followed by an empty line) with <code>&lt;br&nbsp;/&gt;</code>.  This mode is
+inconvenient for files prepared manually in a text editor, but is useful
+for texts received through web-forms, such as user comments.
+</p>
+<p>In both modes the filter is aware of some HTML/XHTML basics (but in a
+<strong>very basic</strong> level): it knows that some tags are not
+suitable inside paragraphs, and that the paragraph conversion shouldn't be
+done within some tags.  However, the filter is not a real (X)HTML parser
+and has no idea about all these DTD schemes.  It simply uses a list of
+&ldquo;special&rdquo; tags: <code>pre</code>, <code>ul</code>, <code>ol</code>,
+<code>table</code>, <code>p</code>, <code>blockquote</code>, <code>h1</code>,
+<code>h2</code>,
+<code>h3</code>, <code>h4</code>, <code>h5</code>, <code>h6</code>.  When
+any of these tags starts, the filter closes the current paragraph, if it is
+open, and doesn't start any new paragraphs until the tag closes.  The list
+is hard-coded.  It is very possible this will change in future versions, as
+all this is, well, just a hack which solves certain problems arised here
+and now.
+</p>
+<p>Anyway, tags that are &ldquo;special&rdquo; anyhow in respect to paragraphs, and are
+not on the list above, shouldn't perhaps be allowed for user-supplied
+content.  As of content created by the site's owner or administrator, it
+can always be checked for results of conversion.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="common_macros.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#headed_text" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="generation_objects.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

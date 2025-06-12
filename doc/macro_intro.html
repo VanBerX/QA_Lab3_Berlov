@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="ini_basics.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#macro_intro" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="common_macros.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Macroprocessor introduction</a></h1>
+    <div class="page_body">
+<p>Contents:
+</p>
+<ul>
+<li><a href="#overview">Overview of macros in Thalassa CMS</a></li>
+<li><a href="#escape">The escape char</a></li>
+<li><a href="#flavors">Three flavors of macro calls</a></li>
+<li><a href="#eager_and_consequences">Eager evaluation
+             and its consequences</a></li>
+<p></ul>
+</p>
+
+<h2 id="overview">Overview of macros in Thalassa CMS<p></h2>
+</p>
+<p>Generally speaking, <strong>macro</strong> is a kind of rule for replacing
+one text with another; a <em>macro call</em> (which is often confused with
+the macro itself) is a (small?) portion of text which gets automatically
+replaced with some other text according to the rule.  The process of this
+replacement is called <em>macro expansion</em>, and the piece of program
+code which performs the expansion is called <em>macroprocessor</em>.
+</p>
+<p>Macros are used heavily in Thalassa CMS configuration files; it is no
+surprise because, actually, what Thalassa does is turning one set of text
+files (your sources) into another set of text files (your site content).
+</p>
+<p>From the very start it is important to keep in mind that macro expansion is
+only done in the ini files, and not everywhere, but only within values of
+<em>some</em> (honestly, most of) parameters.  It is explicitly mentioned
+in documentation for every ini file section whether macroexpansion is done
+in all its parameters, only some of them or none.
+</p>
+<p>Strictly speaking, all macros in Thalassa are built-in in the sense that
+you can't add new macros without hacking the source code of Thalassa
+itself.  However, you can add various snippets, templates, options and
+other things accessible via the existing macros, and some of them accept
+parameters so effectively you can achieve all the same goals as if you
+could invent user-defined macros.
+</p>
+<p>There are basic macros, which are available both for <code>thalassa</code>
+and <code>thalcgi.cgi</code>; there are as well macros specific for each of
+them; and there are even some macros local for a particular configuration
+file section or a particular parameter.
+</p>
+
+
+<h2 id="escape">The escape char<p></h2>
+</p>
+<p>Wherever macro expansion is performed, it uses the percent char
+&ldquo;<code>%</code>&rdquo; as the &ldquo;escape&rdquo; character.  This means that once the
+macroprocessor sees the percent char, it expects there will be a macro call
+right after it.  So, if you just need the percent char itself, you must
+double it, like this: <code>%%</code> &mdash; but only in case you write a
+text which will be passed through the macroprocessor; remember, <strong>not
+all parameter values</strong> go through the macroprocessor, so in case of
+any doubts be sure to take a look at the documentation for a particular
+configuration section.
+</p>
+
+
+<h2 id="flavors">Three flavors of macro calls<p></h2>
+</p>
+<p>Thalassa uses the macroprocessor implemented by ScriptPlusPlus library (see
+<a href="http://www.croco.net/software/scriptpp/">http://www.croco.net/software/scriptpp/</a>).
+This library provides three flavors of macro calls: simple, nesting and
+lazy.  For a macro named <code>foobar</code>, the simple form of the call
+is written as <code>%foobar%</code>, the nesting form will be
+<code>%[foobar]</code>, and the lazy form will be <code>%{foobar}</code>.
+</p>
+<p>Before we discuss the difference between them, we need to introduce
+<em>macro arguments</em>.  It is relatively a rare case when a macro is
+just called by its name without any additional information.  Sometimes this
+thing happens; for example, macro named <code>now</code> returns the
+current time as a Unix datetime value (a decimal integer equal to the
+amount of seconds passed since Jan 01, 1970).  We can call it both with
+<code>%now%</code> and <code>%[now]</code>, in this (very simple) case it
+makes no difference.  Another example of such a &ldquo;parameter-less&rdquo; macro is
+<code>message</code>, which is only available in <code>thalcgi.ini</code>
+and represents a short message describing the result of the action the
+user requested and the server has just performed (or at least tried to).
+Again, we can write either <code>%message%</code>, or
+<code>%[message]</code>, there's no difference.
+</p>
+<p>It is also possible to write <code>%{now}</code> or
+<code>%{message}</code>, and both will (highly likely) work, but this is
+strongly discouraged and may lead to serious security-related problems.
+<strong>Please don't use the &ldquo;lazy&rdquo; flavor of macro calls unless you're
+absolutely sure you know what you do.</strong>
+</p>
+<p>In the whole Thalassa CMS there are no more macros accepting no arguments,
+only these two (strictly speaking, there are also some such macros specific
+to particualr configuration parameters, but let's ignore them for now, as
+they even aren't listed in the macro references, they are only mentioned in
+descriptions of the respective parameters).  All the other macros accept
+one or more arguments.  For example, macro named <code>ltgt</code> accepts
+exactly one argument &mdash; an arbitrary string, and returns the same
+string, but with characters &ldquo;<code>&lt;</code>&rdquo;, &ldquo;<code>&gt;</code>&rdquo;
+and &ldquo;<code>&amp;</code>&rdquo; replaced with, respectively,
+&ldquo;<code>&amp;lt;</code>&rdquo;, &ldquo;<code>&amp;gt;</code>&rdquo; and
+&ldquo;<code>&amp;amp;</code>&rdquo;; so, the macro call
+<code>%[ltgt:3 &lt; pi &lt; 4]</code> will be replaced with
+&ldquo;<code>3 &amp;lt; pi &amp;lt; 4</code>&rdquo;.  Exactly the same will happen if
+we write the call in the simple form: <code>%ltgt:3 &lt; pi &lt; 4%</code>
+</p>
+<p>In this example, a colon &ldquo;<code>:</code>&rdquo; is used as a delimiter between
+the name of the macro and its argument, but this is not necessarily so.  In
+the macro system we discuss here, a macro name can only consist of
+alpanumeric chars ('a'..'z', 'A'..'Z', '0'..'9'), the underscore
+&ldquo;<code>_</code>&rdquo; and the asterisk &ldquo;<code>*</code>&rdquo;.  When the
+macroprocessor analyses a macro call, the first char it sees which doesn't
+belong to this set is taken as the delimiter.  In examples all through this
+documentation, as well as in example sites provided along with Thalassa, we
+usually delimit with colon, but sometimes we have to use something
+different, like &ldquo;<code>|</code>&rdquo; (in case the colon is to be present
+within one of arguments).  However, you can use whatever punctuation
+character you like.
+</p>
+<p><strong>WARNING: don't use non-ascii characters as delimiters, specially if
+you use UTF-8.  Problems are almost guaranteed if you do.</strong>  Also it
+is not a good idea to use whitespace chars in this role.
+</p>
+<p>It is a very common situation when a result of one macro needs to be passed
+to another macro as one of its arguments.  For example, macro named
+<code>rfcdate</code> turns a Unix datetime value into a human-readable form
+as defined by rfc2822, something like &ldquo;<code>29 Mar 2023 19:15:00
++0000</code>&rdquo;.  So, to get the current date and time, we need to write
+&ldquo;<code>%[rfcdate:%[now]]</code>&rdquo;.  It is obvious that the simple form
+doesn't work here: we can write &ldquo;<code>%[rfcdate:%now%]</code>&rdquo; and it
+will work, but if we try &ldquo;<code>%rfcdate:%now%%</code>&rdquo;, the macro
+<code>rfcdate</code> will receive empty argument (and hence will fail),
+while the <code>now</code> macro will not be called at all.
+</p>
+<p>Macro calls in their simple form work a bit faster, so sometimes it makes
+sense to use the simple form, but it obviously doesn't work even for
+shortest superpositions, like the one we've just discussed.  This is why
+the nesting flavor of macro calls is there.
+</p>
+<p>Before we start discussing the last macro call flavor &mdash; the lazy one
+&mdash; we'd like to repeat one more time our warning.  It is almost always
+possible to avoid lazy macro calls, and it is highly recommended that you
+don't use them at all.  You can just skip the text until the next heading,
+and stay safe.  If you don't understand why we give this recommendation, it
+means you can accidentally introduce a security hole into your site's
+implementation and remain unaware until a catastrophe happens.  You've been
+warned.
+</p>
+<p><span id="eager_algorithm"></span>
+When the macroprocessor performs macro expansion, it does precisely the
+following.  First, it analyses the macro call, determines where the call
+starts and where it ends, and, BTW, for nested calls this is not as easy as
+it can sound.  The next step is no break the macro call down using the
+delimiter chars, so that the macroprocessor knows the name of the macro and
+all its arguments.  For the simple flavor of macro calls, we're almost
+done: superposition is impossible here, so the macroprocessor just calls
+the function corresponding to the extracted macro name and passes all the
+arguments to it as an array of strings.  The function computes the desired
+result of macro expansion, returns it, and macroprocessor appends this
+result to the text being composed.
+</p>
+<p>For the nested flavor, things are different, as each of the arguments may
+contain further macro calls.  So in this case the macroprocessor has to
+effectively create another instance of itself, use that instance to
+process each of the arguments, and only then it can call the corresponding
+function, passing it this time an array composed of processing
+<em>results</em> for each argument, instead of arguments themselves.
+</p>
+<p>Lazy calls follow completely another way.  Once they have the arguments,
+they immediately call the coresponding function, passing it the array of
+<em>raw</em> (unprocessed) arguments.  But once the function returns the
+result, <strong>this result is processed again</strong> before it goes to
+the target text.
+</p>
+<p>Consider for example the macro named <code id="readfile">readfile</code>.
+It takes a file name as the argument and reads the file; being used with
+simple or nesting flavor of calls, this allows to insert a whole file's
+content into your parameter (e.g. into an html page being generated).
+</p>
+<p>If you use <code>readfile</code> in a lazy macro call, you'll be unable to
+compute the name of the file, so you have to know it in advance, but this
+might be not a problem.  The real problems may arise out of the fact that
+in this case <strong>the file's content will get processed by the
+macroprocessor</strong>, so, should there be pieces of text looking like
+macro calls, they will get macro-expanded.  Again, this might be no
+problem if the file is written by you and you're sure there's nothing wrong
+in it.  It is even possible you decide to do this intentionally.  But in
+case the file you read this way may (at least in theory) be modified by
+someone else, then your security hole is ready to serve: everyone who can
+technically supply such a file to your site's implementation, can do
+whatever can be done with Thalassa CMS macros, and that's a lot of things.
+Definitely it is more than you'd want to allow arbitrary people to do on
+your server.
+</p>
+<p>Once again: if all this sounds complicated to you, simply don't use the
+lazy flavor of macro calls, and that's all.
+</p>
+
+
+
+<h2 id="eager_and_consequences">Eager evaluation and its consequences<p></h2>
+</p>
+<p>As it is <a href="#eager_algorithm">mentioned above</a>, for a nesting
+macro call, the process of macro expansion involves applying the
+macroprocessor to every argument of the macro.  In other words, every
+argument of a nesting call gets <em>computed</em> as a separate text to be
+macroprocessed.  In terms of functional programming, all arguments are
+first evaluated, and only then the actual macro is applied to the results.
+This is exactly what is usually called <em>eager evaluation model</em>.
+</p>
+<p>It is important to understand that this happens to <em>every</em> argument
+of the call, every time the call is processed.  The macro system used in
+Thalassa CMS <strong>is not a programming language</strong>, and it doesn't
+provide &ldquo;special&rdquo; macros that could skip evaluation of some of their
+arguments depending on values of other arguments.  Such &ldquo;selective&rdquo;
+evaluation is simply impossible in this implementation.
+</p>
+<p>Thalassa CMS provides some &ldquo;conditional&rdquo; macros, which allow to choose
+one of two or more variants.  What is critically important to understand
+here is that <strong>all variants will be computed</strong> every time a
+call to such a macro is processed.  The macro implementation will choose
+one of the variants afterwards, but it is only <em>after all the variants
+are computed</em>.
+</p>
+<p>Let's consider a more or less simple example.  The <cond>ifeq</cond> macro
+takes exactly four arguments, the first two are stripped from any leading
+and trailing spaces and compared; in case they are equal, the third is
+returned, otherwise the fourth is returned.  Another macro,
+<code>opt</code>, gives access to various options given in the
+<code>options</code> section group.  The last macro for our example is
+known to us already, it is <code>readfile</code> we <a href="#readfile">explained earlier</a>.  Now look at the following:
+</p>
+<pre>
+  %[ifeq:%[opt:scheme:lights]:night
+      :%[readfile:night.txt]:%[readfile:default.txt]]
+<p></pre>
+</p>
+<p>Well, the result of this is more or less obvious: if the option
+<code>scheme/lights</code> is set to <code>night</code>, then the whole
+construction will be replaced with the <code>night.txt</code> file's
+contents, otherwise the contents of <code>default.txt</code> will be used.
+What is not so obvious is that <strong>both files will be read</strong>.
+Sometimes this can be a problem, specially in case one of the files
+actually doesn't exist and an unintentional attempt to read it produces an
+error.
+</p>
+<p>For this particular example, it is easy to avoid the problem:
+</p>
+<pre>
+  %[readfile
+    :%[ifeq:%[opt:scheme:lights]:night:night.txt:default.txt]
+  ]
+<p></pre>
+</p>
+<p>Being used this way, <code>ifeq</code> doesn't choose between two
+<code>readfile</code> call results (after doing them both), as it was done
+in the previous example; instead, it
+just chooses one of the two <em>file names</em>, and the choice is used as
+the <code>readfile</code>'s argument.
+</p>
+<p>In fact, Thalassa provides ways to always avoid unnecessary computations,
+but attention must be paid to this, and, first things first, the person who
+writes configuration files should at least understand what the problem is.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="ini_basics.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#macro_intro" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="common_macros.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

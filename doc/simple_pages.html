@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="general_configuration.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#simple_pages" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="verbatim_publishing.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Simple pages</a></h1>
+    <div class="page_body">
+
+<p>Contents:
+</p>
+<ul>
+<li><a href="#page_section">The <code>[page <em>NNN</em>]</code>
+      section group</a></li>
+<li><a href="#template_section">The <code>[template <em>ID</em>]</code>
+      section group</a></li>
+<p></ul>
+</p>
+
+<h2 id="page_section">The <code>[page <em>NNN</em>]</code> section group<p></h2>
+</p>
+<p>Sections of the <code>[page <em>NNN</em>]</code> group are used to generate
+stand-alone HTML pages as well as almost arbitrary text files residing
+within your site's tree.
+</p>
+<p>The name of the file to generate is defined by the section name, it is that
+<em>NNN</em> thing, relative to your site's tree root (see the
+<a href="general_configuration.html#general_rootdir_parameter">[general]/rootdir
+parameter description</a>).  Yes, dots and slashes are okay in the name,
+so, for example, you can have something like this:
+</p>
+<pre>
+  [page img/.htaccess]
+  body = Options +Indexes
+  +
+<p></pre>
+</p>
+<p>(the &ldquo;<code>+</code>&rdquo; is needed to make sure the file is
+correctly ended with a newline character).
+</p>
+<p>The page name may be overriden by the <code>path</code> parameter, which,
+if given, is passed through the macroprocessor.  Setting it to an empty
+string, or a string <code>"."</code>, or <code>"-"</code>, will cause the
+page generation to be silently suppressed.  This is primarily used by site
+templates.  In case you specify the <code>path</code> parameter, the name
+of the section looses its role and is only required to differ from other
+section names within the <code>[page&nbsp;]</code> group; you can set it to
+whatever (distinct) name you want.
+</p>
+<p>There are two ways to generate a page: on its own or by expanding a
+template (defined by the appropriate <code>[template <em>NNN</em>]</code>
+section).  Creating a page without a template involves parameter
+named <code>body</code>, which specifies the text to be placed into the
+file.  Macroprocessing is done on its value, so you can use
+<a href="general_configuration.html#html_section">HTML snippets</a> and
+other things available through macros.  All other parameters are silently
+ignored, provided that there's no parameter named &ldquo;<code>template</code>&rdquo;.
+</p>
+<p>To generate the page (or a generic file) using a template, the
+<code>template</code> parameter must be given; its value specifies the
+template identifier.  If this parameter is present, the <code>body</code>
+parameter will not be used for generation and will be ignored in case it is
+given (strictly speaking, this is true unless the template being used
+depends on an argument named &ldquo;<code>body</code>&rdquo;, but this is strongly
+discouraged to avoid confusing).  Additional parameters may be specified as
+required for the template.  This method of stand-alone page
+generation is described in the <a href="#template_section">next
+section</a>.
+</p>
+<p><span id="chmod"></span>
+Whatever method is selected, you can affect the mode (that is, access
+permissions) for the generated file.  This is done by specifying
+another parameter, named <code>chmod</code>, whose value is the desired
+mode value, represented by an octal number.  For example, adding
+</p>
+<pre>
+  chmod = 600
+<p></pre>
+</p>
+<p>to the section will make the file accessible (for reading and writing) to
+its owner only.  This may be useful for files that are not web pages and
+are not intended to be accessible through the HTTP server; configuration
+file for the Thalassa CGI program gives a good example.  <strong>Please
+note that the value is passed directly to the <code>fchmod</code> system
+call, so it is not affected by your current <code>umask</code>
+value</strong>.
+</p>
+<p>Please note that <strong>macroprocessing is NOT done for the
+<code>template</code> and <code>chmod</code> parameters</strong>.  In
+particular, the <code>template</code>
+parameter's value must be exactly equal to the appropriate
+<code>[template&nbsp;]</code> section name.  From the other hand, all
+parameters requested by the template are passed through the macroprocessor
+before processing the template.
+</p>
+
+
+<h2 id="template_section">The <code>[template <em>ID</em>]</code>
+section group<p></h2>
+</p>
+<p>Sections headed as <code>[template <em>ID</em>]</code> (where <em>ID</em>
+is a template identifier) specify templates, which can be used to generate
+stand-alone pages of similar structure.
+</p>
+<p>A section of this group has exactly two parameters:</p>
+<ul>
+<li><code>params</code>, a whitespace-separated list of parameters to be
+set by the <code>[page&nbsp;]</code> section and substituted as macros with
+the same names within the template body;</li>
+<li><code>body</code>, which is the template itself.</li>
+<p></ul>
+</p>
+<p>Consider the following example:
+</p>
+<pre>
+  [template dont]
+  params = subject epilogue
+  body = Don't %subject% a %subject% until the %subject%
+  +%subject%s you! %epilogue%
+
+  [page trouble.txt]
+  template = dont
+  subject = trouble
+  epilogue = Or else you'll have a trouble.
+
+  [page cheat.txt]
+  template = dont
+  subject = cheat
+  epilogue = Cheaters are stinky.
+<p></pre>
+</p>
+<p>Two files will be generated: <code>trouble.txt</code> will contain
+</p>
+<pre>
+  Don't trouble a trouble until the trouble
+  troubles you! Or else you'll have a trouble.
+<p></pre>
+</p>
+<p>and <code>cheat.txt</code> will have
+</p>
+<pre>
+  Don't cheat a cheat until the cheat
+  cheats you! Cheaters are stinky.
+<p></pre>
+</p>
+<p>Please note that <strong>macroprocessing is NOT done for the
+<code>params</code> parameter's value.</strong>  The <code>body</code>
+parameter is certainly passed through the macroprocessor to get the
+resulting text, and for this run the macroprocessor is supplied with simple
+(argument-less) macros for each of the words mentioned in the
+<code>params</code>, in addition to all macros available everywhere.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="general_configuration.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#simple_pages" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="verbatim_publishing.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

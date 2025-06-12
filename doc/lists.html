@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="page_sets.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#lists" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="aliases.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Lists</a></h1>
+    <div class="page_body">
+
+<p>Contents:</p>
+<ul>
+<li><a href="#basics">List basics</a></li>
+<li><a href="#list_section">The <code>[list&nbsp;]</code> ini file
+                            sections</a></li>
+<ul>
+   <li><a href="#list_source">List source configuration</a></li>
+   <li><a href="#list_general_params">General parameters</a></li>
+   <li><a href="#list_pages">Appearance of list pages</a></li>
+   <li><a href="#list_item_pages">Generation of list item pages</a></li>
+</ul>
+<li><a href="#ini_based_lists">Lists of items defined by ini file
+                            sections</a></li>
+<li><a href="#ls_macro">The <code>%[ls:&nbsp;]</code> macro</a></li>
+<li><a href="#li_macro">The <code>%[li:&nbsp;]</code> macro</a></li>
+<li><a href="#listinfo_macro">The <code>%[listinfo:&nbsp;]</code>
+                            macro</a></li>
+<p></ul>
+</p>
+
+<h2 id="basics">List basics<p></h2>
+</p>
+<p>First things first.  Relatively detailed
+<a href="generation_objects.html#lists">introduction to lists</a> is given
+in our review of objects Thalassa can generate.  Make sure you read
+it beforehand.  We'll assume you already understand what lists are and what
+they are for.
+</p>
+<p>Let's recall that list, as Thalassa object, consists of <em>items</em>,
+placed in some order.  Every item is, basically, a piece of text, but,
+besides of that, a separate html page can be generated for each item of the
+list.  These pages are calles &ldquo;<em>list item pages</em>&rdquo;; they can even
+have comment sections, which means several physical HTML files may appear
+for a single list item.  However, generation of item pages may be turned
+off for a particular list.
+</p>
+<p>Normally, one or more pages will be generated to display items of the list,
+one by one; macros are provided to build obvious navigation in such a page
+array.  These pages are called <em>list pages</em> and they are not to be
+confused with <em>list item pages</em>: obviously, list item pages are
+generated (unless disabled) one per item, while list pages <em>contain</em>
+items.  Typically, for the case when both list pages and list item pages
+are generated, every item has a shorter version (description, or teaser) for
+inclusion in the list pages, and a longer version (full text) used for the
+item page.
+</p>
+<p>List pages generation can be disabled for a particular list as well.  A list
+that has no list pages is called <em>embedded list</em>; it is generated
+during expansion of a macro call <code>%[embedlist:<em>NAME</em>]</code>
+(where <em>NAME</em> is the list ID).
+</p>
+<p>For every list, there must be a place the items actually come from.  It is
+called <em>list source</em>.  There are two possibilities:</p>
+<ul>
+
+<li>a <a href="ini_basics.html#sectiongroups">section group</a> placed in
+one of your ini files can serve as a list source;</li>
+
+<li>a <a href="page_sets.html">page set</a> or a certain part of it can
+become a list source with a help of an additional file, in which the set
+items that form the list are enumerated.</li>
+
+<p></ul>
+</p>
+<p>A single list source can serve several lists, should this is needed for
+some reason.
+</p>
+<p>List item pages, in case they are generated, can have their own
+<a href="comment_sections.html">comment sections</a>.  This, as well as
+list item pages theirselves, is mostly useful for lists that use section
+groups as their source, because pages from page sets can have comments on
+their own, without any help from lists.
+</p>
+
+
+<h2 id="list_section">The <code>[list&nbsp;]</code> ini file sections<p></h2>
+</p>
+<p>Lists are defined with ini file sections of the <code>list</code> group,
+e.g.
+</p>
+<pre>
+  [list news]
+<p></pre>
+</p>
+<p>The section name (<code>news</code> in this example) identifies the list as
+a whole and serves as a default for some parameters.
+</p>
+
+   <h3 id="list_source">List source configuration<p></h3>
+</p>
+<p>The <code>source</code> parameter determines what will be used as the
+source for the list items.  The value consists of two or three
+<em>words</em>, delimited by any amount of whitespace; the first word must
+be either <code>ini</code>, meaning the items will be taken from a
+designated section group in one of your ini files, or <code>set</code>,
+meaning a page set will act as the list source.
+</p>
+<p>For <code>ini</code>, there must be the second word which indicates the
+section group name.  For example,
+</p>
+<pre>
+  [list crocodiles]
+  src = ini croco
+<p></pre>
+</p>
+<p>means the items will be taken from sections
+<code>[croco&nbsp;gavial]</code>,
+<code>[croco&nbsp;saltwater]</code>,
+<code>[croco&nbsp;caiman]</code> and the like.
+</p>
+<p>For <code>set</code>, two additional words must be given, the first for the
+name of the page set (exactly as in the respective
+<a href="page_sets.html#pageset_section">pageset section</a> head), and the
+second for the so-called <em>tag</em>.  Please note that in the present
+version of Thalassa the <em>tag</em> has nothing to do with the
+<code>tags:</code> header field (although such a connection may appear in
+the future).  What the tag determines is the name of the file that
+enumerates the list of page set item IDs, thus turning an (unordered) page
+set into an ordered list.  The name of the file is computed by prepending
+an underscore &ldquo;<code>_</code>&rdquo; to the tag.  Hence,
+</p>
+<pre>
+  [list dogbreeds]
+  src = set dogs breeds
+<p></pre>
+</p>
+<p>means the page set defined by <code>[pageset dogs]</code> section will be
+used as the item source, and a file named <code>_breeds</code>, containing
+the actual list of set IDs, is expected to exist within the
+<a href="page_sets.html#set_src_dir">set source directory</a>.
+</p>
+<p>For example, in your <a href="page_sets.html#set_src_dir">page set source
+directory</a> for the set named <code>dogs</code> you can create
+<a href="headed_text.html">headed text files</a> named, e.g.,
+<code>terrier</code>, <code>spaniel</code>, <code>shepherd</code>,
+<code>pointer</code>, <code>beagle</code>, <code>rottweiler</code> and the
+like, and along them place a file named <code>_breeds</code> containing
+something like this:
+</p>
+<pre>
+  beagle
+  pointer
+  rottweiler
+  shepherd
+  spaniel
+  terrier
+<p></pre>
+</p>
+
+
+
+
+   <h3 id="list_general_params">General parameters<p></h3>
+</p>
+<p>The <code>reverse</code> parameter specifies if the items should be placed
+in the native (same as in the source) or reverse order.  The value should
+be &ldquo;<code>yes</code>&rdquo; or &ldquo;<code>no</code>&rdquo;; &ldquo;<code>no</code>&rdquo; is the
+default, and, actually, anything not equal to &ldquo;<code>yes</code>&rdquo; is
+considered &ldquo;no&rdquo;.
+</p>
+<p>The <code>reverse_source</code> parameter allows to declare that the items
+in the source are placed in reverse order.  The value must be
+&ldquo;<code>yes</code>&rdquo; or &ldquo;<code>no</code>&rdquo;; in fact, &ldquo;<code>yes</code>&rdquo;
+is the only one that makes sense, otherwise the parameter should perhaps be
+simply omitted.
+</p>
+<p class="remark">If you change both <code>reverse</code> and
+<code>reverse_source</code> to their opposite values, your resulting order
+of items will remain the same; impression can occur that it is senseless to
+have both parameters, but such impression is wrong because of the next
+parameter, named <code>last_items_only</code>.<p></p>
+</p>
+<p>The <code>last_items_only</code> parameter's value, if specified, must be
+an integral number; Thalassa will only handle that many <em>last</em> items
+of the list, completely ignoring all the rest.  This is useful for creating
+lists like <em>latest news</em>, <em>last added photos</em> etc., specially
+if it is an additional list based on the same source with a &ldquo;main&rdquo; list
+(like, may be, &ldquo;news&rdquo; or &ldquo;photos&rdquo;).
+</p>
+<p>The <code>embedded</code> parameter declares the list to be
+<em>embedded</em>; technically this means Thalassa will not generate list
+pages for it.  The list will be generated as a result for a call to
+<code>embedlist</code> macro, like <code>%[embedlist:latestnews]</code>.
+</p>
+<p>The <code id="param_aux_params">aux_params</code> parameter only makes
+sense for
+<code>ini</code>-sourced lists; its value is a comma-separated list of
+<em>additional</em> parameters to be extracted from each item's ini
+section.  These parameters are accessible by calling
+<code>%[li:hf:<em>NAME</em>]</code> (see the
+<a href="page_sets.html#li_func_hf">hf function of the li macro</a>).
+</p>
+
+
+   <h3 id="list_pages">Appearance of list pages<p></h3>
+</p>
+<p>For both list pages and HTML code returned by the <code>embedlist</code>
+macro (for embedded lists), the actual content is controlled by the same
+set of parameters: <code>list_header</code>, <code>list_footer</code> and
+<code>list_item_template</code>.
+</p>
+<p>The <code>list_header</code> and <code>list_footer</code> define what to
+place at the head and at the tail of every list page, that is, before the
+list items and after them.  For embedded lists, these parameters define how
+to start and how to end the HTML fragment returned by the
+<code>embedlist</code> macro; for example, you can use them to start (and
+to end) a numbered/unnumbered list, or a table, or whatever HTML
+construction you like.
+</p>
+<p>The <code>list_item_template</code> parameter defines how each list item is
+generated.  For example, a very basic embedded list may be configured as
+follows:
+</p>
+<pre>
+  [list lastnews]
+  embedded = yes
+  last_items_only = 15
+  source = ini news
+  reverse = yes
+  list_header = &lt;ul&gt;
+  list_footer = &lt;/ul&gt;
+  list_item_template = &lt;li&gt;&lt;a href="/news/%li:id%.html"&gt;%li:title%&lt;/a&gt;
+  +   %li:descr%&lt;/li&gt;
+  pages = no
+<p></pre>
+</p>
+
+<p>The <code>items_per_listpage</code> parameter sets the number of items to
+display per page; the value must be a non-negative integer,
+<code>0</code>&nbsp;(the default) means to display the whole list on a
+single page.  This parameter, as well as the following two, are ignored for
+embedded lists.
+</p>
+<p>Names of the files to be generated as list pages are set with
+<code>main_listpage_name</code> and <code>listpage_name_templ</code>
+parameters.  The <code>main_listpage_name</code> parameter parameter's
+value is simply a file name, relative to your site's tree root, for the
+&ldquo;main&rdquo; page of the list (containing first items for a normal-order list,
+last items for a reverse list).  The <code>listpage_name_templ</code>
+parameter sets a template for names of additional pages, in which <a href="page_sets.html#idx_macros">index macros</a> (<code>%idx%</code>,
+<code>%_idx%</code> and <code>%idx0%</code>) are expanded.  In case
+<code>main_listpage_name</code> is omitted,
+<code>listpage_name_templ</code> is used for the main (zeroth) page as
+well.
+</p>
+
+
+
+   <h3 id="list_item_pages">Generation of list item pages<p></h3>
+</p>
+<p>List item pages (once again, not to be confused with list pages) are
+enabled by setting the <code>pages</code> parameter to
+&ldquo;<code>yes</code>&rdquo;.  Any other value, as well as omitted parameter, are
+considered equal to &ldquo;<code>no</code>&rdquo;, which means not to generate the
+pages.
+</p>
+<p>File names for the item pages are controlled with the
+<code>itempage_name</code> parameter, whose value is effectively a template
+in which <a href="common_macros.html#idx_macros"><em>index macros</em></a>
+are available.  The index macros are only used in case the page to be
+generated contains a comment section and there are so many comments that
+more than one physical page is to be generated.
+</p>
+<p>The actual content of list item pages is controlled by two parameters:
+<code>itempage_template</code> and <code>itempage_tail_template</code>.
+Their values are passed through the macroprocessor; then, the generator
+concatenates the processing result for <code>page_template</code>, the
+comment section (if it exists for the page being generated) and the
+processing result of <code>page_tail_template</code>.
+</p>
+<p>The <code>comments</code> parameter sets the comment sections style, the
+path to the comment tree (the part of the &ldquo;database&rdquo; that holds comments
+for the particular page) and some additional parameters available
+in comment-related templates by macro calls.  This parameter is closely
+discussed along with <a href="comment_sections.html">comment sections</a>.
+By default this parameter's value is empty, which means no comment section
+to be generated.
+</p>
+<p>For list item pages that, because of comments, are generated in more than
+one instance, <a href="page_sets.html#comment_maps">comment map files</a>
+need to be generated, just like for page set items (use the link for the
+discussion).  The <code>commentmap</code> parameter is used to set the
+comment map file name.
+</p>
+
+
+<h2 id="ini_based_lists">Lists of items defined by ini file sections<p></h2>
+</p>
+<p>In case your list is configured to use ini sections as a source, e.g.,
+</p>
+<pre>
+  [list mylst]
+  source = ini myitem
+<p></pre>
+</p>
+<p>&mdash; effectively this means you defined a custom
+<a href="ini_basics.html#sectiongroups">section group</a>; in this example
+it is named &ldquo;<code>myitem</code>&rdquo;, so it can have sections with heads
+<code>[myitem&nbsp;foo]</code>,
+<code>[myitem&nbsp;bar]</code>,
+<code>[myitem&nbsp;bad.example]</code>,
+<code>[myitem&nbsp;237]</code> and the like, each representing an item of
+the list.  From every such section Thalassa expects certain parameters to
+be defined, and additional parameters may be given as well.
+</p>
+<p>Actually, the parameters Thalassa always expects from every list item don't
+depend on your choice of source.  Having said this and recalling that the
+only alternative to ini sections is <a href="page_sets.html">page set
+items</a>, we'll be well-prepared to the fact that some of parameters in an
+ini file section representing a list item play exactly the same role as
+<a href="page_sets.html#header_fields">header fields</a> in a page set item
+source file.  These parameters are:</p>
+<ul>
+
+<li><code>unixtime</code> (the date and time as a number of seconds &ldquo;since
+Epoch&rdquo;),</li>
+
+<li><code>date</code> (the date in a human-readable form),</li>
+
+<li><code>title</code> (the title, or, if you like so, subject),</li>
+
+<li><code>descr</code> (description, or a teaser &mdash; a shorter version of
+the text for inclusion in lists),</li>
+
+<li><code>comments</code> (the comments mode for the item page if one
+exists; may be one of <code>enabled</code>, <code>disabled</code> or
+<code>readonly</code>),</li>
+
+<li><code>tags</code> (the list of tags).</li>
+
+<p></ul>
+</p>
+<p class="remark">
+Please note there's no parameter resembling that <code>teaser_len</code>
+field of page set items.  For ini-based list items, there's only one way to
+set the description/teaser &mdash; with the <code>descr</code> parameter.
+<p></p>
+</p>
+<p>Values of these parameters are available via the accordingly-named
+<a href="page_sets.html#li_macro">functions of the <code>li</code>
+macro</a>.  The same is true for the <code>text</code> function of the same
+macro: for ini-based list items, <code>%[li:text]</code> returns the
+<code>text</code> parameter's value.  This means that the <code>text</code>
+parameter plays a very important role: the main text, which is taken from
+the source file's body for set-based list items, in ini-based lists is
+taken from this parameter.
+</p>
+<p>Thalassa doesn't recognize any other parameters of list item sections on
+its own, but you can declare more parameters for your particular list using
+the <a href="#param_aux_params"><code>aux_params</code></a> parameter in
+the <code>[list&nbsp;]</code> section.
+</p>
+
+<h2 id="ls_macro">The <code>%[ls:&nbsp;]</code> macro<p></h2>
+</p>
+<p>The <code>ls</code> macro provides access to list properties.  In the
+present version, only a few functions are available with this macro:</p>
+<ul>
+
+<li><code>%[ls:id]</code> is the list ID (the name of the
+<code>[list&nbsp;]</code> section);</li>
+
+<li><code>%[ls:srctype]</code> returns either <code>ini</code>, or
+<code>set</code>, according to the source type configured for the current
+list;</li>
+
+<li><code>%[ls:srcname]</code> (or just <code>%[ls:name]</code>) is the
+source name, that is, the second word from the <code>source</code>
+parameter;</li>
+
+<li><code>%[ls:tag]</code> only makes sense for set-based lists; returns
+the <em>tag</em> value (the third word of the <code>source</code>
+parameter);</li>
+
+<li><code>%[ls:first]</code> and <code>%[ls:last]</code> return the item
+IDs for the first and the last item of the list, respectively; for an empty
+list, the functions return an empty string.</li>
+
+<p></ul>
+</p>
+
+<h2 id="li_macro">The <code>%[li:&nbsp;]</code> macro<p></h2>
+</p>
+<p>The <code>%[li:&nbsp;]</code> macro provides access to list item
+properties.  We already introduced it as a part of the discussion
+related to <a href="page_sets.html#li_macro">page sets</a>; in particular,
+we explained the following functions of the <code>li</code> macro:
+<code>title</code>,
+<code>unixtime</code>,
+<code>date</code>,
+<code>descr</code>,
+<code>tags</code>,
+<code>hf</code>,
+<code>ifcomenabled</code> and
+<code>iffile</code>.  Be sure to use the link above to read that text if
+you didn't do that already.
+</p>
+<p>Besides the functions we already discussed, there's a handful of
+<code>li</code> macro functions that are hard to explain without
+list-related background; we postponed the discussion on these functions
+until a better moment, and now the time comes.
+</p>
+<p>The <code>iflong</code> and <code>ifmore</code> functions are conditional
+checkers; they both take two arguments: the <em>then</em> value and the
+<em>else</em> value, and return the former in case the condition is true
+and the latter if it is false.  For <code>iflong</code>, the condition is
+simple: whether the list item <em>text</em> is not empty.  For ini-based
+lists, the text will be empty if the <code>text</code> parameter of the
+item section is omitted or left blank, and for set-based lists, the text
+will be empty if in the item source file, only the header is given and
+there's no body.  For <code>ifmore</code>, the condition is whether the
+<em>text</em> is longer than the teaser (description).  This doesn't make
+much sense for ini-based lists (although still can be used), but for
+set-based lists, in case you use the <code>teaser_len</code> header field,
+the <code>ifmore</code> function allows to check whether the item is
+fully displayed in the list, or the reader must go to the item page to read
+its full text.  It is useful for adding, as needed, links like <em>read
+more</em>, <em>click for more</em> and so on.
+</p>
+<p>The <code>prev</code> and <code>next</code> functions return list item IDs
+for the previous item of the list and for the next one accordingly.  If
+there's no previous/next item, an empty string is returned.  The tricky
+matter here is that <em>sometimes</em> these two functions accept an
+additional argument, which must be the list ID, but sometimes they don't.
+Well, the trick is simple: the functions need to know which particular list
+they are called for, and <em>within a page set context</em> they can't know
+that for sure until the list is explicitly specified.  Indeed, a particular
+page set can have more that one list files, and these files may introduce
+different order for the same items.  So, <strong>if you use
+<code>%[li:prev:&nbsp;]</code> and
+<code>%[li:next:&nbsp;]</code> in parameter values of a
+<code>[pageset&nbsp;]</code> section, you must specify the list ID
+explicitly</strong>.  When the two functions are used within a
+<code>[list&nbsp;]</code> section (or even a list item section, which is
+possible but not normally needed), any extra arguments are ignored.
+</p>
+<p>The <code>ifprev</code> and <code>ifnext</code> functions take exactly
+three arguments: the list ID, the <em>then</em> value and the <em>else</em>
+value.  If the previous/next item in the list exists, the <em>then</em>
+value is returned, otherwise the <em>else</em> value is returned.  The list
+ID is only used in a page set context (that is, within a
+<code>[pageset&nbsp;]</code> section); within a <code>[list&nbsp;]</code>
+section, as well as list item sections, it is ignored and should be left
+empty.
+</p>
+<p>The <code>listarraynum</code> function only makes sense for lists that span
+on more than one page; the function returns a 1-based decimal number that
+corresponds to the index of the list page on which the (current) item is
+displayed.  The function is useful to make links from list item pages back
+to the corresponding list pages.  The function returns an empty string if
+there's no number to return, e.g., the list is not multipage, or the item
+doesn't actually belong to the list.  In the page set context, the function
+accepts the list ID as its argument; for ini-based lists, the argument is
+ignored and should be omitted.
+</p>
+<p>The <code>iflistarraynum</code> function is a conditional checker intended
+to be used together with <code>listarraynum</code>; it accepts exactly
+three arguments: the list ID, the <em>then</em> value and the <em>else</em>
+value.  In case <code>listarraynum</code> would return a non-empty value,
+<code>iflistarraynum</code> returns its <em>then</em> value, otherwise the
+<em>else</em> value is returned.  The list ID is only used in a page set
+context; within a <code>[list&nbsp;]</code> section, as well as list item
+sections, it is ignored and should be left empty.
+</p>
+<p class="remark">
+In the present version of Thalassa, there are also <code>listidx</code> and
+<code>iflistidx</code> functions, but their usefulness is doubtful and they
+can be removed from the future versions.  Let's leave them undocumented for
+now.
+<p></p>
+</p>
+
+
+<h2 id="listinfo_macro">The <code>%[listinfo:&nbsp;]</code> macro<p></h2>
+</p>
+<p>The <code>%[listinfo:&nbsp;]</code> macro allows to retrieve some
+information about a list <em>from outside of the list</em>, that is,
+when you are not generating the list or any of its parts.  Unlike the
+<a href="#ls_macro"><code>ls</code> macro</a>, the <code>listinfo</code>
+macro accepts the list ID as its second argument (while the first argument
+must be the name of the desired function).
+</p>
+<p>In the present version, only two functions, <code>first</code> and
+<code>last</code>, are supported.  The calls
+<code>%[listinfo:first:<em>ID</em>]</code> and
+<code>%[listinfo:last:<em>ID</em>]</code> expand to the item IDs of the
+first and the last item for the given list, respectively.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="page_sets.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#lists" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="aliases.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

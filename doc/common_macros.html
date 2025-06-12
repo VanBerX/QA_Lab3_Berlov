@@ -1,0 +1,677 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="macro_intro.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#common_macros" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="headed_text.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Common macros</a></h1>
+    <div class="page_body">
+<p>This page describes macros available both for <code>thalassa</code> (the
+static content generator) and <code>thalcgi.cgi</code> (the CGI program).
+</p>
+<p>Please note that the colon char &ldquo;<code>:</code>&rdquo; is used hereinafter as
+the delimiter, but in fact <em>any</em> ASCII punctuation char (except for
+&ldquo;<code>_</code>&rdquo; and &ldquo;<code>*</code>&rdquo;) can be used in this role.
+</p>
+
+<ul>
+<li><a href="#conditionals">Conditionals</a></li>
+<ul>
+  <li><a href="#macro_if">The <code>if</code> macro</a></li>
+  <li><a href="#macro_ifeq">The <code>ifeq</code> macro</a></li>
+  <li><a href="#macro_ifbelongs">The <code>ifbelongs</code> macro</a></li>
+  <li><a href="#macro_or">The <code>or</code> macro</a></li>
+  <li><a href="#macro_switch">The <code>switch</code> macro</a></li>
+</ul>
+<li><a href="#the_mapper">The mapper</a></li>
+<ul>
+  <li><a href="#macro_foreach">The <code>foreach</code> macro</a></li>
+  <li><a href="#foreach_howto">How to use it</a></li>
+</ul>
+<li><a href="#string_manipulation">String manipulation</a></li>
+<ul>
+  <li><a href="#macro_trim">The <code>trim</code> macro</a></li>
+  <li><a href="#macro_collapsews">The <code>collapsews</code> macro:
+                           collapse whitespace</a></li>
+  <li><a href="#macro_rmlf">The <code>rmlf</code> macro:
+                           remove linefeeds</a></li>
+  <li><a href="#macro_headtail">The <code>lhead</code> and <code>lhead</code>
+                           macros: list splitting</a></li>
+  <li><a href="#macro_lindex">The <code>lindex</code> macro:
+                           access list items by indices</a></li>
+  <li><a href="#macro_lsort">The <code>lsort</code> macro</a></li>
+  <li><a href="#macro_ltgt">The <code>ltgt</code> macro:
+                           HTML protection</a></li>
+  <li><a href="#macro_urlenc">The <code>urlenc</code> macro:
+                           URL-encoding</a></li>
+  <li><a href="#macro_q">The <code>q</code> macro:
+                           quote string as HTML attribute</a></li>
+</ul>
+<li><a href="#file_access">Accessing files</a></li>
+<ul>
+  <li><a href="#macro_iffile">The <code>iffile</code> macro</a></li>
+  <li><a href="#macro_filesize">The <code>filesize</code> macro</a></li>
+  <li><a href="#macro_readfile">The <code>readfile</code> macro</a></li>
+  <li><a href="#macro_dir">The <code>dir</code> macro</a></li>
+  <li><a href="#macro_imgdim">The <code>imgdim</code> macro:
+                           dimensions for <code>img</code> tag</a></li>
+</ul>
+<li><a href="#time_related">Time and date</a></li>
+<ul>
+  <li><a href="#macro_now">The <code>now</code> macro: current time</a></li>
+  <li><a href="#macro_rfcdate">The <code>rfcdate</code> macro</a></li>
+</ul>
+<li><a href="#idx_macros">Indices in file names</a></li>
+<li><a href="#thalassa_version_macro">Thalassa CMS version</a></li>
+<p></ul>
+</p>
+
+
+<h2 id="conditionals">Conditionals<p></h2>
+</p>
+<p>This section describes macros that allow to choose one of the two (or more)
+alternatives depending on certain conditions.
+</p>
+<p><strong>WARNING:</strong> Please make sure you read and understood
+<a href="macro_intro.html#eager_and_consequences">the section devoted to
+eager computational model and its consequences</a>.  It is important to
+understand that all arguments of any <em>nesting</em> macro call are always
+computed (unconditionally), and conditional macros only choose one of the
+results of these computations, simply dropping the results that aren't
+choosen.
+</p>
+
+
+  <h3 id="macro_if">The <code>if</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[if:<em>condition</em>:<em>then_text</em>:<em>else_text</em>]</code>
+</p>
+<p>The first argument (<em>condition</em>) is trimmed off any leading and
+trailing whitespace; in case the result of this trimming is <strong>not
+empty</strong>, the condition is assumed true, and
+<em>then_text</em> is returned; otherwise, <em>else_text</em> is returned.
+</p>
+<p>The third argument may be omitted; in this case, if the <em>condition</em>
+is empty (false), the macro call expands to an empty string.
+</p>
+
+
+  <h3 id="macro_ifeq">The <code>ifeq</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[ifeq:<em>str1</em>:<em>str2</em>:<em>then_text</em>:<em>else_text</em>]</code>
+</p>
+<p>The first two arguments (<em>str1</em> and <em>str2</em>) are trimmed off
+any leading and trailing whitespace, and the results are compared; in case
+they are equal, <em>then_text</em> is returned; otherwise,
+<em>else_text</em> is returned.
+</p>
+<p>The fourth argument may be omitted; in this case, if the strings are not
+equal, the macro call expands to an empty string.
+</p>
+
+  <h3 id="macro_ifbelongs">The <code>ifbelongs</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[ifbelongs:<em>str1</em>:<em>list</em>:<em>then_text</em>:<em>else_text</em>]</code>
+</p>
+<p>The first argument (<em>str</em>) is trimmed off any leading and trailing
+whitespace.  The second argument (<em>list</em>) is broken down to
+<strong>words</strong> (that is, using whitespace as separators); then,
+check is performed whether <em>str</em> equals any of the words.  In case
+the word is found, <em>then_text</em> is returned; otherwise,
+<em>else_text</em> is returned.
+</p>
+<p>The fourth argument may be omitted; in this case, if the given word isn't
+found in the list, the macro call expands to an empty string.
+</p>
+
+  <h3 id="macro_or">The <code>or</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[or:<em>str1</em>:<em>str2</em>: ... ]</code>
+</p>
+<p>The arguments (<em>str1</em>, <em>str2</em> etc.) are checked one by one,
+whether they turn into an empty string after trimming off leading and
+trailing whitespace.  The first argument that doesn't become empty (which
+effectively means it contains any non-whitespace characters) is returned
+<em>as it was in the call, before trimming</em>.
+</p>
+<p>If no suitable argument is found, an empty string is returned.
+</p>
+
+  <h3 id="macro_switch">The <code>switch</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[switch:<em>expr</em>:<em>v1</em>:<em>r1</em>:<em>v2</em>:<em>r2</em> ... ]</code>
+</p>
+<p>The first argument, <em>expr</em>, after stripping off all leading and
+trainling whitespace, is compared, one by one, with values <em>v1</em>,
+<em>v2</em> etc., also with spaces stripped off; in case one of them equals
+to the <em>expr</em>, the work is immediately finished and the
+corresponding result (<em>r1</em>, <em>r2</em>...) is returned.  In case
+none of the values match, an empty string is returned.
+</p>
+
+
+<h2 id="the_mapper">The mapper<p></h2>
+</p>
+<p>In the present version of Thalassa CMS, there's only one macro resembling a
+loop construct.  In reality it is not a loop, it is a mapper.  It might
+look somewhat bad practice to provide anything loop-like in such an
+environment; unfortunately, it seems hard to invent anything else to
+build, e.g., a list of <code>&lt;option&gt;</code> items for the
+<code>&lt;select&gt;</code> HTML form input &mdash; and, generally
+speaking, having an arbitrary list of items, to build an HTML
+representation for it.
+</p>
+<p>Anyway, the mapper is not intended to be used as a general purpose loop
+construct, and it definitely should not be abused this way.  Remember, all
+these Thalassa CMS ini files <strong>are not programs</strong>.  If you
+feel you need a general purpose loop, it means you're doing something
+wrong.
+</p>
+
+  <h3 id="macro_foreach">The <code>foreach</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[foreach:<em>list</em>:<em>name</em>:<em>a1</em>:<em>a2</em>: ... ]</code>
+</p>
+<p>The first argument (<em>list</em>) is broken down to <em>words</em> (using
+whitespace for delimiting).  Then for each word, the macro named
+<em>name</em> is invoked with arguments <em>a1</em>, <em>a2</em>, ..., and
+with the <em>word</em> as the last argument.
+</p>
+<p>The results of all invocations are concatenated (with no chars inserted in
+between the items &mdash; that is, a real concatenation is done), and the
+concatenated string is returned.
+</p>
+<p>For example, consider the following call:
+</p>
+<pre>
+  %[foreach:alpha beta gamma:m1:pp:qq:rr]
+<p></pre>
+The result will be precisely the same as if we did
+</p>
+<pre>
+  %[m1:pp:qq:rr:alpha]%[m1:pp:qq:rr:beta]%[m1:pp:qq:rr:gamma]
+<p></pre>
+</p>
+
+
+  <h3 id="foreach_howto">How to use it<p></h3>
+</p>
+<p>In most cases, the
+<a href="general_configuration.html#html_section"><code>html</code>
+macro</a> is used as the second argument to <code>foreach</code>, and the
+HTML snippet name is passed as the third argument.
+</p>
+<p>Consider, for example, you've got a list of certain words and you want to
+create an HTML enumerated list out of them.  The following two snippets
+will do the thing:
+</p>
+<pre>
+  [html]
+  words2ol   = &lt;ol&gt;%[foreach:%0%:html:li_enclose]&lt;/ol&gt;
+  li_enclose = &lt;li&gt;%0%&lt;/li&gt;
+<p></pre>
+</p>
+<p>Having these two snippets, it is sufficient to write
+<code>%[html:words2ol:<em>put&nbsp;your&nbsp;list&nbsp;here</em>]</code> to
+get the HTML list.
+</p>
+
+
+<h2 id="string_manipulation">String manipulation<p></h2>
+</p>
+<p>In the present version, the set of string manipulation functions doesn't
+look very powerful.  However, once again, this macro system <strong>is not
+a programming language</strong>, so we shouldn't ever want things like
+indexing a string, getting substrings and the like.
+</p>
+
+
+  <h3 id="macro_trim">The <code>trim</code> macro<p></h3>
+</p>
+<p>Synopsis: <code>%[trim:<em>string</em>]</code>
+</p>
+<p>The argument is stripped off any leading and trailing whitespace; the
+result is returned.
+</p>
+
+
+  <h3 id="macro_collapsews">The <code>collapsews</code> macro: collapse whitespace<p></h3>
+</p>
+<p>Synopsis: <code>%[collapsews:<em>string</em>]</code>
+</p>
+<p>The argument is stripped off any leading and trailing whitespace; within
+the rest, any non-empty sequence of whitespace chars (space, tab, carriage
+return and newline) is replaced with exactly one space.  The result is
+returned.
+</p>
+
+
+  <h3 id="macro_rmlf">The <code>rmlf</code> macro: remove linefeeds<p></h3>
+</p>
+<p>Synopsis: <code>%[rmlf:<em>string</em>]</code>
+</p>
+<p>All carriage return and newline chars are removed from the argument, the
+result is returned.
+</p>
+<p>Please note the argument is not stripped nor modified in any other way,
+only the CR and LF chars are removed.
+</p>
+
+
+  <h3 id="macro_headtail">The <code>lhead</code> and <code>lhead</code>
+                           macros: list splitting<p></h3>
+</p>
+<p>Synopsis:<br />
+<code>%[lhead:<em>list</em>:<em>delimiter</em>]</code><br />
+<code>%[ltail:<em>list</em>:<em>delimiter</em>]</code>
+</p>
+<p>The two macros allow to split a string, treated as a list, down to the head
+and the tail.  The <em>delimiter</em> argument may be omitted or left
+empty; the string is then considered as a list of <em>words</em>, separated
+by arbitrary amounts of whitespace.  If a non-empty <em>delimiter</em> is
+specified, it is trimmed off any leading and trailing whitespace, and the
+remaining string (as a whole) is used as the delimiter: the first occurence
+of it is found within the first argument, and <code>lhead</code> returns
+everything <em>before</em> the delimiter, while <code>ltail</code> returns
+everything <em>after</em> the delimiter.
+</p>
+<p>If the specified delimiter is not found within the first agrument,
+<code>lhead</code> returns the whole agrument, and <code>ltail</code>
+returns an empty string.  If delimiter is not specified, and there's only
+one word, <code>lhead</code> returns the word (trimmed off surrounding
+whitespace), and <code>ltail</code> returns an empty string.  If the first
+argument is empty, both macros return an empty string.
+</p>
+
+
+  <h3 id="macro_lindex">The <code>lindex</code> macro:
+                           access list items by indices<p></h3>
+</p>
+<p>Synopsis:
+<code>%[lindex:<em>list</em>:<em>template</em>:<em>delims</em>]</code>
+</p>
+<p>The <code>lindex</code> macro treats its first argument
+(<code><em>list</em></code>) as a list and provides access to its first 10
+elements by their indices; it is possible to access several elements in one
+call, building a new string according to the given
+<code><em>template</em></code>.
+</p>
+<p>The third argument (<code id="lindex_delim_arg"><em>delims</em></code>)
+controls how the string is broken to list elements.  The argument can be
+omitted or left empty; in this case the string is broken down to
+<em>words</em> using whitespace chars as delimiters, producing <em>no empty
+words</em> (that is, any amount of whitespace in a row it considered equal
+to a single space).  If the argument consists of non-whitespace chars
+<em>only</em>, all the chars become delimiters; in this case, the string is
+broken down to elements using the delimiters, and empty elements become
+possible.  Adding a <em>trailing</em> whitespace instructs the macro to
+trim off any leading and trailing whitespace from every element.
+</p>
+<p>Please be warned that, as the macroprocessor is encoding-agnostic, using a
+non-ascii char as a delimiter will not work for UTF-8.
+</p>
+<p>If the third argument <em>starts with one or more whitespace chars and
+contains non-whitespace chars as well,</em> it means one of the predefined
+special cases; the argument in this case is stripped off any leading and
+trailing whitespace, and the rest identifies how the list must be broken
+down to elements.  In the present version, there are two such cases:</p>
+<ul>
+<li><code>n</code> means to use the newline char as the only delimiter,
+stripping carriage returns (leading and trailing), if any, and</li>
+<li><code>N</code> works similarly, but trims any leading and trailing
+whitespace from every line.</li>
+<p></ul>
+</p>
+<p>We leave it unspecified what happens if the <code><em>delims</em></code>
+argument has leading spaces and is not listed as a special case above; in
+future versions, some additional functionality may be implemented.
+</p>
+<p>The <code><em>template</em></code> is first striped off any leading and
+trailing whitespace; what happens afterwards depends on whether its first
+non-space char is a digit or not, and may sound complicated.  Before giving
+the full description, let's note that <strong>in the simplest case it is
+just a digit from <code>0</code> to <code>9</code></strong>, causing the
+macro to return the respective element of the list, numbered from zero.
+For example, <code>%[lindex:foo bar bazz:1]</code> will return
+<code>bar</code>.
+</p>
+<p>In case the first character of the template is a digit, the template is
+traversed from left to right, and digits from <code>0</code> to
+<code>9</code> are <em>replaced</em> with the respective elements of the
+list, while all other characters are left intact.  For example, a call
+</p>
+<pre>
+    %[lindex:foo bar bazz:2-0+1]
+<p></pre>
+will expand to <code>bazz-foo+bar</code>.
+</p>
+<p>If the first non-space char of the template is <strong>not</strong> a
+digit, it becomes the local escape char.  The <em>rest</em> of the
+template, not including its first char, is traversed from left to right,
+and escape chars immediately followed by digits are replaced with the
+respective list elements.  If the escape char is followed by another escape
+char, a single escape char is put into the resulting string; we
+intentinally leave unspecified what happens in case the escape char is
+followed by anything but a digit and the escape char.  All the other stuff
+is left intact.  For example,
+</p>
+<pre>
+    %[lindex:foo bar bazz:=AAA=2BBB=0==0CCC=1DDD]
+<p></pre>
+will turn into <code>AAAbazzBBBfoo=0CCCbarDDD</code>.  This mode allows
+including literal digits into the result.
+</p>
+
+
+  <h3 id="macro_lsort">The <code>lsort</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[lsort:<em>list</em>:<em>delims</em>:<em>glue</em>]</code>
+</p>
+<p>The <code>lsort</code> macro sorts the given list of strings.
+</p>
+<p>The first argument (<em>list</em>) is a string to be broken down to list
+items, and the second argument (<em>delims</em>) determines <em>how</em>
+the string is broken down; see the <a href="#lindex_delim_arg">the lindex
+macro's <em>delims</em> argument description</a> for details, it works
+exactly the same way.
+</p>
+<p>The last argument (<em>glue</em>) is the string to put between each two
+elements after they are sorted; one might want to call this a
+<em>separator</em>, but we use the term <em>glue</em> to avoid confusion
+with how the initial separation is done.  If this argument is omitted, a
+single space char is used.  If the argument is empty, the elements within
+the resulting string are not separated from each other at all.
+</p>
+<p>Hence, if both <em>delims</em> and <em>glue</em> are omitted (that is, the
+macro is called with only one argument), the list is assumed to consist of
+<em>words</em> (any amount of whitespace is considered a separator), and
+after the sorting is done, the list is reassembled into the string of
+words, separated with exactly one space.
+</p>
+<p>The sorting is done lexicographically in respect to the ASCII codepage.
+Please note however that Thalassa is mostly encoding-agnostic, so with
+strings containing non-ascii chars, the result may be far from what you
+expect.
+</p>
+<p>Furthermore, please be aware that, despite the <em>quicksort</em> algorithm
+is used internally, the whole thing can be way too slow for lenghty lists,
+just because performing the <code>lsort</code> involves, first, tokenizing
+a large string (which means a lot of memory allocation operations and
+copying), and, second, rejoining the sorted elements back to a single
+string.  It is strongly recommended to <strong>avoid sorting as long as you
+can</strong>.  For example, in the well-known Smoky template this macro is
+used only once&nbsp;(!), for the <code>/thalcgi.cgi/cmtadmin</code> page,
+because being left unsorted, that list of all existing discussions looks
+too messy to handle.
+</p>
+
+
+  <h3 id="macro_ltgt">The <code>ltgt</code> macro: HTML protection<p></h3>
+</p>
+<p>Synopsis: <code>%[ltgt:<em>string</em>]</code>
+</p>
+<p>Within the argument, HTML active characters &mdash; namely &ldquo;&lt;&rdquo;,
+&ldquo;&gt;&rdquo; and &ldquo;&amp;&rdquo; &mdash; are replaced with, respectively,
+&ldquo;<code>&amp;lt;</code>&rdquo;, &ldquo;<code>&amp;gt;</code>&rdquo; and
+&ldquo;<code>&amp;amp;</code>&rdquo;, making the text safe to be included into an
+HTML document.
+</p>
+
+
+  <h3 id="macro_urlenc">The <code>urlenc</code> macro: URL-encoding<p></h3>
+</p>
+<p>Synopsis: <code>%[urlenc:<em>string</em>]</code>
+</p>
+<p>The argument is
+<a href="https://en.wikipedia.org/wiki/URL_encoding">URL-encoded</a>
+and returned.
+</p>
+<p>Precisely speaking, ASCII alphanumeric characters as well as punctuation
+chars <code>-_~.</code> are left as they are, spaces are replaced with
+<code>+</code>, and any other <em>byte</em> is <em>percent-encoded</em>,
+that is, replaced with the percent char and the 2-digit hexadecimal code.
+Upper-case chars are uses as hexadecimal digits.
+</p>
+<p>The macro is codepage-agnostic, just like almost all Thalassa CMS.
+</p>
+
+
+  <h3 id="macro_q">The <code>q</code> macro: quote string as HTML attribute<p></h3>
+</p>
+<p>Synopsis: <code>%[q:<em>string</em>]</code>
+</p>
+<p>If the argument contains no doublequote char, it is returned being
+surrounded by doublequotes.  If it contains doublequotes but doesn't contain
+apostrophes, it is returned surrounded by apostrophes.  In case it contains
+both apostrophes and doublequotes, it is returned surrounded by
+doublequotes, with each doublequote char inside the argument replaced with
+&ldquo;<code>&amp;quot;</code>&rdquo;.
+</p>
+<p>The macro is useful when you need to give an attrubute to an HTML tag, and
+you're not sure it will not contain doublequote chars at the generation
+time.  Actually, it seems to be a good practice to use this macro for all
+attribute values that contain any macro calls.
+</p>
+
+
+<h2 id="file_access">Accessing files<p></h2>
+</p>
+
+  <h3 id="macro_iffile">The <code>iffile</code> macro<p></h3>
+</p>
+<p>Synopsis:
+<code>%[iffile:<em>filename</em>:<em>then_text</em>:<em>else_text</em>]</code>
+</p>
+<p>The first argument (<em>filename</em>) is trimmed off any leading and
+trailing whitespace, and the result is used as a file name; if the file
+with given name exists, <em>then_text</em> is returned; otherwise,
+<em>else_text</em> is returned.
+</p>
+<p>The third argument may be omitted; in this case, if the file doesn't exist,
+the call expands to an empty string.
+</p>
+
+
+  <h3 id="macro_filesize">The <code>filesize</code> macro<p></h3>
+</p>
+<p>Synopsis: <code>%[filesize:<em>filename</em>]</code>
+</p>
+<p>The first argument (<em>filename</em>) is trimmed off any leading and
+trailing whitespace, and the result is used as a file name; if the file
+with given name exists and is a regular file, its size (in bytes, as a
+decimal number) is returned; otherwise, the macro returns an empty string.
+</p>
+
+
+  <h3 id="macro_readfile">The <code>readfile</code> macro<p></h3>
+</p>
+<p>Synopsis: <code>%[readfile:<em>filename</em>]</code>
+</p>
+<p>The first argument (<em>filename</em>) is trimmed off any leading and
+trailing whitespace, and the result is used as a file name; if the file
+with given name exists and is readable, the macro returns the whole
+contents of the file (as a string, so you probably shouldn't apply this
+macro to binary files).  In case of any error, an empty string is returned.
+</p>
+<p>In case the argument is empty or becomes empty after trimming, no attempts
+will be made to open any files or to do anything else; the macro will
+immediately return the empty string.  This property can be used for
+conditional reading of files: instead of placing the <code>readfile</code>
+call in one of branches of any conditional checkers (in which case the
+reading attempt <a href="macro_intro.html#eager_and_consequences">will be
+performed regardless of the condition</a>), better check for the condition
+within the <code>readfile</code>'s argument and return an empty string in
+case the file is not to be read.
+</p>
+
+
+  <h3 id="macro_dir">The <code>dir</code> macro<p></h3>
+</p>
+<p>Synopsis: <code>%[dir:<em>dirname</em>:<em>flags</em>]</code>
+</p>
+<p>The <code>dir</code> macro allows to extract file names from a given
+directory.  By default, filenames starting with
+&ldquo;<code>.</code>&rdquo; and &ldquo;<code>_</code>&rdquo; are ignored;
+this behaviour can be modified with flags (see below).  It is important to
+note that <strong>file names containing any whitespace are always
+ignored</strong> and there's no way to override this rule.
+</p>
+<p>The first argument (<em>dirname</em>) is trimmed off any leading and
+trailing whitespace, and the result is used as the directory name.
+</p>
+<p>The second argument may contain the following chars:</p>
+<ul>
+
+<li><code>h</code>: don't ignore hidden files (those with leading
+&ldquo;<code>.</code>&rdquo; in names);</li>
+
+<li><code>H</code>: extract hidden files <strong>only</strong>;</li>
+
+<li><code>u</code>: don't ignore file names that start with the underscore
+char &ldquo;<code>_</code>&rdquo;;</li>
+
+<li><code>U</code>: extract <strong>only</strong> file names starting with
+underscore.</li>
+
+<p></ul>
+If the second argument is empty, it can be omitted altogether.
+</p>
+<p>The macro returns a string containing the extracted file names, separated
+by a single space char.
+</p>
+
+
+  <h3 id="macro_imgdim">The <code>imgdim</code> macro: dimensions for <code>img</code> tag<p></h3>
+</p>
+<p>Synopsis: <code>%[imgdim:<em>filename</em>]</code>
+</p>
+<p>The first argument (<em>filename</em>) is trimmed off any leading and
+trailing whitespace, and the result is used as a file name; the file should
+contain a valid image in PNG, JPEG or GIF format.  In case the file doesn't
+exist, not readable or its format is not recognized, the macro returns an
+empty string.
+</p>
+<p>In case of successful image parsing, a string with HTML attributes,
+suitable for use within the <code>img</code> HTML tag, is returned.  The
+string looks like this:
+</p>
+<pre>
+  width="305" height="500"
+<p></pre>
+</p>
+<p>The file format is detected by its content, <strong>not</strong> by its
+name.
+</p>
+
+<h2 id="time_related">Time and date<p></h2>
+</p>
+
+  <h3 id="macro_now">The <code>now</code> macro: current time<p></h3>
+</p>
+<p>Synopsis: <code>%now%</code>
+</p>
+<p>No arguments are accepted.  Macro call is replaced with the current time as
+a Unix datetime value (a decimal integer equal to the amount of seconds
+passed since Jan 01, 1970).
+</p>
+
+
+  <h3 id="macro_rfcdate">The <code>rfcdate</code> macro<p></h3>
+</p>
+<p>Synopsis: <code>%[rfcdate:<em>unix_datetime</em>]</code>
+</p>
+<p>The first argument (<em>unix_datetime</em>) is trimmed off any leading and
+trailing whitespace; the result, which must be a decimal number, is taken
+as a Unix date/time value.  The macro returns the same date in a
+human-readable form as defined by rfc2822, something like &ldquo;<code>29 Mar
+2023 19:15:00 +0000</code>&rdquo;.
+</p>
+
+
+
+<h2 id="idx_macros">Indices in file names<p></h2>
+</p>
+<p>Sometimes it becomes necessary to provide a template for file names that
+form a kind of an array with a main page and some <em>numbered</em>
+additional pages.  For such cases, Thalassa provides a family of <em>index
+macros</em>; being used within a file name template, they are replaced with
+the indicies as necessary, thus forming file name series containing numbers.
+</p>
+<p>The &ldquo;main&rdquo; page is always meant to have zero as its index; however,
+there's often no page with index <code>1</code> (it is not present in lists
+that have a native order, while is present in reversed lists).
+</p>
+<p>The following macros are used in &ldquo;indexed&rdquo; file name templates:</p>
+<ul>
+
+<li><code>%idx%</code> is substituted with the index number, but empty
+string for zero;</li>
+
+<li><code>%_idx%</code> is substituted with the underscore char and the
+index number (like &ldquo;<code>_12</code>&rdquo;, but empty string for zero;</li>
+
+<li><code>%idx0%</code> is substituted with the index number, even if it is
+zero.</li>
+
+<p></ul>
+</p>
+<p>Please note these macros are not universally available, they only work for
+file name templates where numbered additional pages are involved.
+Parameters using these macros are explicitly declared as such.
+</p>
+
+
+
+<h2 id="thalassa_version_macro">Thalassa CMS version<p></h2>
+</p>
+<p>Synopsis: <code>%[thalassa_version:<em>function</em>]</code>
+</p>
+<p>If the argument is omitted, empty or contains whitespace only, the short
+version string is returned.  It looks like <code>0.2.00</code>.
+</p>
+<p>Otherwise, the argument (function name) is trimmed off leading and trailing
+whitespace; as of the current version,
+<code>%[thalassa_version:full]</code> returns longer string, like
+</p>
+<pre>
+  Thalassa CMS v. 0.2.00 (built Feb 27 2024)
+<p></pre>
+<code>%[thalassa_version:id]</code> returns short decimal number
+identifying the version; for 0.2.00, this number is <code>200</code>, and
+for later versons the number is guaranteed to be greater.
+</p>
+<p><code>%[thalassa_version:built]</code> returns the build date, as given by
+the <code>__DATE__</code> macro in gcc, like <code>Feb 27 2024</code>.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="macro_intro.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#common_macros" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="headed_text.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

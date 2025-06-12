@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_comments.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#setup_apache" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Setup Apache2 for a Thalassa-based site</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ul>
+<li><a href="#intro">Scope and limitations of this instruction</a></li>
+<li><a href="#common">Common preparations</a>
+<ul>
+  <li><a href="#get_thalassa_binaries">Getting Thalassa binaries</a></li>
+  <li><a href="#install_apache">Installing Apache and getting
+                                 it to run</a></li>
+</ul></li>
+<li><a href="#singlesite">Configuration for a single site</a></li>
+<li><a href="#nosuexec">Configuration with virtual sites
+                         but without <code>suexec</code></a></li>
+<li><a href="#suexec">Configuration with virtual sites and
+                         <code>suexec</code></a></li>
+<p></ul>
+</p>
+
+<h2 id="intro">Scope and limitations of this instruction<p></h2>
+</p>
+<p>This page gives a step-by-step instruction how to set up a fresh Linux
+machine to serve a Thalassa-based site with the well-known Apache HTTP
+server.  It is assumed that your site is based on the Smoky template, but
+some advices are given for non-template sites as well.
+</p>
+<p>Instructions are given assuming Debian or a Debian-like distribution.  On
+machines with other distros, the things may look slightly different.  This
+question is addressed somehow, too, but obviously it is not possible to
+provide a step-by-step instruction covering all possible distros and
+systems.
+</p>
+<p>All HTTPS-related stuff is deliberately ignored here.  If you really
+want/need HTTPS with all its certificates, trusted authorities and all the
+stuff, well, there are tons of sources on how to make Apache serve it.
+</p>
+<p>If for some reason you don't need interactive features of Thalassa, then
+the simplest way to organize thing will be perhaps to generate the site on
+your own machine and upload the results to the server; deployment of a
+completely static site has no Thalassa-specific issues and is not addressed
+here.  The tricky part is to make Apache run the
+<a href="thalcgi_overview.html">Thalassa CGI program</a> properly.
+</p>
+<p>There are three possible configurations for Apache to run a Thalassa-based
+site:</p>
+<ul>
+<li>without virtual hosts;</li>
+<li>with virtual hosts that belong to the same user, without
+<code>suexec</code>;</li>
+<li>with virtual hosts, using <code>suexec</code>.</li>
+<p></ul>
+</p>
+<p>The last one may look the most tricky, but from the other hand it is
+the most flexible and secure one.  In case there are several people running
+their sites on a single server machine (no matter if it is physical or
+virtual), the <code>suexec</code>-based configuration becomes the only
+possible option; however, even if you run only one site on your server, it
+is still much better to run it as a virtual site with <code>suexec</code>,
+so that the CGI program will execute under a (dummy) user different from
+the one used for Apache itself.  So this one is highly recommended.
+</p>
+
+<h2 id="common">Common preparations<p></h2>
+</p>
+<h3 id="get_thalassa_binaries">Getting Thalassa binaries<p></h3>
+</p>
+<p>Generally, there are two ways of getting Thalassa binaries ready to run on
+your server box: either to build them from sources right on the server, or
+build it on your computer and upload to the server.  Yes, this
+<strong><em>IS</em></strong> possible, as Thalassa is built fully-static by
+default.
+</p>
+<p>In order <strong>to build Thalassa from sources</strong> (which is not
+necessary in most cases!), you'll need the GNU C++ compiler and GNU make;
+install them with smth. like this
+</p>
+<pre>
+  apt install gcc g++ make
+<p></pre>
+</p>
+<p>and follow <a href="overview.html#build">the instruction</a>; then, as
+<code>root</code>, copy your binaries to <code>/usr/local/bin</code> (this
+step is not required, but in the rest of this text we assume you did it):
+</p>
+<pre>
+  cd thalassa_0.3.00/cms
+  cp thalassa thalcgi.cgi /usr/local/bin
+<p></pre>
+</p>
+<p>However, even though Thalassa doesn't need any external libraries and weird
+tools to build, installing even the minimal C++ toolchain on a low-end VPS
+may considerably reduce the amount of available disk space, so you might
+want to avoid having it on your server.  For most of programs around, you
+can't copy executable binaries from one computer to another, but for
+Thalassa, this approach works.  The only limitation is that both computers
+must be of the same processor architecture and must run the same OS kernel
+type (okay, sometimes these may differ and copying the binaries will still
+work, but in this instruction we will not discuss things like
+cross-compiling, architecture backwards compatibility, foreign binary
+interfaces and the like).  To check if they match, issue the
+<code>uname&nbsp;-mo</code> command on both boxes.  Most probably, in both
+cases you'll see &ldquo;<code>x86_64 GNU/Linux</code>&rdquo;; this means
+everything's good (well, if you see something else, but occasionally the
+same thing on both boxes, then everything is okay, too, but hardly this
+will happen in real life).
+</p>
+<p>So, build Thalassa following <a href="overview.html#build">the
+instruction</a> on your working machine (e.g., your home computer or your
+office workstation), then do something like this:
+</p>
+<pre>
+  cd thalassa_0.3.00/cms
+  scp thalassa thalcgi.cgi root@your-server.example.com:/usr/local/bin
+<p></pre>
+</p>
+<p>To check if they really work, login to your server and try launching the
+<code>thalassa</code> program, e.g.:
+</p>
+<pre>
+  thalassa show version
+<p></pre>
+</p>
+
+
+<h3 id="install_apache">Installing Apache and getting it to run<p></h3>
+</p>
+<p>On Debian-like distros, Apache is installed like this:
+</p>
+<pre>
+  apt install apache2
+<p></pre>
+</p>
+<p>If your system is <code>systemd</code>-based (which is highly likely in
+these insane days), try launching Apache with smth. like
+</p>
+<pre>
+  systemctl start apache2
+<p></pre>
+</p>
+<p>If you're lucky enough and your server runs a non-systemd system, you'll
+need a different command to start your Apache, like
+</p>
+<pre>
+  service apache2 start
+  service apache start
+  service httpd start
+<p></pre>
+</p>
+<p>or even
+</p>
+<pre>
+  apachectl start
+<p></pre>
+</p>
+<p>Then, point your browser to your server's address, and you should see the
+default Apache web page.
+</p>
+<p>Please note that in Debian and its company, the Apache's configuration is
+found in <code>/etc/apache2</code>, the <code>/var/www</code> directory is
+considered the &ldquo;<em>web root</em>&rdquo; (<code>/var/www/html</code>
+being the default site's location), and Apache runs under the
+<code>www-data</code> account (dummy user).  In other distros and systems
+the things may be different; it is useful to figure out everything in
+advance.
+</p>
+<p>For a Thalassa-based site, you need to enable at least the Apache's
+<code>mod_cgi</code> module, and it is useful (although not strictly
+required) to enable <code>mod_rewrite</code> as well.  In Debian, it's is
+done like this:
+</p>
+<pre>
+  cd /etc/apache2/mods-enabled
+  ln -s ../mods-available/cgi.load .
+  ln -s ../mods-available/rewrite.load .
+<p></pre>
+In other circumstances, you might need to place the following line
+</p>
+<pre>
+  LoadModule cgi_module /usr/lib/apache2/modules/mod_cgi.so
+<p></pre>
+somewhere in the Apache's configuration (the symlink chemistry shown just
+above actually does exactly this, only in a weird manner).  Just look
+through what you have to figure out where other <code>LoadModule</code>
+directives are placed (or simply <code>grep ^LoadModule -R *</code>), and
+add this one.
+</p>
+<p>Finally, uncomment and edit the <code>ServerName</code> directive for your
+site.  In Debian and friends, it is in the
+<code>sites-available/000-default.conf</code> file, within the
+&ldquo;default&rdquo; site configuration.  Make it look like
+</p>
+<pre>
+          ServerName www.example.com
+<p></pre>
+</p>
+<p>It is might also be useful to let Apache know for sure how your
+<em>server</em> (that is, the machine, as opposite to the <em>site</em>) is
+named.  To do so, add to your <code>apache2.conf</code> a line like this:
+</p>
+<pre>
+  ServerName your-server.example.com
+<p></pre>
+</p>
+<p>There's one more thing to address.  The CGI configuration files, named
+<code>thalassa.ini</code>, have to reside within your web tree (side by
+side with the CGI programs they tune), but they must never be leaked though
+the web server, like normal (.html and other) files do.  If you're going to
+use a <code>suexec</code>-based configuration, this problem is solved with
+properly set permissions, and the <code>thalcgi.cgi</code> program even
+refuses to run until you set the permissions for its configuration file
+properly.  If, however, you're not going to use <code>suexec</code>
+(thus disregarding all our recommendations), you must take some other
+actions to protect these files.  The Smoky template does that from the
+<code>.htaccess</code> files it generates, but even if you do use Smoky,
+these <code>.htaccess</code> files may occasionally get disabled and
+disregarded; and if you don't use Smoky, it is very easy to leave one of
+your <code>thalcgi.ini</code> files exposed to the whole Internet.  So, it
+may be not a bad idea to add the following to your Apache configuration:
+</p>
+<pre>
+  &lt;FilesMatch "^thalcgi\.ini$"&gt;
+          Require all denied
+  &lt;/FilesMatch&gt;
+<p></pre>
+</p>
+<p>Be sure to run <code>apachectl restart</code> for your changes to take
+effect.
+</p>
+
+
+<h2 id="singlesite">Configuration for a single site<p></h2>
+</p>
+<p>One of the simplest approaches is to place your site's source (that is,
+configuration files and other stuff used by Thalassa) side-by-side with
+that <code>html</code> directory (that is, make a dir like
+<code>/var/www/Site</code> for your site's source), and make the whole
+<code>/var/www</code> <em>owned</em> by Apache (the <code>www-data</code>
+account in case of Debian), and perform all site maintenance tasks as that
+user.
+</p>
+<p>You will also need a directory for your
+<a href="thalcgi_overview.html#database">session database</a>.  We'll use
+<code>/var/www/_site</code> directory for this purpose.
+</p>
+<p class="remark">Letting the whole <code>/var/www</code> tree be owned by
+the <code>www-data</code> user is terribly risky.  If some bad guys manage
+to establish control over your Apache, they will have write access not only
+to your site, but to your site sources as well, and the worst thing here is
+that all this may remain unnoticed for a long period.  However, we cant't
+follow the usual permissions scheme in which the files placed in the web
+space are owned by another user and are only readable for Apache (actually,
+they are typically made world-readable, thus Apache being just one of these
+<em>others</em>).  This is because, as long as we don't use
+<code>suexec</code>, the CGI programs are launched by Apache with the same
+credentials as it has itself, <em>and</em> the Thalassa CGI program must
+be able to update the files within the web space.  If you want a secure
+configuration, please give up this single-site, no-suexec approach in favor
+of the <a href="#suexec">suexec-based configuration</a>.  Yes, it
+<strong>does</strong> make sense even in case you only run one site on your
+server.<p></p>
+</p>
+<p>We will assume you're going to use the Smoky template; it's a good starting
+point anyway.
+</p>
+<p>Assuming the <code>Site</code> directory isn't there yet, do the following
+(as root):
+</p>
+<pre>
+  cp -R /your/sources/of/thalassa/example/templ_smoky /var/www/Site
+  mkdir /var/www/_site
+  chown www-data /var/www -R
+  chmod ugo+rX /var/www -R
+  chmod 700 /var/www/_site
+<p></pre>
+</p>
+<p>From now on, you will only need root access to modify the configuration of
+Apache, while all manipulations with the site's content can be done with
+the Apache user's (<code>www-data</code> in our example) permissions.
+If the command <code>su - www-data</code> fails, you might need to change
+the login shell for the <code>www-data</code> user in your
+<code>/etc/passwd</code>.
+</p>
+<p>Prepare your site for generation; if you use Smoky, follow the instructions
+found in the README file; in particular, set at least the following in your
+<code>config.ini</code>:
+</p>
+<pre>
+  [options dir]
+  target = ../html
+  spool = ../_site/_spool
+  thalcgi = /usr/local/bin/thalcgi.cgi
+
+  [options site]
+  url = http://www.example.com    <em>whatever is the URL of your site</em>
+  briefname = example.com
+
+  [options cgi]
+  userdbdir = ../_site
+  sitesrc = ../Site
+  thalassa_bin = /usr/local/bin/thalassa
+  secret = YOUR_VERY_SECRET_PIECE_OF_JUNK
+
+  [general]
+  opt_selector:feed = news
+<p></pre>
+</p>
+<p>Be sure to pay attention to other configurable options as well.  The
+parameters listed above may be more important in the sense your site will
+not work without them, but that's no reason to ignore everything else.
+</p>
+<p>Launch the <code>thalassa gen -r</code> command <em>in your
+<code>Site</code> directory</em> and check if the
+<code>/var/www/html</code> directory is now populated with files.
+Actually, your site must be reachable now, showing all the static content,
+but the CGI program is still unable to run.
+</p>
+<p>As root, edit your <code>/etc/apache2/apache2.conf</code>.  Find the
+default <code>Directory</code> directives, which usually looks like this:
+</p>
+<pre>
+  &lt;Directory /&gt;
+          Options FollowSymLinks
+          AllowOverride None
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /usr/share&gt;
+          AllowOverride None
+          Require all granted
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/&gt;
+          Options Indexes FollowSymLinks
+          AllowOverride None
+          Require all granted
+  &lt;/Directory&gt;
+<p></pre>
+</p>
+<p>Add the following here:
+</p>
+<pre>
+  &lt;Directory /var/www/_site&gt;
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/Site&gt;
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/html&gt;
+          Options Indexes FollowSymLinks ExecCgi
+          AddHandler cgi-script .cgi
+          AllowOverride All
+          Require all granted
+  &lt;/Directory&gt;
+<p></pre>
+</p>
+<p>Now restart your Apache, and everything should work.
+</p>
+
+<h2 id="nosuexec">Configuration with virtual sites but without <code>suexec</code><p></h2>
+</p>
+<p>This is perhaps the ugliest thing possible.  Only one Apache user (that
+poor <code>www-data</code>) is available, so you can't give different users
+of your system access to different sites.  You can't, e.g., invite friends to
+use your Linux box, and this is weird, because even the lowest-end-possible
+VPS is capable of running hundreds of Thalassa-based sites.
+</p>
+<p>Anyway, if you're affraid of <code>suexec</code> that much, what we'd
+suggest is to create 3 subdirectories under your <code>/var/www</code> for
+every site you're going to run: e.g., if your site is identified somehow by
+the word <code>foobar</code> (e.g., it is
+<code>http://www.foobar.example.com</code>, well, you've got the idea),
+then let the <code>/var/www/foobar</code> directory be your site's web
+tree, place your site's source in <code>/var/www/Foobar</code> and also be
+sure to make an empty directory named <code>/var/www/_foobar</code> for the
+session database.  This may (and should) be done as the
+<code>www-data</code> user.
+</p>
+<p>Indeed, your <code>config.ini</code> should now be slightly different:
+</p>
+<pre id="config_ini_for_virtuals">
+  [options dir]
+  target = ../foobar
+  spool = ../_foobar/_spool
+  thalcgi = /usr/local/bin/thalcgi.cgi
+
+  [options site]
+  url = http://www.foobar.example.com
+  briefname = foobar.example.com
+
+  [options cgi]
+  userdbdir = ../_foobar
+  sitesrc = ../Foobar
+  thalassa_bin = /usr/local/bin/thalassa
+  secret = YOUR_VERY_SECRET_PIECE_OF_JUNK
+
+  [general]
+  opt_selector:feed = news
+<p></pre>
+</p>
+
+<p>Next, as root, create an Apache configuration file for your site.
+Here's an example:
+</p>
+<pre id="virtual_site_conf_nosuexec">
+  &lt;Directory /var/www/_foobar&gt;
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/Foobar&gt;
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/foobar&gt;
+          Options Indexes FollowSymLinks ExecCgi
+          AddHandler cgi-script .cgi
+          AllowOverride All
+          Require all granted
+  &lt;/Directory&gt;
+
+  &lt;VirtualHost *:80&gt;
+          ServerName foobar.example.com
+          ServerAlias foobur.example.com www.foobar.example.com
+
+          ServerAdmin webmaster@remove-this-crap.foobar.example.com
+          DocumentRoot /var/www/foobar
+
+          ErrorLog ${APACHE_LOG_DIR}/error.log
+          CustomLog ${APACHE_LOG_DIR}/access.log combined
+  &lt;/VirtualHost&gt;
+<p></pre>
+</p>
+<p>If your system uses that debian-style configuration, save the file as
+<code>/etc/apache2/sites-available/001-foobar.html</code> (or, you can pick
+<code>002-</code>, <code>003-</code> etc, in case the <code>001-</code>
+prefix is already taken).  Then, go to your <code>sites-enabled</code>
+directory and make the appropriate symlink:
+</p>
+<pre>
+  cd /etc/apache2/sites-enabled
+  ln -s ../sites-available/001-foobar.conf .
+<p></pre>
+</p>
+<p>If you're not on a debian-like system, it is still useful to define each
+virtual site in its own conf file.  You can include them one by one by
+adding to your <code>apache2.conf</code> directives like
+</p>
+<pre>
+  Include foobar.conf
+<p></pre>
+&mdash; or, alternatively, you can make a directory for these files, e.g.,
+<code>/etc/apache2/virtuals/</code>, and include them all at once:
+</p>
+<pre>
+  IncludeOptional virtuals/*.conf
+<p></pre>
+</p>
+<p>Everything should work when you restart your Apache.
+</p>
+
+
+<h2 id="suexec">Configuration with virtual sites and <code>suexec</code><p></h2>
+</p>
+<p><strong>Install the <code>suexec</code> program</strong>.  If
+you use a Debian-based distro, you might want to use the <em>custom</em>
+(in Debian's terms) version of <code>suexec</code>, installed like this:
+</p>
+<pre>
+  apt install apache2 apache2-suexec-custom
+<p></pre>
+</p>
+<p>However, the default <code>suexec</code> version (as provided by the
+original Apache package) will work well too; if you decide to use that one,
+install like this:
+</p>
+<pre>
+  apt install apache2 apache2-suexec-pristine
+<p></pre>
+</p>
+<p>The following steps don't depend on which <code>suexec</code> you choose,
+both will work.  On non-debian systems, there's usually no such option, but
+there's nothing wrong in using the default <code>suexec</code>.
+</p>
+
+<p><strong>Enable the module</strong>.  In Debian, it's is done like this:
+</p>
+<pre>
+  cd /etc/apache2/mods-enabled
+  ln -s ../mods-available/suexec.load .
+<p></pre>
+In other circumstances, you might need to place the following line
+</p>
+<pre>
+  LoadModule suexec_module /usr/lib/apache2/modules/mod_suexec.so
+<p></pre>
+somewhere in the Apache's configuration.  Whatever system you use, be sure
+to add the following line to your <code>apache2.conf</code>:
+</p>
+<pre>
+  Suexec on
+<p></pre>
+</p>
+
+<p><strong>Set up the directory tree</strong>.
+For this approach, we strongly recommend to create per-user directories
+under your <code>/var/www/</code>, with per-site directories residing under
+the users' directories of their owners.  For example, if the user
+<code>lizzie</code> is going to run a site named <code>foobar</code>, then,
+according to this layout paradigm, there must be the per-user directory
+named <code>/var/www/lizzie/</code>, <em>and</em> the directories
+<code>/var/www/lizzie/foobar</code>, <code>/var/www/lizzie/Foobar</code>
+and <code>/var/www/lizzie/_foobar</code>, for the site web space, the site
+sources (those files used by Thalassa to generate the site) and the
+<a href="thalcgi_overview.html#database">session database</a> respectively.
+<strong>The whole <code>/var/www/lizzie/</code> subtree must belong to the
+user <code>lizzie</code>, and only the <code>/var/www/lizzie/foobar</code>
+directory has to be world-readable</strong> (so that Apache can read it),
+while the other two dirs (<code>Foobar</code> and <code>_foobar</code>) may
+&mdash; and should &mdash; only be accessible for the owner.
+You might want to make a symlink to <code>/var/www/lizzie/</code> from
+within the <code>lizzie</code>'s home directory for the user's convenience;
+we'll name the symlink &ldquo;<code>web</code>&rdquo;.
+</p>
+<p>To make the things as they should, do the following <em>as root</em>:
+</p>
+<pre>
+  chown root:root /var/www
+  chmod 755 /var/www
+  mkdir /var/www/lizzie
+  chown lizzie: /var/www/lizzie
+  chmod 755 /var/www/lizzie
+  ln -s /var/www/lizzie ~lizzie/web
+<p></pre>
+Then, <strong>login as <code>lizzie</code></strong>, and do the following:
+</p>
+<pre>
+  cd ~/web
+  cp -R /your/sources/of/thalassa/example/templ_smoky ./Foobar
+  chmod 700 Foobar
+  mkdir _foobar
+  chmod 700 _foobar
+<p></pre>
+After that, <code>cd Foobar</code> and customize the Smoky template to fit
+your needs, exactly <a href="#config_ini_for_virtuals">as we did it for the
+non-suexec scheme with multiple sites</a>; as all paths are relative there,
+nothing actually changes from Thalassa's content generator's point of
+view.
+</p>
+<p><strong>Take care about permissions for your
+<code>thalcgi.ini</code></strong>.  The Smoky template sets the appropriate
+permissions for the <code>thalcgi.ini</code> file on its own, but if you
+wrote your site ini files from scratch, make sure the file has the mode
+<code>0600</code> in your web space.  You can copy the file to your web
+space as a
+&ldquo;<a href="verbatim_publishing.html#binary_section">binary</a>&rdquo;
+or generate one as a &ldquo;<a href="simple_pages.html">page</a>&rdquo;
+(note Smoky does exactly this); in both cases be sure to add
+<code>chmod&nbsp;=&nbsp;700</code> to the appropriate section.
+</p>
+<p><strong>Tell your Apache to serve the site</strong>.  To make Apache
+recognize (and serve) your site, prepare a virtual site description file in
+a way similar to the one <a href="#virtual_site_conf_nosuexec">discussed
+for the non-suexec approach</a>.  The file's content will be a bit
+different, as you need to adjust the directories and to add the
+<code>SuexecUserGroup</code> directive, which tells Apache which UID and
+GID to use for the CGI &ldquo;scripts&rdquo; launched via
+<code>suexec</code> for the particular site.  Assuming that
+<code>lizzie</code>'s primary user group is <code>webadmin</code>, the
+virtual site description for our example will become as follows:
+</p>
+<pre>
+  &lt;Directory /var/www/lizzie/_foobar&gt;
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/lizzie/Foobar&gt;
+          Require all denied
+  &lt;/Directory&gt;
+
+  &lt;Directory /var/www/lizzie/foobar&gt;
+          Options Indexes FollowSymLinks ExecCgi
+          AddHandler cgi-script .cgi
+          AllowOverride All
+          Require all granted
+  &lt;/Directory&gt;
+
+  &lt;VirtualHost *:80&gt;
+          ServerName foobar.example.com
+          ServerAlias foobur.example.com www.foobar.example.com
+
+          ServerAdmin webmaster@remove-this-crap.foobar.example.com
+          DocumentRoot /var/www/lizzie/foobar
+
+          ErrorLog ${APACHE_LOG_DIR}/error.log
+          CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+          SuexecUserGroup lizzie webadmin
+  &lt;/VirtualHost&gt;
+<p></pre>
+</p>
+<p>See the <a href="#virtual_site_conf_nosuexec">discussion of the non-suexec
+approach</a> for details on where to place this file and how to activate
+it.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_comments.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#setup_apache" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

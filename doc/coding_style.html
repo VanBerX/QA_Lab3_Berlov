@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="cpp_subset.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#coding_style" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="scriptpp.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Coding style guide</a></h1>
+    <div class="page_body">
+<ul>
+<li><a href="#formatting">Code formatting, indentation, spaces and the
+      like</a></li>
+<ul>
+  <li><a href="#sacredrule">The sacred 80 column rule</a></li>
+  <li><a href="#indentation">Basic indentation</a></li>
+  <li><a href="#braces">Curly braces placement</a></li>
+  <li><a href="#longlines">Breaking up long lines</a></li>
+</ul>
+<li><a href="#alphabet">Alphabet and language</a></li>
+<ul>
+  <li><a href="#asciionly">ASCII only</a></li>
+  <li><a href="#english">English only</a></li>
+  <li><a href="#Identifiers">Identifiers</a></li>
+</ul>
+<li><a href="#restrictions">More restrictions</a></li>
+<ul>
+  <li><a href="#typedefs">No commitee-invented typedefs</a></li>
+  <li><a href="#sideeffects">Side effects</a></li>
+  <li><a href="#goto">Goto is only allowed in two situations</a></li>
+</ul>
+<p></ul>
+</p>
+<p><hr />
+</p>
+<h2 id="formatting">Code formatting, indentation, spaces and the like<p></h2>
+</p>
+<p>First of all, no auto formatters, such as well-known GNU
+<code>indent</code> program, are allowed.  The rules from this section must
+be obeyed continuously, which means that your code <em>in any given
+moment</em> must be rules-compliant.  Once you did something to the code so
+that it is no longer compliant, you <strong>must not</strong> do anything
+but making it compliant again, until it is.
+</p>
+
+  <h3 id="sacredrule">The sacred 80 column rule<p></h3>
+</p>
+<p>Thou shalt not cross 80 columns in thy file.
+</p>
+<p>Once again: <strong>Thou shalt not cross 80 columns in thy file.</strong>
+</p>
+<p>If you use tabs for indentation (which is <strong>not</strong> recommended,
+but still allowed), the 80 columns rule must be obeyed for 8-column tabs.
+</p>
+<p>In fact, it is recommended to keep the lines no longer than 75 columns, but
+in case you really need so, 78 is still okay.  Even 79 is still okay.  80
+is not okay, but, well, tolerable. <strong>For 81-column and longer lines,
+zero-tolerance policy is in effect.</strong>
+</p>
+<p>If your line doesn't want to fit into this limit, see the section devoted
+to <a href="#longlines">long lines</a> for further instructions (spoiler:
+no, there's no exception for the sacred 80 column rule).
+</p>
+<p><div class="remark">
+</p>
+<p>People often argue there's no real reason to maintain the 80-column rule
+nowadays, when monitors are wide and so on.  Some even recall that the
+figure of 80 in fact came from a punch card width; those people would tell
+you the punch card epoch is over so traditions should be revised.
+</p>
+<p>Damn all the crap like this.  To understand how misleading it is, just come
+to your bookshelf (well, you do have some books printed on paper, don't
+you? if you don't, then visit local library or one of your friends who
+still have books), take any arbitrary book, printed in any year from, say,
+XVIII century to the present time, in any place in the world, in any
+language, in any alphabet (well, not hieroglyphic, so a book in Japanese,
+Chinese or Corean will not fit &mdash; but any of English, Spanish,
+Russian, Armenian, Arabic &mdash; it doesn't matter that Arabic is written
+right to left &mdash; all of these work), open it on a random page, peek a
+line from somewhere in the middle of the page, and <strong>count letters,
+spaces and punctuation marks on that line</strong>.
+</p>
+<p>The result will be 40 to 75.  With 40 to 50 letters per line, books are
+often printed in two columns layout; for a single column typesetting,
+typical line length are from 58 to 67 &ldquo;symbols&rdquo; (including spaces), 73 is
+rare enough, but it is absolutely predictable you will never see a book
+having lines longer than 75.  It is because <strong>lines longer than 75
+symbols are hard to read for a human</strong>, and book publishers know
+this fact for centuries.  That's why the well-known 80-column punch card
+was so popular; other formats existed, but were rarely used.  First four
+columns were usually occupied by the line number, one was left blank, and
+the rest &mdash; 75 columns, you see &mdash; contained actual text.  The
+width of 80 column was not in any way arbitrary, and nothing has actually
+changed in real reasons behind the 80-column rule when punch cards became
+ancient history.
+</p>
+<p>So we repeat it once again: <strong>Thou shalt not cross 80 columns in thy
+file.</strong>  It is unfair to others to force them keeping their terminal
+windows wider than the traditional 80 columns.
+</p>
+<p></div>
+</p>
+
+  <h3 id="indentation">Basic indentation<p></h3>
+</p>
+<p>The recommended indentation is <strong>four spaces</strong>, but we
+consider acceptable to use two spaces, three spaces or one tab for
+indentation.  <strong>It is prohibited to use single space indentation, as
+well as more than four spaces and more than one tab</strong>.
+</p>
+<p>Also the following rules are to be strictly obeyed:</p>
+<ul>
+
+<li>no mixture of tabs and spaces is allowed; either you use spaces, or you
+use tabs, but not both, and if your text editor replaces 8 spaces with a
+tab, then change the editor;</li>
+
+<li>the same indentation must be maintained within any single file; it is
+also strongly discouraged to use different indentations within a single
+&ldquo;unit&rdquo;, be it a program or a library;</li>
+
+<li>tab is assumed to be 8-columns; if you use different tab stops in your
+editor, always keep in mind others use 8-cols.</li>
+
+<p></ul>
+</p>
+
+  <h3 id="braces">Curly braces placement<p></h3>
+</p>
+<p>Curly braces that <strong>delimit a function body</strong> are placed like
+this:
+</p>
+<pre>
+int f(int x)
+{
+    /* ... */
+}
+<p></pre>
+</p>
+<p>and <strong>not</strong> like this:
+</p>
+<pre class="wrongcode">
+int f(int x) {
+<p></pre>
+</p>
+<p>The only exception for this rule is made for C++ methods in case the body
+is placed right inside the class (or structure).  Such a body must be short
+enough (one line, may be two, but <strong>never more that three</strong>),
+and for the sake of compactnes of the class header itself, it may be
+formatted other ways.
+</p>
+
+
+<p>Curly braces <strong>within control statements</strong> are placed like this:
+</p>
+<pre>
+    while (a != b) {
+        /* ... */
+    }
+
+    if (a == b) {
+        /* ... */
+    } else {
+        /* ... */
+    }
+
+    do {
+        /* ... */
+    } while (a != b);
+<p></pre>
+</p>
+<p>There's one important exception from this rule, which will be discussed in
+the section devoted to <a href="#longlines">breaking up long lines</a>.
+</p>
+
+  <h3 id="longlines">Breaking up long lines<p></h3>
+</p>
+<p>There are a lot of cases something doesn't fit on a single code line.  One
+of the most important cases of this is when a head of a statement like
+<code>if</code>, <code>while</code>, <code>for</code> or even
+<code>switch</code> becomes too long because of the conditional expression.
+In this situation we do the following:</p>
+<ul>
+
+<li>indent additional lines of the conditional expression by the usual
+indentation step, e.g., four spaces;</li>
+
+<li>enclose the statement's body with a block, even if it only contains one
+non-block statement;</li>
+
+<li>write the opening &ldquo;<code>{</code>&rdquo; on a separate line, precisely
+under the first char of the statement's name.  <strong>This is an exception
+for the general rule that prescribes to write the &ldquo;<code>{</code>&rdquo; on the
+same line with the statement's head</strong>.</li>
+
+<p></ul>
+</p>
+<p>Together it looks like this:
+</p>
+<pre>
+   while (!the_collection->known_set->first &&
+       the_collection->to_parse->first &&
+       the_collection->to_parse->first->s == ' ')
+   {
+       skip_space(the_collection);
+   }
+<p></pre>
+</p>
+<p>What we explicitly disallow here are things like the following:
+</p>
+<pre class="wrongcode">
+   while (!the_collection->known_set->first &&
+       the_collection->to_parse->first &&
+       the_collection->to_parse->first->s == ' ') {
+       skip_space(the_collection);
+   }
+<p></pre>
+</p>
+<p>or like this:
+</p>
+<pre class="wrongcode">
+   while (!the_collection->known_set->first &&
+       the_collection->to_parse->first &&
+       the_collection->to_parse->first->s == ' ')
+       skip_space(the_collection);
+<p></pre>
+</p>
+<p>or like this:
+</p>
+<pre class="wrongcode">
+   while (!the_collection->known_set->first &&
+     the_collection->to_parse->first &&
+     the_collection->to_parse->first->s == ' ')
+       skip_space(the_collection);
+<p></pre>
+</p>
+
+
+
+<h2 id="alphabet">Alphabet and language<p></h3>
+</p>
+  <h3 id="asciionly">ASCII only<p></h3>
+</p>
+<p>For most of programmers around the world, this is obvious, but
+unfortunately not for all; otherwise, all these &ldquo;wide strings&rdquo; would
+never slip into language specifications.
+</p>
+<p>So here is the rule: any source file for any programming language, not only
+for C and C++, must only contain chars from ASCII alphabet.  See '<code>man
+7 ascii</code>' for what ASCII alphabet is.
+</p>
+<p>Non-ascii chars, such as latin letters with diacritics, letters from
+non-latin alphabets (be it cyrillic, greek or whatever else), hieroglyphs,
+math operators and so on, <strong>are not allowed in source code</strong>.
+Not only they are prohibited in identifiers, which is rejected by most
+iterpreters and compilers anyway; but also <strong>they must never appear
+in string constants and even in comments</strong>.
+</p>
+<p>As a rule of a dumb: a correct source file must, first of all, be
+considered as a sequence of 8-bit bytes, one byte per character
+(fortunately, not many compilers agree to work with commitee-invented
+&ldquo;encodings&rdquo; such as ucs32, but the things are bad enough so this has to
+be mentioned explicitly), and these bytes can only have the following
+values: 9 (tab), 10 (carriage return, not recommended but still acceptable),
+13 (newline), 32 (space), 33&ndash;126 (printable ASCII chars).  That's all.
+</p>
+
+
+  <h3 id="english">English only<p></h3>
+</p>
+<p>There's only one native language to be used within source code, and that
+language is English.  Identifiers must be derived from English words, not
+Spanish, not German, not Russian, not French, not Arabic &mdash; English.
+Comments must be written in English, or not written at all.
+</p>
+<p class="remark">
+Damn, this has nothing to do with american or british chauvinism even if
+such chauvinism really exists (which is doubtful).  The original author of
+this text (and of Thalassa CMS) is not a native English speaker, and this
+fact must be obvious for any native English speaker reading this text, heh
+(sorry guys, I realize how disgusting it is to read a text written in your
+native language by a non-native author).
+<p></p>
+</p>
+<p class="remark">
+The mere fact is that all programmers around the world understand English
+at least to some extent, so English is THE language we programmers can
+communicate with each other.  It isn't so bad, as, among all more or less
+popular native languages, English is the simplest to learn.
+<p></p>
+</p>
+
+  <h3 id="Identifiers">Identifiers<p></h3>
+</p>
+<p>In plain C, <strong>all identifiers but macro names are written lowercase,
+optionally using underscores to separate the words</strong>, like this:
+<code>i</code>, <code>namelen</code>, <code>name_length</code> and so on.
+</p>
+<p>Please note <strong>all but macro names</strong> means exactly this: all
+but macro names.  Hence, <strong>enum constants are written in
+lowercase</strong>.  So, this is okay:
+</p>
+<pre>
+    enum traffic_lights { tl_red, tl_yellow, tl_green };
+<p></pre>
+</p>
+<p>But the following is NOT okay, despite you might be used to this:
+</p>
+<pre class="wrongcode">
+    enum traffic_lights { TL_RED, TL_YELLOW, TL_GREEN };
+<p></pre>
+</p>
+<p>Macro names, and <strong>only</strong> macro names, are written
+all-uppercase, with optional underscores, and must never be shorter than
+five chars.  So these both are okay:
+</p>
+<pre>
+    #define MYMESSAGE "This is a message"
+    #define MY_MESSAGE "This is a message"
+<p></pre>
+</p>
+<p>but all the following are NOT:
+</p>
+<pre class="wrongcode">
+    #define MSG "This is a message"
+    #define MyMessage "This is a message"
+    #define mymessage "This is a message"
+<p></pre>
+</p>
+<p><strong>In plain C, mixed case in identifiers is never used</strong>, and
+never means never.
+</p>
+<p>In C++, we use CamelCase for everything related to object-oriented
+programming and abstract data types (BTW, you don't confuse these two
+completely different paradigms, do you?)  This means, effectively, that
+CamelCase (okay, every word starts with a capital, all the other letters
+are lowercase... hence, the first letter is always uppercase, do we make it
+clear?) for names of classes and methods.  And that's all.
+</p>
+<p>Structure names are written in CamelCase only when they are not, actually,
+structures as they are in plain C &mdash; e.g., if your structure has
+methods, or if it has some private members, than it is no longer a
+structure.  It is up to you whether to use the <code>class</code> keyword
+for all such structures, or stick with <code>struct</code> sometimes, but
+they are no longer structures, so please name them in MixedCase.
+</p>
+<p>Everything else, including</p>
+<ul>
+
+<li>functions which are not methods (even if they accept or return objects
+of classes),</li>
+
+<li>fields, that is, members that aren't methods, even if they are actually
+objects,</li>
+
+<li>variables, even if they are of a class type</li>
+
+<p></ul>
+&mdash; is named all-lowercase.
+</p>
+<p>Please note we never use identifiers such as <code>isEmpty</code>,
+<code>getValue</code>, <code>feedTheCat</code> and the like &mdash; that
+is, mixed case starting with lowercase.
+</p>
+<p>Furthermore, we never use underscores in mixed-case identifiers.
+</p>
+<p>And one more thing: all <em>globally-visible</em> identifiers must be
+reasonably long and as meaningful as possible.  From the other hand, local
+variables should be named short, with rare exceptions.  For example, if
+you're going to write a <code>for</code> loop with an integer loop variable
+that just increments or decrements (may be with inc/dec step other
+than&nbsp;1), it would look stupid to name that variable anyhow longer than
+just <code>i</code>, <code>j</code>, <code>n</code> and so on.  However, it
+is strictly prohibited to use 1-char identifiers <code>l</code>,
+<code>o</code>, <code>I</code> and <code>O</code>, because they can be
+confused with digits (yes, even the lowercase <code>o</code>, and yes,
+there are a lot of people around who don't use syntax highlighting), as
+well as any multichar identifiers that consist of only these four chars,
+such as <code>Ill</code>, <code>IO</code>, <code>loo</code> and so on.
+</p>
+
+
+<h2 id="restrictions">More restrictions<p></h2>
+</p>
+  <h3 id="typedefs">No commitee-invented typedefs<p></h3>
+</p>
+<p>Are you already used to all these <code>size_t</code>, <code>off_t</code>,
+<code>time_t</code>, <code>uint32_t</code> and the like?  Now (at least if
+you work on Thalassa CMS code) please start avoiding these as long as it is
+possible.
+</p>
+<p>Unfortunately, it is not <em>always</em> possible.  For example, if you use
+a syscall or a standard library function which accepts or returns a
+<em>pointer</em> to such type, you can blame the commitee that invented it,
+but you actually have to obey.  Fortunately, it is unlikely you'll need
+such calls (getgroup, accept, recvfrom and the like) in Thalassa CMS.
+</p>
+<p>The well-known <code>time</code> syscall gives a perfect example of a
+situation where you <em>can</em> avoid these idiotic type names.  Instead
+of
+</p>
+<pre class="wrongcode">
+  time_t tm;
+  time(&tm);
+<p></pre>
+</p>
+<p>please write
+</p>
+<pre>
+  long long tm;
+  tm = time(0);
+<p></pre>
+</p>
+<p>(replace the <code>0</code> with <code>NULL</code> for plain C code; in
+C++, keep the zero as it is <a href="cpp_subset.html#nokeywords">the</a>
+representation for a null pointer).
+</p>
+
+
+  <h3 id="sideeffects">Side effects<p></h3>
+</p>
+<p>There are two rules for side effects, each with one exception.  The rules
+are: </p>
+<ol>
+<li>no more than one side effect per <em>expression statement</em>;</li>
+<li>no side effects in conditional expressions.</li>
+<p></ol>
+</p>
+<p>The first rule means it is not good to write, e.g.,
+</p>
+<pre class="wrongcode">
+  x = v[n++];
+<p></pre>
+Instead, two statements must be written:
+</p>
+<pre>
+  x = v[n];
+  n++;
+<p></pre>
+</p>
+<p class="remark">
+
+BTW, this means we never make use of the difference between
+<code>i++</code> and <code>++i</code>, so we always write <code>i++</code>.
+These STL addicts may argue we should definitely always write
+<code>++i</code> instead, but the fact is that we don't use STL, so their
+reasoning isn't valid for us.
+
+<p></p>
+</p>
+<p>The obvious exception is when you need to call a function which has a side
+effect but nonetheless it returns something important as its returning
+value.  In most cases we shouldn't ignore such values, and sometimes
+attepmts to ignore them effectively make our program obviously wrong, like
+with the <code>read</code> syscall.  So, the very minimum we have to do is
+to <em>assign</em> the value to a variable, and assignment is a side
+effect, too.  So, the statement like
+</p>
+<pre>
+  res = func(arg1, arg2);
+<p></pre>
+</p>
+<p>is considered valid, despite there are two side effects in it, but the
+expression in such a statement <strong>must only consist of the function
+call and the assignment operator</strong>.  No additional operators are
+allowed, and no side effects are allowed for the function arguments, so the
+following (provided that <code>func</code>, <code>foo</code> and
+<code>bar</code> all have side effects):
+</p>
+<pre class="wrongcode">
+  res = func(arg1) + 1;
+  res = foo(bar(arg2));
+<p></pre>
+</p>
+<p>both are not allowed.
+</p>
+<p>The second rule means you must not write anything like this:
+</p>
+<pre class="wrongcode">
+  if (close(fd) == -1) {
+<p></pre>
+</p>
+<p>nor like this:
+</p>
+<pre class="wrongcode">
+  if (-1 == close(fd)) {
+<p></pre>
+</p>
+<p>Despite the latter is better than the former, it is still bad enough,
+because <code>close</code> has a side effect (actually, this side effect is
+what it exists for, heh...), and there must be <strong>no side effects in
+conditional expressions</strong>.  However, for this rule there's one
+exception, too.
+</p>
+<p>In practice, we often need to construct a loop according to the "get,
+check, handle" model.  Examples for such a loop are reading from a stream
+and the main loop in an event-driven application; well, other examples
+exist, too.
+</p>
+<p>The problem is that the check has to be placed between getting and
+handling, which means &ldquo;in the middle of the loop&rdquo;.  Programming languages
+don't provide us a statement for this, in the best case they provide loops
+with precondition and postcondition, but not with a
+&ldquo;in-the-middle-condition&rdquo;.  So, what is better, this?
+</p>
+<pre>
+  n = 0;
+  c = getchar();
+  while (c != EOF) {
+      if(c == '\n') {
+          printf("%d\n", n);
+          n = 0;
+      } else {
+          n++;
+      }
+      c = getchar();
+  }
+<p></pre>
+</p>
+<p>Or, maybe, this?
+</p>
+<pre>
+  n = 0;
+  for (;;) {
+      c = getchar();
+      if(c == EOF)
+          break;
+      if(c == '\n') {
+          printf("%d\n", n);
+          n = 0;
+      } else {
+          n++;
+      }
+  }
+<p></pre>
+</p>
+<p>Or, well, finally this?
+</p>
+<pre>
+  n = 0;
+  while ((c = getchar()) != EOF) {
+      if(c == '\n') {
+          printf("%d\n", n);
+          n = 0;
+      } else {
+          n++;
+      }
+  }
+<p></pre>
+</p>
+<p>Honestly speaking, all the three are ugly.  But the first version involves
+duplication of the &ldquo;get&rdquo; in &ldquo;get, check, hangle&rdquo; &mdash; lucky we are
+if it is only a getchar, but consider the well-known <code>select</code>
+syscall with all the preparations (such as filling in the sets, computing
+timeout until the closest time-based event, all that), and you won't be any
+longer happy with duplicating such amount of code.
+</p>
+<p>The second version might look better, but when an average reader of your
+program sees the <code>for (;;)</code> (or <code>while (1)</code>, no
+matter), (s)he expects a real <em>endless</em> loop.  It is okay for a main
+event loop in an event-driven program, because in that case loop only ends
+together with the program itself, but for a simple stream reading or the
+like, it might look misleading.
+</p>
+<p>So, here is the exception to our second rule: it is only acceptable to have
+a side effect within the conditional expression of <code>while</code> loop
+(but not <code>do-while</code>, nor <code>for</code>) in case the loop is
+built according to the &ldquo;get, check, handle&rdquo; scheme and the side effect
+corresponds to the &ldquo;get&rdquo;.
+</p>
+<p>Please note that there are no similar exceptions for <code>if</code>,
+<code>switch</code>, <code>for</code> and <code>do-while</code>.  Side
+effects are NOT allowed in their conditional expressions.
+</p>
+
+  <h3 id="goto">Goto is only allowed in two situations<p></h3>
+</p>
+<p>Many people argue <code>goto</code> must never be used at all.  Some say
+exactly the opposite: that there's nothing wrong with <code>goto</code>
+(well, at all).  BTW, Linus Torvalds often tells this in his interviews.
+</p>
+<p>Okay, they are wrong.  Even Linus Torvalds.
+</p>
+<p>It is really easy to turn a piece of code into a complete mess, and
+<code>goto</code> is an efficient tool for that (although, surely, other
+tools exist for the same purpose).
+</p>
+<p>However, those who prefer to deny <code>goto</code> once and forever, seem
+to be missing one important thing.  The final goal is to make the code as
+clear as possible.  Once again, the goal is <strong>not</strong> to make
+the code free of <code>goto</code>s or whatever else, it is <em>to make the
+code clear</em>.
+</p>
+<p>There are exactly two situations when <code>goto</code> obviously makes the
+code easier to read, and attempts to write the same code without
+<code>goto</code>s surprisingly complicate the code.  Always remember what
+is the final goal; whenever we see we're doing something that moves us away
+from the goal, it means we're doing wrong.
+</p>
+<p>The first of the two situations is simple: it is when we need to
+<strong>bail out from inside several nested statements</strong>, such as
+loops and the <code>switch</code> statement.  With only a single statement,
+we can use <code>break</code>, but it doesn't work for more than one
+statement.
+</p>
+<p>Certainly, some obvious measures must be taken in order not to let the code
+become messy.  The label must have a meaningfull and self-descriptive name,
+and it must be placed right after the outmost of the loops (or, well, loops
+and switches) we're jumping out.  But if we do so, everything will be fine.
+</p>
+<p>Some people will tell you it is easy to go without goto here.  Yes, it is
+really so.  We can isolate the nested statements into a separate function
+and do a <code>return</code> from it; we can add a flag checked in outer
+loops, set it in the innermost loop and do a <code>break</code>; we can
+invent other things as well.  But the truth is that <strong>in this
+situation the code with <code>goto</code> will be the clearest
+one</strong>.  Try it yourself if you don't believe.
+</p>
+<p>The second situation is simple, too.  Suppose you grab something valuable
+at the start of your function, and you need to, well, <em>ungrab</em> it
+before you return.  The role of &ldquo;something valuable&rdquo; is most often played
+by dynamic memory, but it can also be, e.g., an open file (okay... it could
+be a mutex as well if we didn't ban multithreading, but
+<a href="banned_techniques.html#multithreading">we did</a>).  Anyway, you've
+got to do something right before you're done, no matter how your function
+finishes.  And now you need to... guess what? quit your function from its
+middle.
+</p>
+<p>Okay, you can duplicate all your cleanup code from the end of the function
+into every place where you're going to place another <code>return</code>.
+<strong>Please don't</strong>.  Better write exactly one
+<code>return</code> as the last line of your function, place all the
+cleanup right before it, and <strong>mark the cleanup code with a
+label</strong>.  The label should be named somehow short and meaningful;
+<code>quit</code> or <code>cleanup</code> may be good choices, just to name
+a couple.  To quit the function &ldquo;from the middle&rdquo;, use
+<code>goto&nbsp;quit</code> instead of <code>return</code>.
+</p>
+<p>Please note that in both cases <code>goto</code> is to be used to jump
+<strong>forward</strong> in the code, and at least one level from inner to
+outer code constructions.  If you feel like doing goto in the backward
+direction, please recall there are <strong>three</strong> different loop
+statements both in C and C++ (namely while, do-while and for), so please
+don't invent another one with jumps.  Please also don't jump from one point
+to another when they are at the same nesting level &mdash; this is exactly
+how <code>goto</code> turns your code into a snake wedding.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="cpp_subset.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#coding_style" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="scriptpp.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

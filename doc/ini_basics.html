@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="components_and_data.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#ini_basics" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="macro_intro.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Ini file basics</a></h1>
+    <div class="page_body">
+
+<p>Contents:
+</p>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#sectiongroups">Section groups</a></li>
+<li><a href="#parameter_specifiers">Parameters with specifiers</a></li>
+<li><a href="#multiline_values">Multiline values</a></li>
+<li><a href="#joining_sections">Joining sections</a></li>
+<li><a href="#comments">Comments</a></li>
+<li><a href="#joined_parameters">Joined parameter values</a></li>
+<p></ul>
+</p>
+
+<h2 id="introduction">Introduction<p></h2>
+</p>
+<p>The &ldquo;ini&rdquo; file format is
+<a href="https://en.wikipedia.org/wiki/INI_file">generally well-known</a>:
+the file consists of <em>sections</em>, every section contains
+<em>parameters</em>.  Section starts with a <em>section header</em>, which
+is basically a line surrounded with square brackets, like this:
+</p>
+<pre>
+  [general]
+<p></pre>
+</p>
+<p>Each parameter has a name and a value; the value is separated from the name
+with an equality sign, like this:
+</p>
+<pre>
+  param1 = this is the value for the parameter named param1
+<p></pre>
+</p>
+<p>Empty lines (that is, lines consisting exclusively of whitespace chars) are
+ignored, as well as comment lines; and here the &ldquo;general&rdquo; ini file format
+description unexpectedly ends, because what &ldquo;comment line&rdquo; strictly is,
+appears to be implementation-specific.
+</p>
+<p>Fortunately enough, there's no &ldquo;stardard&rdquo; for ini files, so authors of
+various programs implement slightly different notions of what ini file
+actually is.  Thalassa CMS uses a very small (actually, single-module)
+library written by Andrey V. Stolyarov, named simply <code>inifile</code>
+(see
+<a href="http://www.croco.net/software/inifile">http://www.croco.net/software/inifile</a>),
+and the particular format is defined by this library.  The rest of this
+page is devoted to details specific for this implementation.
+</p>
+
+<h2 id="sectiongroups">Section groups<p></h2>
+</p>
+<p>First of all, section name can consist of one or two <em>words</em>.
+Sections named with just one word, like <code>[general]</code> from the
+example above, are kinda stand-alone, whilst sections with 2-word names
+form so-called <em>section groups</em>; the group is defined by the first
+word of the name.  Hence, the following sections:
+</p>
+<pre>
+  [foo bar]
+  enabled = yes
+
+  [foo bur]
+  enabled = yes
+
+  [foo bazz]
+  enabled = no
+<p></pre>
+</p>
+<p>form a section group named <code>foo</code>, and each of the three sections
+has a parameter named <code>enabled</code>, with value <code>yes</code> for
+the first two sections and <code>no</code> for the last one.
+</p>
+
+<h2 id="parameter_specifiers">Parameters with specifiers<p></h2>
+</p>
+<p>Another important implementation-specific feature is that a parameter name
+can contain a <em>specifier</em>, separated with a colon, like this:
+</p>
+<pre>
+  email:sales = sales@example.com
+<p></pre>
+</p>
+<p>Such specifiers define <em>special cases</em> of a generic parameter value;
+a parameter with the same primary name but with no specifier is taken as
+the default.  For example, some (imaginary) company could have a list of
+contact emails like this:
+</p>
+<pre>
+  email:sales = sales@example.com
+  email:support = support@example.com
+  email:legal = attorneys@example.com
+  email:netadmin = noc@example.com
+  email = info@example.com
+<p></pre>
+</p>
+<p>&mdash; thus assigning four specific addresses and one default, for any
+other issues.  Another (imaginary) organization could make the things
+simpler:
+</p>
+<pre>
+  email:legal = Mrs.Sarah.Smith@example.org
+  email = boss@example.org
+<p></pre>
+</p>
+<p>If a particular program is written (or configured) so that it uses email
+specifiers <code>sales</code>, <code>support</code>, <code>legal</code>,
+<code>netadmin</code> and possibly others to decide what email address to
+use in any given situation, then the program will use
+<code>sales@example.com</code> as the sales department address for the
+first company, but for the second one in the same situation it will use the
+default <code>boss@example.org</code>.
+</p>
+
+
+<h2 id="multiline_values">Multiline values<p></h2>
+</p>
+<p>In this variant of ini format, a parameter value may consist of several
+lines of text, and there are two ways to achieve this.  In both cases,
+several lines immediately following the one where the parameter starts, are
+explicitly made to be <em>continuations</em> of the parameter's value:
+either by starting the additional line by an arbitrary amount of white
+space (spaces and tabs), or by placing the &ldquo;<code>+</code>&rdquo; (plus) sign
+at the leftmost position of the line, like this:
+</p>
+<pre>
+  longparam = The value for this parameter is
+      effectively a text consisting of three
+      lines, with all leading whitespace stripped.
+
+  anotherlongone = With this parameter, its value is
+  +multiline as well, but it can contain whitespace
+  +at the start of some lines, like this:
+  +   this line starts with 3 spaces;
+  +      this one starts with 6 spaces;
+  +you've got the idea.
+<p></pre>
+</p>
+<p>Inside the actual parameter value (which the program receives from the file
+parser) the lines are separated by the newline character, so the
+parameter's value becomes a real multiline text.  As one could guess from
+the example, the whitespace variant doesn't allow to have any leading
+whitespace in lines of the text, as all the leading whitespace is stripped
+off.  The &ldquo;plus&rdquo; variant solves this, but it might look less readable.
+</p>
+<p>There's another thing to note here.  For any parameter value, not only
+multiline, the parser strips off all the spaces and tabs (but not newline!)
+located right after the &ldquo;<code>=</code>&rdquo; sign, as well as all trailing
+whitespace together with the newline character which terminates the value
+(but only the terminating newline, not a one preceding it, if any).  This
+means that your multiline parameter will not contain a terminating newline
+character.  Sometimes such a newline is needed, specially in templates
+that expand to a multiline fragment of your target (generated) file.  This
+problem is solved by adding an empty line with another &ldquo;+&rdquo;, like this:
+</p>
+<pre>
+  realtext = For this parameter, the value
+  +is a real multiline text, which is terminated
+  +by a newline character, just like any correct
+  +text.
+  +
+<p></pre>
+</p>
+<p class="remark">
+In the present version it is impossible to have the first line of a
+parameter value to start with whitespace, but this is subject to fix;
+it is possible future versions will strip off the first line of a value in
+case it is empty.
+<p></p>
+</p>
+
+
+<h2 id="joining_sections">Joining sections<p></h2>
+</p>
+<p>Most ini file interpreters consider a current section finished once they
+encounter a header for another section or the end of file.  This is not the
+case for the parser used in Thalassa CMS.
+</p>
+<p>Two or more sections with equal names, no matter how far from each other they
+appear in the ini file (or even in different files, in case more than one
+file is being loaded into the same parser &mdash; which happens when you
+use several ini files for the <code>thalassa</code> program) are considered
+to be parts of one section, just as if parameters from all them were
+written in the first of them.  For example, to write the following:
+</p>
+<pre>
+  [person]
+  name = John
+  age = 37
+
+  [special]
+  smoking_prohibited = yes
+
+  [person]
+  surname = Smith
+  job = teacher
+<p></pre>
+</p>
+<p>has exactly the same effect as if it was
+</p>
+<pre>
+  [person]
+  name = John
+  age = 37
+  surname = Smith
+  job = teacher
+
+  [special]
+  smoking_prohibited = yes
+<p></pre>
+</p>
+
+<h2 id="comments">Comments<p></h2>
+</p>
+<p>The parser considers a line to be a comment (and therefore ignores it) if,
+and only if, <strong>the first non-whitespace character</strong> of the
+line is either semicolon &ldquo;<code>;</code>&rdquo; or hash mark
+&ldquo;<code>#</code>&rdquo;.
+</p>
+<p>The parser also allows to place a comment on the line of a section header,
+like this:
+</p>
+<pre>
+  [foo bar]   ; here goes the comment
+<p></pre>
+</p>
+<p>(or with a &ldquo;#&rdquo; instead of &ldquo;;&rdquo;).
+</p>
+<p>On lines other than section headers, in case a &ldquo;<code>;</code>&rdquo; or
+&ldquo;<code>#</code>&rdquo; is encountered <em>after</em> any non-space chars, they
+have no special meaning.
+</p>
+<p>BTW, a comment line may be placed within a
+<a href="#multiline_values">multiline value</a>, like this:
+</p>
+<pre>
+  longpar = This is the first line of the value
+    this is the second line of the value
+    ; this is a commentary line
+    this is the last (third) line of the value.
+<p></pre>
+</p>
+<p>Thus, if you need a line of your value to start with &ldquo;<code>;</code>&rdquo; or
+&ldquo;<code>#</code>&rdquo;, use the &ldquo;plus&rdquo; variant of additional strings:
+</p>
+<pre>
+  longpar = This is the first line of the value
+  +this is the second line of the value
+  +; this is a no longer a comment, but the third line
+  +this is the last (fourth) line of the value.
+<p></pre>
+</p>
+
+
+
+<h2 id="joined_parameters">Joined parameter values<p></h2>
+</p>
+<p>In the present version of the parser, if in a single section there are two
+or more parameters with exactly equal names, their values are joined
+together as a comma-separated list.  This behaviour is likely to become
+optional in future versions of the <code>inifile</code> library, and if
+this happens, Thalassa CMS will disable it; but as of present, there's no
+way to get rid of this despite it is of no use for the particular program.
+</p>
+<p>For example, to write
+</p>
+<pre>
+  [general]
+
+  foo = bar
+  foo = bur
+  foo = bazz
+<p></pre>
+</p>
+<p>has precisely the same effect as
+</p>
+<pre>
+  [general]
+
+  foo = bar, bur, bazz
+<p></pre>
+</p>
+<p>This is also true for <a href="#joining_sections">joined sections</a>, so,
+for example,
+</p>
+<pre>
+  [list first]
+
+  enabled = true
+  items = 5
+
+  [list first]
+
+  enabled = true
+  items = 10
+<p></pre>
+</p>
+<p>turns into
+</p>
+<pre>
+  [list first]
+
+  enabled = true, true
+  items = 5, 10
+<p></pre>
+</p>
+<p>which will likely simply fail.
+</p>
+<p>Thalassa CMS doesn't rely on this behaviour in any way, but it can lead to
+strangely-looking errors, and this is why its explanation is included here.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="components_and_data.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#ini_basics" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="macro_intro.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

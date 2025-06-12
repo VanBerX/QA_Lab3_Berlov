@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="coding_style.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#scriptpp" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="dullcgi.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Scriptpp library: string manipulations</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ol>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#scriptvariable"><code>ScriptVariable</code>: the string representation</a></li>
+<li><a href="#scriptvector"><code>ScriptVector</code> class and string tokenization</a></li>
+<li><a href="#macros">Macroprocessor</a></li>
+<p></ol>
+</p>
+
+<h2 id="overview">Overview<p></h2>
+</p>
+<p>The scriptpp (<em>Script Plus Plus</em>) is a relatively small C++ class
+library written by Andrey V. Stolyarov, initially intended to replace the
+well-known (and generally unusable) <code>std::string</code> class; as
+years passed, the library became much more than just another string class
+implementation.  The official web home page for scriptpp is
+<a href="http://www.croco.net/software/scriptpp/">http://www.croco.net/software/scriptpp/</a>.
+</p>
+<p class="remark">Despite its name, the library generally has nothing to do
+with scripting.  The name was based on a (wrong) assumption that script
+programming, as a paradigm, consists of two basic things: using text
+strings as the representation for all kinds of data, and extensively
+relying on external programs and text streams.  The library was expected to
+turn C++ into a kind of scripting language &mdash; that is,
+<strong>not</strong> provide a scripting language to be used from within
+C++ programs, but, in contrast, to enable people to use C++ itself for
+scripting.  Well, as the author of this concept, I admit it was all wrong;
+in reality, scripting is not about strings nor external programs, scripting
+is about small and primitive programs (scripts) that control bigger and
+more complicated programs, either <em>glueing</em> them (like Bourne Shell
+and various other shells do), or running inside them, like, by the way, Tcl
+was initially supposed to be used.  In both cases, a scripting language is
+about interpreted execution, so C++, by its very nature, can not play this
+role.  However, I, the author of scriptpp, realized all this stuff like 15
+years after the first release of the library, and decided not to rename
+anything.<p></p>
+</p>
+<p>Thalassa CMS uses the library for:</p>
+<ul>
+
+<li>handling strings, which means storing them, passing them around, in and
+out of functions, composing, modifying, analysing, converting to numbers
+and back, tokenizing and actually doing everything what is usually done
+with strings in computer programs;</li>
+
+<li>processing macros &mdash; well, yes, the
+<a href="macro_intro.html">macroprocessor</a> used by Thalassa is
+implemented by the scriptpp library;</li>
+
+<li>reading and composing <a href="headed_text.html">headed text
+files</a>;</li>
+
+<li>reading text files and analysing text streams;</li>
+
+<li>launching and controlling external programs.</li>
+
+<p></ul>
+</p>
+<p>Unluckily enough, there's actually almost no documentation for the library,
+only some doxygen-style commentary inside its header files can explain
+something about it.  The page you're now reading is in no way a replacement
+for such documentation (which is still to be written), it is only here to
+provide some glue on what's the hell is going on and how to deal with it.
+</p>
+
+
+<h2 id="scriptvariable"><code>ScriptVariable</code>: the string representation<p></h2>
+</p>
+<p>To get the <code>ScriptVariable</code> class available, one must
+<code>#include &lt;scriptpp/scrvar.hpp&gt;</code> header file, which may be
+considered the main header of the library, as all the other features
+provided by the library actually depend on this class anyway.
+</p>
+<p>The <code>ScriptVariable</code> class is <strong>the</strong> replacement
+for that <code>std::string</code>, so basically it has similar
+functionality and even <em>some</em> compatibility features, such as the
+<code>c_str()</code> method, which returns the respective
+<code>const&nbsp;char&nbsp;*</code> value.  A&nbsp;converting constructor
+from the <code>const&nbsp;char&nbsp;*</code> type is also available, as
+well as an assignment operator accepting
+<code>const&nbsp;char&nbsp;*</code> as the argument; the
+default constructor creates an object holding empty string.
+</p>
+<p>The current length of the string can be obtained with the
+<code>Length()</code> method, which is named accordingly to the
+style generally used in the library, but there's a <em>compatibility</em>
+alias <code>length()</code> as well.
+</p>
+<p>Just like these ``standard'' strings, the strings represented by
+<code>ScriptVariable</code> objects can be concatenaded with
+<code>operator+</code>.  The index operator (<code>operator[]</code>) is
+also available, allowing to access chars of the string in an obvious way.
+The <code>operator+=</code> is available for <code>char</code>s and
+C&nbsp;strings (that is, <code>const&nbsp;char&nbsp;*</code>), as well as
+for other <code>ScriptVariable</code> objects.
+</p>
+<p><strong>Objects of the class have strictly the size of a single
+pointer</strong>, which allows to pass them by value, return them from
+functions, assign them here and there, with no harm to efficiency.  Unlike
+the ``modern'' versions of <code>std::string</code>, <strong>the
+<code>ScriptVariable</code> class implements the copy-on-write
+strategy</strong> and will always do.  Yes, this is principially
+incompatible with multithreading, and that's good: be good and never ever
+use multithreading in your programs, because only bad and evil people do
+so.
+</p>
+<p>Another feature worth mentioning is that a <code>ScriptVariable</code>
+class object is capable to be <em>invalid</em>.  It can be constructed in
+the invalid state by passing <code>(char*)0</code> value to the converting
+constructor, and there's a special (tiny) derived class named
+<code>ScriptVariableInv</code> which is created in the invalid state by its
+default constructor.  An object can also be <em>invalidated</em> by calling
+the <code>Invalidate()</code> method, and can be made valid again by
+assigning a valid string to it.  An object can be queried for its validity
+by methods <code>IsValid()</code> and <code>IsInvalid()</code>.
+</p>
+<p>There's a slave class <code>ScriptVariable::Substring</code>, which
+represents a <em>substring</em> of a given string.  The object is created
+in several cases, the most important of them is an explicit call to the
+<code>Range(<em>index</em>,&nbsp;<em>length</em>)</code> method.  The range
+selected this way can then be erased or replaced with another string, e.g.:
+</p>
+<pre>
+      str.Range(0, 5).Erase();
+      str.Range(7, -1).Replace("foobar");
+<p></pre>
+</p>
+<p>(well, passing <code>-1</code> as the length means &ldquo;all the
+rest&rdquo;).  These <code>Erase()</code> and
+<code>Replace(<em>string</em>)</code> are methods of the
+<code>ScriptVariable::Substring</code>, which is the return type for the
+<code>Range</code> method.
+</p>
+<p>It is useful to remember that the substring's method <code>Get()</code>
+makes a copy of the selected substring and returns it as a new
+<code>ScriptVariable</code> object.
+</p>
+<p>Another important feature of the <code>ScriptVariable</code> class is to
+convert a string representing a number to the represented numeric value.
+Here are the four methods for this:
+</p>
+<pre>
+    bool GetLong(long &amp;l, int radix = 0) const;
+    bool GetLongLong(long long &amp;l, int radix = 0) const;
+    bool GetDouble(double &amp;d) const;
+    bool GetRational(long &amp;p, long &amp;q) const;
+<p></pre>
+</p>
+<p>All methods return <code>true</code> in case the conversion is successful,
+otherwise they return <code>false</code> and leave the arguments untouched.
+</p>
+<p>Please be <strong>warned</strong> that the zero value for radix, which is
+the default, means to convert like in the C language, that is,
+<code>"0x25"</code> will get converted as hexadecimal (so the decimal value
+will be 37), and <code>"025"</code> will be considered octal (decimal 21).
+In most cases the thing you really want is achieved specifying
+<code>10</code> as the radix value for these <code>GetLong</code> and
+<code>GetLongLong</code>.
+</p>
+<p>The opposite conversion &mdash; from numbers to strings &mdash; is done by
+the <code>ScriptNumber</code> class, which is a direct descendent of
+<code>ScriptVariable</code>.  It has converting constructors for all
+existing base numeric types.
+</p>
+
+
+
+
+<h2 id="scriptvector"><code>ScriptVector</code> class and string tokenization<p></h2>
+</p>
+<p>The <code>ScriptVector</code> class generally represents a (resizeable)
+vector of <code>ScriptVariable</code> objects.  However, its main indended
+use is not to store these objects, but rather to <em>break a given string
+down to words or tokens</em>, which is performed by its constructors.
+A&nbsp;vector of strings is perhaps the most natural representation for a
+result of such operations, hence the class.
+</p>
+<p>To get the <code>ScriptVector</code> class available, one must
+<code>#include &lt;scriptpp/scrvect.hpp&gt;</code> header file.
+</p>
+<p>It is important to understand the difference between words and tokens, in
+terms used in the scriptpp library.  Generally, <em>words</em> in a string
+can be separated by any non-zero amount of whitespace chars (or any other
+chars choosen to be used as separators), and hence words can't be empty,
+while <em>tokens</em> are expected to be separated by exactly one delimiter
+between them, and in case there are more than one delimiter, it is assumed
+there are empty tokens between the delimiters.  For example, if we for some
+reason decide to use the &ldquo;<code>#</code>&rdquo; char as the only
+separator/delimiter, then the string <code>"#abra###cadabra#"</code> will
+break down to <em>two words</em> <code>"abra"</code> and
+<code>"cadabra"</code>, but to <em>six tokens</em>: <code>""</code>,
+<code>"abra"</code>, <code>""</code>, <code>""</code>,
+<code>"cadabra"</code>, <code>""</code>.
+</p>
+<p>Tokens (in the given sense), by their nature, can be optionally trimmed off
+the leading and trailing whitespace (or whatever chars we decide to trim
+off as if they were whitespace).  Words, by contrast, should not need any
+trimming, we just tell the tokenizer to consider all unwanted chars as
+being separators.  This allows to use a (kinda non-intuitive) rule: if we
+specify the string, the set of delimiter chars <strong>and</strong> the set
+of whitespace chars to be trimmed off (even empty), then we are requesting
+tokens, but if we only specify the string and the separator (whitespace)
+chars, then we are asking for words.  For example:
+</p>
+<pre>
+      ScriptVariable s("#abra###cadabra#");
+      ScriptVector v1(s, "#");
+      ScriptVector v2(s, "#", " \t\r\n");
+      ScriptVector v3(s, "#", "");
+<p></pre>
+</p>
+<p>Once constructed this way, <code>v1</code> will contain the two words, and
+both <code>v2</code> and <code>v3</code> will (each) hold the six tokens.
+</p>
+<p>The default constructor creates an empty vector (that is, a vector of zero
+length); there's <code>operator[]</code>, which gives access to the
+elements of the vector (and the vector authomatically resize in case the
+index is out of range).  Some other important methods are
+<code>Length()</code>, which returns the current amount of elements in the
+vector, and <code>AddItem(<em>string</em>)</code>, which adds another
+string to the vector's end (well... like <code>push_back</code> in STL).
+</p>
+<p>For more methods, take a look at the header file.
+</p>
+
+
+
+<h2 id="macros">Macroprocessor<p></h2>
+</p>
+<p>The <a href="macro_intro.html">macroprocessor</a> is implemented by the
+<code>ScriptMacroprocessor</code> class, <code>#include
+&lt;scriptpp/scrmacro.hpp&gt;</code> to access it.  In the header file
+there's a relatively long commentary describing the class.
+</p>
+<p>From the user's point of view the macroprocessor is explained on the
+<a href="macro_intro.html">Macroprocessor introduction</a> page.  Be sure
+to read it before going further.
+</p>
+<p>The class allows to redefine the escape char as well as all the special
+chars used by the macroprocessor, but this possibility is not used in
+Thalassa; we use the defaults for all the five chars <code>%[]{}</code>.
+</p>
+<p>Being constructed by default, the macroprocessor class contains no macros;
+the macros are expected to be added by the user (the module or program
+which uses the macroprocessor).  There's an abstract class named
+<span id="macro_class"></span>
+<code>ScriptMacroprocessorMacro</code> intended to represent the notion of
+a generic macro with a name; all macros are implemented by its subclasses.
+</p>
+<p>The macroexpansion is supposed to be done by the <code>Expand</code>
+methods; there are two of them, one accepts a <code>ScriptVector</code>
+containing arguments, and the other accepts no arguments.  The version
+that accepts the vector of parameters is pure virtual in the base class,
+while the no-args version has a default implementation which creates an
+empty <code>ScriptVector</code> object and calls the other version of the
+method.  This version can be overriden, too, to gain efficiency for macros
+that don't accept arguments.
+</p>
+<p>The library provides several convenient predefined subclasses of the
+<code>ScriptMacroprocessorMacro</code> class.  We'll describe some of them.
+</p>
+<p>The (abstract) <code>ScriptMacroVariable</code> implements the generic
+notion of a macro accepting no arguments.  It introduces the pure virtual
+method <code>Text()</code> which is supposed to return the string to which
+the macro is to be expanded.
+</p>
+<p>Two heavily used classes are derived from <code>ScriptMacroVariable</code>:
+the <code>ScriptMacroConst</code> class implements a macro which always
+expand to the same string, passed to the object as its constructor
+argument, and the <code>ScriptMacroScrVar</code> class represents a macro
+that expands to the current value of a <code>ScriptVariable</code> object,
+which itself exists somewhere else and whose <em>address</em> is given to
+the <code>ScriptMacroScrVar</code> class as its constructor argument.
+</p>
+<p>A slightly more complicated thing is implemented by the
+<code>ScriptMacroDictionary</code> class.  The macro implemented with this
+class accepts exactly one argument, which is a dictionary key; the call
+expands to the value associated with the key.  The dictionary is
+represented by a <code>ScriptVector</code> of even length, the 0th, 2nd,
+4th... items being the keys, and the 1st, 3rd, 5th... representing values
+to expand to.  The object can either make a copy of your vector, or (if you
+wish so) assume the vector remains existing somewhere else, and there's no
+need for a copy.
+</p>
+<p>For anything not covered with these classes, one has to derive his/her own
+class from the abstract <code>ScriptMacroprocessorMacro</code> class,
+overriding the <code>Expand</code> method as appropriate.
+</p>
+<p>All these objects representing macros are to be passed to the
+macroprocessor object using the <code>AddMacro</code> method.  Please note
+the class assumes <em>ownership</em> over all these objects, so they
+<strong>must</strong> be created in the dynamic memory (with operator
+<code>new</code>); once passed to the macroprocessor, they start to belong
+to it in the sense the macroprocessor actually <code>delete</code>s all
+macro objects from its destructor.
+</p>
+<p><span id="positionals"></span>
+TODO: explain positionals
+</p>
+<p>TODO: describe the Process methods
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="coding_style.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="devdoc.html#scriptpp" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="dullcgi.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

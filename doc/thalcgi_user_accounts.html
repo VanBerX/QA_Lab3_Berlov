@@ -1,0 +1,758 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_webforms.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_user_accounts" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_contact_form.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Signing up and signing in: user accounts</a></h1>
+    <div class="page_body">
+
+<p>Contents:</p>
+<ul>
+<li><a href="#single_use_passwords">Single-use passwords</a></li>
+<li><a href="#user_account">User account</a></li>
+<ul>
+   <li><a href="#user_account_name">User account name</a></li>
+   <li><a href="#user_account_data">User account data
+                                    and implementation</a></li>
+   <li><a href="#profile_macro">The <code>%[profile:&nbsp;]</code>
+                                    macro</a></li>
+   <li><a href="#valid_email">Thalassa's notion of a valid
+                              email address</a></li>
+   <li><a href="#email_data">Data associated with email addresses</a></li>
+</ul>
+<li><a href="#webforms">Account-related webforms and actions</a></li>
+<ul>
+   <li><a href="#form_login">Login form</a></li>
+   <li><a href="#form_signup">Registration (signup) form</a></li>
+   <li><a href="#form_profile">Profile data modification form</a></li>
+   <li><a href="#form_mail_change">Email changing form</a></li>
+</ul>
+<li><a href="#sess_macro">Related functions of the
+                          <code>%[sess:&nbsp;]</code> macro</a></li>
+<li><a href="#service_email">Service email configuration</a></li>
+<p></ul>
+</p>
+
+
+
+<h2 id="single_use_passwords">Single-use passwords<p></h2>
+</p>
+<p>Thalassa CMS uses single-use passwords to authentificate its users.  The
+passwords are sent to users' emails on their requests.  As of present, this
+is the only possibility.
+</p>
+<p>Single use passwords are chosen because Thalassa is intended to be used
+over unencrypted channels, that is, using HTTP (as opposite to HTTPS).
+This of course doesn't mean you <em>can't</em> use HTTPS &mdash; definitely
+you can.  If you want.  From the other hand, you <em>can</em> use plain
+HTTP as well.  Practice shows this doesn't make any problems for relatively
+small sites; despite it is possible to sniff all the traffic between the
+client and the server in any network between them, it is still hard for a
+potential attacker to take over the control on any of these networks, and
+the networks' personnel is in most cases just not interested in such an
+attack.  If, however, the HTTP traffic actually gets sniffed, single-use
+passwords, being sent by email, will only be seen by the attacker when they
+get actually used (within the HTTP POST request that logs the user in) and
+become useless.  To intercept the passwords when they are still of value,
+the attacker will need to sniff the SMTP channels as well, or break into
+the user's mailbox, or act as a man-in-the-middle rather than just sniffing
+the traffic, which is notably harder to perform.
+</p>
+<p><strong>WARNING: It is all still perfectly possible!</strong> In most of
+existing real life cases, breaking a user account at a small site is not
+worth bothering with all these espionage techniques, but your particular
+case may be different.  If, for example, you expect some VIPs like the
+president or the prime minister of your country (or, well, leaders of
+political opposition) among your users, perhaps you should take some
+additional care, such as enabling HTTPS and making sure your outgoing SMTP
+traffic goes using TLS.
+</p>
+
+
+<h2 id="user_account">User account<p></h2>
+</p>
+
+   <h3 id="user_account_name">User account name<p></h3>
+</p>
+<p>It is important to note that user (login) names in Thalassa CMS are used as
+file (well, <em>directory</em>) names within the
+<a href="thalcgi_overview.html#database">database</a> so there are strict
+limits on what can and what can not be used as a user name.  Furthermore,
+there are actually two different limitations: first, what can
+<em>users</em> specify as their login names, and, second, what <em>the
+site's administrator</em> can use as login names for accounts created
+manually.
+</p>
+<p>For both cases, <strong>only low-case latin chars, digits and the
+underscore</strong> are acceptable.  Any char not within this set, in any
+position of the name, will make the name non-working even if the account is
+created by the administrator, because Thalassa CGI rejects it long before
+any password checks or other actions.
+</p>
+<p>For user names choosen by users on their own, additional limitations are in
+effect.  The name <strong>can't be shorter than 2 nor longer than
+16 chars</strong> (both limits are hardcoded), and it <strong>must start
+with a latin letter</strong>, neither a digit nor the underscore are
+accepted as the first char of such a name.
+</p>
+<p>For example, names such as <code>joe</code>, <code>bond007</code>,
+<code>mister_x</code>, <code>wolf__</code> are allowed for users to choose
+on sign up; names like <code>x</code>, <code>007</code>,
+<code>7seas</code>, <code>_alice</code> are not allowed for users to choose
+on their own, but the administrator still can make such accounts; and the
+following names will not work at all:
+<span class="wrongcode"><code>John</code>, <code>JOHN</code>,
+<code>john.doe</code>, <code>john+doe</code>, <code>john-doe</code></span>
+and so on.
+</p>
+
+
+   <h3 id="user_account_data">User account data and implementation<p></h3>
+</p>
+<p>Besides the login name, a user account has the following properties:</p>
+<ul>
+
+<li>account status, which can be either of <code>active</code>,
+<code>pending</code> (email is to be confirmed to finish the signup
+process) and <code>blocked</code>;</li>
+
+<li>email address;</li>
+<li>visible user name (<em>real name</em>);</li>
+<li>optional URL of a web site;</li>
+<li>date/time of:</li>
+<ul>
+  <li>account creation;</li>
+  <li>last login;</li>
+  <li>last activity on the account;</li>
+  <li>last time when single-use passwords were sent to the owner;</li>
+  <li>last email change request;</li>
+</ul>
+
+<li>new email address (for users who requested changing their emails but
+not yet confirmed their new addresses);</li>
+
+<li>confirmation code (for accounts in the <code>pending</code> status and
+for accounts in process of changing their emails);</li>
+
+<li id="roles">list of <em>roles</em> granted to the user; each role
+corresponds to
+some things this user is authorized to do on the site, and there are
+&ldquo;special&rdquo; roles (the <code>all</code> role is always there, even if
+there's no user, the <code>anon</code> role is there for sessions that
+aren't logged in, and the <code>auth</code> role belongs to every logged in
+user);</li>
+
+<li>valid single-use passwords (for states other than
+<code>pending</code>).</li>
+
+<p></ul>
+</p>
+<p>Within the <a href="thalcgi_overview.html#database">user database</a>
+directory, a subdirectory named <code>_users</code> contains the user
+accounts' information.  For every account, a subdirectory in the
+<code>_users</code> directory is created, using the account name (login
+name) as the name for that directory.  For example, if your database is
+located ad <code>/var/sites/example.com</code>, and a new user registers
+with the name <code>lizzie</code>, her account's directory will be
+<code>/var/sites/example.com/_users/lizzie</code>.
+</p>
+<p>In each user account directory there's a text file named <code>_data</code>,
+which contains <code><em>NAME</em>&nbsp;=&nbsp;<em>VALUE</em></code> pairs,
+just like for <a href="thalcgi_sessions.html#session_file">session
+files</a>.  The following <em>NAME</em>s are used to store the properties
+enumerated above:
+<code>status</code>,
+<code>realname</code>,
+<code>site</code>,
+<code>created</code>,
+<code>last_login</code>,
+<code>last_seen</code>,
+<code>last_pwdsent</code>,
+<code>last_mailchange</code>,
+<code>new_email</code>,
+<code>confirmation_code</code>,
+<code>roles</code>.
+</p>
+<p>As you may have noticed, login name and passwords are not on this list.
+The login name is always the same as the name of the user account's
+directory; as of passwords, they are stored <em>as hardlinks to the
+<code>_data</code> file, created within the same directory</em>.  The
+passwords generated by Thalassa never contain the underscore, so the name
+<code>_data</code> itself can not be used as a password.  Once a password
+is used, Thalassa CGI <code>unlink</code>s it, so it effectively stops to
+exist.
+</p>
+<p class="remark">This is one of the simplest possible implementations
+that allows not to bother locking the directory, as both <code>link</code>
+and <code>unlink</code> operations are expected to be atomic.  Using hard
+links is more efficient than, e.g., using empty files, as it doesn't
+involve making and deleting i-nodes, only the directory and the i-node of
+the <code>_data</code> file (you know, that link counter field) get
+changed.<p></p>
+</p>
+
+   <h3 id="profile_macro">The <code>%[profile:&nbsp;]</code> macro<p></h3>
+</p>
+<p>The <code>profile</code> macro allows to access the user account properties
+for an arbitrary (not necessary the current, which is sometimes important)
+user.  The macro accepts at least two arguments, the first for the user
+login name, and the second is for the function name.  It is necessary to
+note that the first argument gets lowercased, and all leading and trailing
+spaces get stripped from it before proceeding.
+</p>
+<p>Two <em>special</em> functions are provided.  The <code>id</code> function
+returns the accounts ID, which equals to the first argument <em>after</em>
+it is stripped and lowercased.  The <code>ifexists</code> function accepts
+two additional arguments: the <em>then</em> value and the <em>else</em>
+value, and returns the former in case the requested account exists,
+otherwise returns the latter.
+</p>
+<p>If the second argument of the macro call is neither <code>id</code> nor
+<code>ifexists</code>, it must be a <em>NAME</em> of the account's
+property, as user in the account file within the database (see the previous
+section for the list of these <em>NAME</em>s).  In this case the macro call
+returns the value of the respective account's property, or an empty string
+in case the property isn't found.
+</p>
+<p>It might be useful to note that the macro doesn't check if the property
+name really belongs to any list, so actually you can (manually or with some
+third party software) add your own properties to your users' accounts
+simply by adding the desired
+<code><em>NAME</em>&nbsp;=&nbsp;<em>VALUE</em></code> pair to the
+<code>_data</code> file of the user account in question and access these
+properties with the <code>profile</code> macro.
+</p>
+
+
+   <h3 id="valid_email">Thalassa's notion of a valid email address<p></h3>
+</p>
+<p>The Thalassa's notion of a valid email address is significantly different
+from what is specified by so-called standards.  Thalassa CGI's internal
+email validator doesn't allow many things that are considered acceptable by
+the &ldquo;standards&rdquo;, but are never actually used.
+</p>
+<p>Only the email address as such must be entered by the user.  Things like
+<code>John Doe &lt;johndoe@example.com&gt;</code> or just
+<code>&lt;john@example.com&gt;</code> will be rejected.   Both '&lt;' and
+'&gt;' are considered inacceptable chars.
+</p>
+<p>Quoted local-parts are not allowed, so, e.g.,  <code>"this is
+crap"@example.com</code>, <code>"double..dot"@example.com</code>,
+<code>"foo"."bar"@example.com</code>,
+<code>"john@example.net"@example.com</code> and the like are rejected
+despite some email software might (surprisingly, heh) consider these valid.
+Did you know about that?  Well, this is even not the most ugly thing the
+&ldquo;standards&rdquo; suggest us to allow in email addresses.  For example, they
+allow so called &ldquo;comments&rdquo; within the local-part in parentheses.
+Thalassa CGI doesn't allow that, so
+<code>(comment)johnny@example.com</code> or
+<code>johnny(comment)@example.com</code> will be rejected.
+</p>
+<p>&ldquo;Standards&rdquo; allow all of the <code>!#$%&amp;'*+-/=?^_`{|}~</code> to
+appear in the local-part, unquoted, with no limitations.  Thalassa CMS,
+however, will reject <code>!#$&amp;'*?/^{|}~</code> in any position of the
+local-part, leaving the possibility to use <code>%-+_</code> and,
+furthermore, will reject <code>%-+</code> in the first position.
+</p>
+<p>Just like the &ldquo;standards&rdquo; specify, the dot &ldquo;<code>.</code>&rdquo; in
+local-part can appear, but not as the first nor last char, and no more than
+one dot in a row.
+</p>
+<p>As for domain-part, only FQDNs are accepted.  IP addresses in square
+brackets, like <code>[192.168.251.1]</code>, are rejected.
+</p>
+<p>The last thing to mention is that FQDN must consist of at least two
+tokens, so, e.g., <code>john@doe</code> is considered invalid.
+FQDNs are also checked to be correct, which means tokens must only consist
+of latin letters, digits and the dash &ldquo;<code>-</code>&rdquo;, and must not
+start nor end with a dash.
+</p>
+
+
+   <h3 id="email_data">Data associated with email addresses<p></h3>
+</p>
+<p>The Thalassa CGI program remembers all email addresses it has ever seen as
+users' emails, unless you remove the respective file manually.  The data is
+stored in the <code>_email</code> subdirectory within the
+<a href="thalcgi_overview.html#database">user database</a> directory; a
+file is created for each email address.
+</p>
+<p>Email address in question is converted into the file name as follows.
+First, the domain part of the address is taken, as is, and two underscores are
+appended to it; then goes the local part of the address.  For example,
+<code>john.doe@example.com</code> will become
+<code>example.com__john.doe</code>.
+</p>
+<p>As usual in the user database, each file contains
+<code><em>NAME</em>&nbsp;=&nbsp;<em>VALUE</em></code> pairs.  Usually there
+are exaclty three pairs, with <em>NAME</em>s <code>status</code>,
+<code>user</code> and <code>date</code>.  The value for the
+<code>user</code> parameter is a user's login name, and the
+<code>date</code> is the date/time of the last status change.
+</p>
+<p>The <code>status</code>' value can be one of the following:</p>
+<ul>
+
+<li><code>banned</code> or <code>blocked</code> means that, for any reason,
+this particular email is not allowed on the site;</li>
+
+<li><code>used</code> or <code>active</code> means that the address
+is currently used by the user account (identified with the
+<code>user</code> parameter);</li>
+
+<li><code>replaced</code> stands that the address <em>was</em> used by the
+user account, but one day the user requested to change it and successfully
+confirmed another address;</li>
+
+<li><code>pending</code> marks addresses that were specified in requests
+for signup or email change, but weren't (yet) confirmed;</li>
+
+<li><code>pending_replaced</code> means that the address belonged to the
+same user some time ago (and the ownership of the address was confirmed),
+was replaced by another address, and recently the user requested to change
+his/her address back to this one, but the change is still to be
+confirmed.</li>
+
+<p></ul>
+</p>
+<p>Technically there's only one situation when Thalassa CGI actually forgets
+an email address: it is when a <em>registered</em> user requests to change
+the address to another, previously unknown one, but later cancels the
+request.  However, in case an address is in the <code>pending</code> (that
+is, unconfirmed) state <strong>and</strong> more than 24 hours passed, the
+program acts as if it never saw that address.
+</p>
+<p>If an email address was entered (so a confirmation code was sent to it),
+but not confirmed, Thalassa CGI will refuse to send more confirmation
+requests to this address for a month (strictly speaking, 31x24 hours).
+</p>
+<p>One more &ldquo;cooldown&rdquo; limit is that users are not allowed to request email
+change more often than once in 24 hours.  All three limits are presently
+hardcoded.
+</p>
+
+
+
+<h2 id="webforms">Account-related webforms and actions<p></h2>
+</p>
+
+<p>Thalassa CGI program supports four
+<a href="thalcgi_webforms.html#list_of_actions">actions</a> related to user
+accounts: <code>login</code>, <code>signup</code>, <code>profile</code> and
+<code>changemail</code>.  All the four don't accept any
+&ldquo;commandline-like&rdquo; arguments; what they do is determined solely by
+parameters sent in the <code>POST</code> request.  We'll explain each of
+them in a dedicated subsection.
+</p>
+
+
+   <h3 id="form_login">Login form<p></h3>
+</p>
+<p>The login form is intended to be shown to users to let them sign in, that
+is, enter the username, one of the single-use password and let the system
+check if the password is valid.  There's an additional function for the
+same form (and the same <em>action</em>): in case the user has no more
+single-use passwords or the remaining passwords are lost, the user should
+have an option to request new passwords.  Hence, the form is expected to
+have two submit buttons.
+</p>
+<p>For a <code>POST</code> request to a page for which the action parameter's
+value is &ldquo;<code>login</code>&rdquo;, the following input values are expected by
+Thalassa CGI:</p>
+<ul>
+
+<li><code>sendmorepass</code> &mdash; shows whether it is a &ldquo;send more
+passwords&rdquo; request; in case the value is &ldquo;<code>yes</code>&rdquo;, the request
+is assumed to be for more passwords, otherwise (no matter whether there's
+no such parameter or it's value differs from &ldquo;<code>yes</code>&rdquo;) a login
+(sign in) request is assumed;</li>
+
+<li><code>login</code> &mdash; the user's login name; used for both request
+types;</li>
+
+<li><code>passtoken</code> &mdash; the single-use password; only expected
+for a sign-in request.</li>
+
+<p></ul>
+</p>
+<p>One important thing to note here is that for both types of the request, and
+not depending on whether the request succeeded or failed, the work session
+gets bound to the login name and can not be unbound; in case the user makes
+a mistake in the login name, the only way to fix it is to close the session
+(with the <a href="thalcgi_webforms#action_rmsession"><code>rmsession</code>
+request</a>) and create a new one.  However, <em>to have the session bound
+to user name</em> <strong>is not the same</strong> as <em>to be logged
+in</em>; being bound to the name does not grant any permissions, access or
+whatever, it <strong>only limits</strong> into which particular user
+account this particular session still may log in.
+</p>
+<p>New passwords can only be sent to a registered user (that is, the account
+status must be <code>active</code>), and only if one of the following is
+true: either there are no more unused passwords for this user, or no less
+that 24 hours passed.  In case everything's okay, an email containing new
+passwords (20&nbsp;of them, the number is presently hardcoded) is composed
+and sent to the user's email address.  See the
+<a href="#service_email">service email</a> section for details on service
+emails (well, emails like this) composition and sending.
+</p>
+<p>For a sign-in request, the CGI program first checks whether the supplied
+password can (as a string) be a password generated by Thalassa, and then
+checks whether the given password exists for the particular user.  If it
+is, the password is removed from the database, and the session changes its
+status to &ldquo;logged in&rdquo;.  Otherwise, the only change to the session will be
+to bind it with the user name, without becoming logged in.
+</p>
+
+
+   <h3 id="form_signup">Registration (signup) form<p></h3>
+</p>
+<p>The <code>signup</code> action expects the following field values:</p>
+<ul>
+
+<li><code>userid</code> &mdash; the login name;</li>
+
+<li><code>username</code> &mdash; the visible (&ldquo;real&rdquo;) name for the
+user;</li>
+
+<li><code>useremail</code> &mdash; the email address;</li>
+
+<li><code>usersite</code> &mdash; the optional URL for a site, presumably
+the user's home page.</li>
+
+<p></ul>
+</p>
+<p>First, the <code>userid</code> is checked for acceptability; after that, it
+is checked whether there's no such user yet.  In case the record with such
+name is found in the database, then it is checked if it has the
+<code>pending</code> status, and how long it exists.  For a record in the
+<code>pending</code> status older than 24 hours, the work continues as if
+there was no record at all; otherwise, registration is refused.
+</p>
+<p>Next, the <code>useremail</code> is checked for validity, and in case the
+address is (lexically) valid, records are checked for the address.  If the
+address is already known to the system, the only possibility to continue is
+if it is in the <code>pending</code> state and the state is more that 24
+hours old; the registration is refused otherwise.
+</p>
+<p>The <code>username</code> is only checked to be non-empty, and the
+<code>usersite</code> is not checked at all.
+</p>
+<p>If no checks failed, a new user record (in the <code>pending</code> state)
+is created in the database, and an email containing a confirmation code is
+sent to the given email.  After that, it is possible for the user
+<strong>to log into the system using the confirmation code as a
+password</strong> &mdash; and this is exactly what must be done to confirm
+the email address ownership.  Logging in for the second time, the user
+should request new passwords.
+</p>
+<p>It is strongly recommended to check from within the registration page
+template whether it is being displayed as a result of a successful signup
+request, and display a short version of the login form, with only the
+<code>passcode</code> input field an the submit button, having the
+<code>login</code> field as a hidden type input, so that the user can enter
+the confirmation code right there, not jumping around from page to page.
+</p>
+
+
+
+   <h3 id="form_profile">Profile data modification form<p></h3>
+</p>
+<p>The <code>profile</code> action lets the user to change values for the
+visible (&ldquo;real&rdquo;) name and the site URL.  This action expects two input
+field values, <code>username</code> and <code>usersite</code>.  The only
+performed checks are whether the session is in the logged in state, and
+whether the <code>username</code> is not empty; if any of them fails,
+the action fails as well.  If both checks are successful, new values are
+saved in the current user's record within the database.
+</p>
+
+
+   <h3 id="form_mail_change">Email changing form<p></h3>
+</p>
+<p>The <code>changemail</code> action allows users to replace their email
+addresses.  The user must first sign in.
+</p>
+<p>What data is expected depends on whether the user is, according to the
+record in the database, already in progress of changing the email.  If not,
+the CGI expects two input field values, named
+&ldquo;<code>newemail</code>&rdquo; (for the new address) and
+&ldquo;<code>passtoken</code>&rdquo; (for a single-use password).
+</p>
+<p class="remark">The password is required for this operation since the
+version 0.3.00.  Earlier versions would only expect the
+<code>newemail</code> value.<p></p>
+</p>
+<p>First of all, the CGI program checks the password and removes it from the
+list of passwords available for the user.  This happens even if the user
+specifies an invalid or non-available email and receives the respective
+error message; that is, if a valid password was specified, it gets used up
+even if no action is taken.  This is because Thalassa CMS is supposed to
+work on unencrypted sites; hence, a valid password, once transferred
+through the network, must become invalid to prevent its usage by those who
+manage to sniff the connection.
+</p>
+<p>After that, the email
+address is <a href="valid_email">checked for validity</a>; for a valid
+address, the program checks if it already knows the address.  The user is
+allowed to try climing the address if <em>any</em> of the following is
+true:</p>
+<ul>
+
+<li>the address is unknown (there's no record for it in the database);</li>
+
+<li>the address is known but has the <code>replaced</code> state and earlier
+belonged to the same user;</li>
+
+<li>the address is known but has the <code>pending</code> state and the
+associated date is more than a month (well, 31x24 hours) in the past.</li>
+
+<p></ul>
+</p>
+<p>If there are no obstacles to go on, both the user account state and the
+email record state are changed accordingly, and a message containing a
+confirmation code is composed and sent to the email address being claimed.
+</p>
+<p>In case the user is already in progress of email changing, the
+<code>POST</code> request to a page with the <code>changemail</code> action
+is handled differently.  It is assumed there's a web form that lets the
+user either enter the confirmation code, or cancel the email change
+request; hence, the form should have two submit buttons, or there may be
+just two forms.   Anyway, the program first checks if there's a value named
+<code>cancel_change</code> set to <code>yes</code>; if so, it also checks
+for the <code>really</code> field's value to be the string
+&ldquo;<code>really</code>&rdquo; (yes, both the name and the expected
+value are &ldquo;<code>really</code>&rdquo;), and if the check passes, both
+the user account and the record for the claimed email are changed
+accordingly.
+</p>
+<p>Otherwise (that is, if there's no <code>cancel_change</code> value or if it
+is not <code>yes</code>), the program gets the value of the
+<code>confirmcode</code>
+parameter and checks whether it is the same as the confirmation code on the
+user's account file.  If the check is successful, the program updates the
+user's account file and records for both the old and the new email
+addresses.
+</p>
+<p class="remark">Presently, there's no limit for failed attempts.  This
+might be one of the subjects for future work.<p></p>
+</p>
+
+
+
+<h2 id="sess_macro">Related functions of the <code>%[sess:&nbsp;]</code> macro<p></h2>
+</p>
+<p>The <a href="thalcgi_sessions.html#sess_macro"><code>%[sess:&nbsp;]</code>
+macro</a> was introduced along with
+<a href="thalcgi_sessions.html">sessions</a>, but only two of its functions,
+<code>cookie</code> and <code>ifvalid</code>, were described.
+</p>
+<p>The <code>ifhasuser</code>, <code>ifloggedin</code>,
+<code>ifcanchangemail</code> and
+<code>ifchangemail</code> functions are conditional checkers; they all take
+two additional arguments: the <em>then</em> value and the <em>else</em>
+value, and return the former in case the condition is true and the latter
+if it is false.  The conditions actually checked are as follows:</p>
+<ul>
+
+<li>for <code>ifhasuser</code>, it is if there's a user account associated
+with the current session, no matter whether the user has logged in or
+not;</li>
+
+<li>for <code>ifloggedin</code>, it is if there's an associated user
+<strong>and</strong> the user has logged in;</li>
+
+<li>for <code>ifcanchangemail</code>, it is if the user has logged in
+<strong>and</strong> can request email address change; the condition
+will be false if the user is either currently changing email, or
+placed a request less than 24 hours ago and then cancelled it;</li>
+
+<li>for <code>ifchangemail</code>, it is if the user has logged in
+<strong>and</strong> the user's account is in process of changing the email
+address.</li>
+
+<p></ul>
+</p>
+<p>The following functions are used to access the data related to the user
+account; they don't need parameters:</p>
+<ul>
+
+<li><code>%[sess:user]</code> returns the associated user's login name (or
+an empty string if there's no associated user);</li>
+
+<li><code>%[sess:loggeduser]</code> returns the user's login name in case
+the user is logged in, otherwise returns an empty string;</li>
+
+<li><code>%[sess:username]</code> returns the associated user's visible
+(&ldquo;real&rdquo;) name; <strong>in case the session is not logged in,
+this function still may return a useful value</strong>: when an anonymous
+user posts a comment, the visible name used for it is stored with the
+session data and the <code>%[sess:username]</code> function will return
+that name, unless the session becomes a logged-in one;</li>
+
+<li><code>%[sess:useremail]</code> returns the associated user's email
+address, even if the user account is in the <code>pending</code> state and
+the email address is not yet confirmed (use the fact such user can not be
+logged in to check if the email can be actually used);</li>
+
+<li><code>%[sess:usersite]</code> returns the associated user's site URL,
+or an empty string if the account doesn't have one;</li>
+
+<li><code>%[sess:usernewemail]</code> returns the requested new email in
+case the user has an unfinished change email request, otherwise returns an
+empty string;</li>
+
+<li><code>%[sess:roles]</code> returns a space-separated list of
+<em>roles</em> the associated user has.</li>
+
+<p></ul>
+</p>
+
+<p>The rest of the <code>sess</code> macro functions,
+<a href="thalcgi_comments.html#sess_macro">related to the moderation
+queue</a> (namely <code>premodq</code>, <code>pqprev</code> and
+<code>pqnext</code>), are described along with
+<a href="thalcgi_comments.html">comments</a>.
+</p>
+
+
+<h2 id="service_email">Service email configuration<p></h2>
+</p>
+<p><div class="banner_warn">
+Please respect the authors of Thalassa CMS: <strong>never</strong> let
+Thalassa send HTML emails to anyone.
+</div>
+</p>
+<p>In the text above (on this page) we've seen two situations when Thalassa
+has to send an email: a message with a confirmation code to let the user
+prove his/her ownership over the email address (both as a part of signup
+and email change &mdash; these cases use the same email composition
+procedure) and a letter containing new single-use passwords.  These two
+cases are identified as <code>confirm</code> and <code>passwords</code>.
+As of present, there are no more cases when Thalassa sends &ldquo;service&rdquo;
+(that is, composed by Thalassa itself) email messages.
+</p>
+<p class="remark">
+Thalassa supports the <a href="thalcgi_contact_form.html">contact form</a>
+which is also able to send emails, but in that case email text and subject
+are supplied by the user <strong>and</strong> there's a fixed
+pre-configured list of addresses such a message can be sent to.
+<p></p>
+</p>
+<p>Thalassa CGI program sends emails by launching an external command
+(presumably <code>/usr/sbin/sendmail</code>, but both the name of the
+command and its arguments are fully configurable) and supplying the message
+(header and body) to its standard input stream.
+</p>
+<p>The <code>[servicemail]</code> ini file section is used to configure what
+exactly is to be sent and how.  There are four parameters in the
+section:</p>
+<ul>
+
+<li><code>send_command</code> is a command line (name and arguments) for
+the external program to launch to send the message; arguments are split down
+to words, using the apostrophe &ldquo;<code>'</code>&rdquo; and the doublequote
+&ldquo;<code>"</code>&rdquo; as grouping symbols (both an apostrophe within
+doublequotes and a doublequote within apostrophes are considered as plain
+chars);</li>
+
+<li><code>header</code> is a template to build the email header;</li>
+
+<li><code>body</code> is a template to build the message body;</li>
+
+<li><code>subject</code> is a template for message subject (the value for
+the <code>%subject%</code> macro).</li>
+
+<p></ul>
+</p>
+<p>For all four parameters, either <code>confirm</code> or
+<code>passwords</code> is always applied as the
+<a href="ini_basics.html#parameter_specifiers">specifier</a>, so you can
+configure different values for different cases.
+</p>
+<p>The following context-specific macros are expanded within the values of
+the <code>send_command</code>, <code>header</code> and <code>body</code>
+parameters:</p>
+<ul>
+
+<li><code>%receiver%</code> is the email address to which the message is to
+be sent;</li>
+
+<li><code>%subject%</code> is the subject string, that is, the
+<code>subject</code> parameter's value;</li>
+
+<li><code>%passwords%</code> is the list of fresh passwords
+(<code>passwords</code> case only);</li>
+
+<li><code>%confirmcode%</code> is the random confirmation code
+(<code>confirm</code> case only);</li>
+
+<li><code>%event%</code> is either <code>signup</code>,
+<code>changemail</code> or <code>passwords</code>.</li>
+
+<p></ul>
+</p>
+<p>The following can serve as an example of the <code>[servicemail]</code>
+section:
+</p>
+<pre>
+  [servicemail]
+
+  send_command = /usr/sbin/sendmail -bm -i
+  +   -f thalassa_master@example.com '%[receiver]'
+
+  header = From: thalassa_master@example.com
+  +To: %[receiver]
+  +Subject: %[subject]
+  +MIME-Version: 1.0
+  +Content-Type: text/plain; charset=us-ascii
+  +Content-Transfer-Encoding: 8Bit
+  +X-Sender-Software: Thalassa CGI script
+  +X-Client: %[getenv:REMOTE_ADDR]:%[getenv:REMOTE_PORT]
+  +
+
+  subject:passwords = access to www.example.com
+
+  body:passwords = Your new single-use passwords:
+  +%[passwords]
+  +See you on the site!
+  +
+
+  subject:confirm = www.example.com: email address confirmation
+
+  body:confirm =
+  +Someone (most probably you) entered %[receiver] at the site
+  +www.example.com as his/her email address.  If it weren't you,
+  +please simply ignore this message.  No more messages will be
+  +sent to your address.  To confirm you really own this address,
+  +please enter the following code on the site:
+  +
+  +%[confirmcode]
+  +
+<p></pre>
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_webforms.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_user_accounts" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_contact_form.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="thalcgi_pages.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_sessions" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_webforms.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Work sessions and the CAPTCHA test</a></h1>
+    <div class="page_body">
+<p>Contents:</p>
+<ul>
+<li><a href="#what_is_session">What is a work session, actually?</a></li>
+<li><a href="#session_in_thalassa">Work sessions in Thalassa</a></li>
+<li><a href="#implementation">How sessions are implemented</a></li>
+<li><a href="#captcha_conf">Configuring CAPTCHA infrastructure</a></li>
+<ul>
+   <li><a href="#captcha_section">The base parameters</a></li>
+   <li><a href="#captcha_form">CAPTCHA solution form</a></li>
+   <li><a href="#no_cookie_page">The No Cookie special page</a></li>
+   <li><a href="#retry_captcha_page">The Retry Captcha special page</a></li>
+</ul>
+<li><a href="#sess_macro">The <code>[sess:&nbsp;]</code> macro</a></li>
+<p></ul>
+</p>
+
+
+
+<h2 id="what_is_session">What is a work session, actually?<p></h2>
+</p>
+<p>Originally, HTTP is request-based, which means that client (browser)
+establishes a connection with server, sends exaclty one request, receives
+the server's response and closes the connection.  Recent implementations of
+both browsers and servers are able to keep the connection to save some
+traffic in case several requests from the same client to the same server
+are needed in a row, which is a typical situation as a page can contain
+images, and downloading each of them takes another request.  However, even
+if several requests are performed using one TCP session, each of them is
+still considered kinda self-containing, that is, from the server's point of
+view, single requests have no relationship between them.
+</p>
+<p>From the user's point of view, the picture is very different.  Web sites
+tend to &ldquo;remember&rdquo; what the user did, and even if they don't, it is a
+rare case when the user fills a single web form and gets what (s)he wants
+right from a single request.  More usual situation is when the site offers
+the user several steps of a dialog.
+</p>
+<p class="remark">Well, the most common situation nowadays is that the
+page containing the form changes right under the user's hands, and often it
+does so despite the user didn't request anything like that.  Okay, all this
+is done with client-side scripting, which we not only don't use, actually
+we believe that publishing sites with client-side scripts should be
+considered criminal and pusnished with several years in prison.<p></p>
+</p>
+<p>What's even more important is that sometimes users somehow identify
+theirselves to a site, and all subsequent actions are assumed to be done by
+the same user.  Also there are other <em>good</em> reasons (in contrast
+with bad reasons, like tracking) for a site to remember something about the
+user, like, as it is true for Thalassa, in case the user solved a CAPTCHA
+test once, it looks fair not to force the user to do it again and again.
+</p>
+<p>So, it is obvious that web sites sometimes need to identify requests coming
+from the same user, or, to say it another way, to separate requests coming
+from different users.  Such requests, known to come from the same client,
+are exactly what &ldquo;work session&rdquo; actually is.  There are two ways to
+maintain sessions: the site needs either to use a cookie to store the
+session ID, or to embed the ID into the URL of each page.
+</p>
+<p>The solution with session ID within the URL has several fundamental flows.
+First, users tend to share URLs of what they see, and an average user will
+not bother stripping off any session IDs from what (s)he copy/pastes to
+another messenger to send to a friend.  The server may get confused seeing
+the same session continuing from two different locations, and, what's more
+serious, the &ldquo;friend&rdquo; who received the URL containing the session ID, may
+do some actions on behalf of the user who sent the URL (and the one who
+sent will hardly realize that (s)he shared not only the URL but also the
+unintended &ldquo;procuracy&rdquo;).
+</p>
+<p>Another fundamental flow of keepig session ID in the URL is that it simply
+doesn't work for static HTML pages.  Unlike various dynamically generated
+content, static pages are, well, static.  They can &ldquo;accept&rdquo; (and ignore)
+query parameters in an URL, but once the user follows a link from a static
+page, that link obviously won't contain these query parameters, so the
+session ID, if any, will be lost.  This is not a problem for these
+&ldquo;modern&rdquo; sites that hardly contain a single static page, but for sites
+made with Thalassa, which consist primarily of static pages (generated
+beforehand, <strong>not</strong> when a request is received), this makes
+URL-based session control effectively impossible.
+</p>
+<p>So, the only thing left to us is a cookie.  When a web-server sends a
+reponse to its client, it can add one or more <em>cookies</em> to the
+headers of the response.  A cookie is effectively a pair of strings, first
+is the name, and the second is the value of the cookie.  Sending another
+request to the same web site, the client (unless it is instructed otherwise
+by the user) adds to the request's header all cookies earlier set by this
+site.  Actually, cookies are <em>intended</em> to make longer sessions out
+of otherwise-isolated requests.
+</p>
+<p>Unfortunately, cookies often trigger some paranoia, and it has its reasons,
+as cookies can also be used for tracking and other bad things.  It remains
+unclear though why all these people afraid of cookies but don't give a damn
+to JavaScript which is deadly dangerous, much much more dangerous and
+harmful than cookies.  Anyway, there's no other option.  At least Thalassa
+only sets a cookie when explicitly requested to do so by the user.
+</p>
+
+
+<h2 id="session_in_thalassa">Work sessions in Thalassa<p></h2>
+</p>
+<p>The <code>thalassa</code> program itself is a static content generator, so
+obviously neither the program itself, nor the content it generates, need
+any sessions.  Hence, whenever we talk about work sessions in Thalassa, it
+must be clear that we only mean the CGI program, <code>thalcgi.cgi</code>.
+</p>
+<p>The CGI program can do some things without a session, too.  The session
+must be already established for any <code>POST</code> request, if only it
+is not the request that actually establishes a new session.
+A&nbsp;<code>GET</code> request will proceed normally without a session
+unless the respective virtual page
+<a href="thalcgi_pages.html#page_type_params">is configured to require a
+session</a>.  In case the <code>session_required</code> parameter is set to
+<code>yes</code> for the requested page, the CGI program will not send the
+page to the user; instead, it will send a
+<a href="thalcgi_baseconf.html#special_pages">special page</a> configured
+with the <code>[nocookiepage]</code> section.
+</p>
+<p>The intention here is to display a webform on a page, and direct to the
+same URL the <code>POST</code> request that contains the data which the
+user entered into the form.  In such configuration it makes sense to only
+display the form when the session is already established, otherwise a user
+may waste some time filling the form just to get a &ldquo;no session&rdquo; error
+right after pressing the submit button.  Furthermore, it is an intended (by
+design) scenario when a user follows a link that points to a webform, gets
+the <code>[nocookiepage]</code> special page instead of the form, reads
+the text about the cookie, decides to set the cookie (and establish the
+session), does so by solving the CAPTCHA test, and finally gets to the
+desired webform because all this time the user stayed at the same virtual
+location (that is, the URL in the browser's address line didn't change).
+</p>
+<p>Establising a session requires to solve the CAPTCHA test; in the present
+version the CAPTCHA can't be disabled, and it's unlikely such an option
+will appear in the future.  This is because technically every session is a
+file within the <a href="thalcgi_overview.html#database">user database</a>
+directory, so there's an obvious risk of a DoS attack; the CAPTCHA test
+reduces this risk, because the session is actually created after the test
+is successfully passed.
+</p>
+<p>The good news for users is that, at least in the present version,
+establishing the working session is the only situation when the CAPTCHA is
+to be solved.  Once the session is active, the user is assumed to be the
+same (human).
+</p>
+<p>As we mentioned already, the <code>[nocookiepage]</code> is a special page,
+which means it has no dedicated path (URI); to see it, a user with no
+active session must point the browser to any of the pages configured to
+require a session.  After that, if everything is configured properly, the
+user receives the special page (with a CAPTCHA form), solves the CAPTCHA,
+submits the solution, optionally (in case either the solution is not
+correct, or something else went wrong) gets the
+<code>[retrycaptchapage]</code>, which contains an explanation of what went
+wrong and another CAPTCHA picture, finally submits the correct solution,
+and after that receives <em>the page (s)he initially requested</em>, as the
+URL didn't change.  But there's one thing to mention here: this is
+<strong>the</strong> moment when the session actually starts to exist, and
+together with the initially requested page, the user receives the cookie
+that contains the session ID.
+</p>
+
+
+<h2 id="implementation">How sessions are implemented<p></h2>
+</p>
+<p>From the client's point of view, things look very simple: there's exactly
+one cookie, named <code>thalassa_sessid</code> (the name is hardcoded in
+the present version, which is likely to change).  The cookie has a value
+that looks somewhat like <code>PJBKANFHFJGBNJNM_PPIGKEIGKBOFHDKL</code>,
+and some attentive users may even notice that the first part of the value
+(the chars before the underscore) remains the same, while the second part
+(after the underscore) changes every time when another page served by the
+CGI is loaded by the browser.
+</p>
+<p>Let's now explain something.  First of all, if for any reason you get
+confused by these characters: these latin letters are actually hexadecimal
+digits, but instead of the traditional <code>0..9,A..F</code>, just the
+first 16 letters from the Latin alphabet (<code>A..P</code>) are used,
+<code>A</code> for zero, <code>P</code> for 15.  Well, actually this
+doesn't really matter, it is only the way choosen for Thalassa CMS to
+generate random identifier strings: first, the desired amount of random
+bytes is acquired, and then these bytes are translated, each to two
+letters, as we've just explained.  Thalassa doesn't use the fact these
+letters are hex digits, e.g., it never converts them back to numbers, they
+are just random strings of a certain length, that's all.
+</p>
+<p>What's more important is that the <em>real</em> session identifier is the
+part of the cookie's value which doesn't change &mdash; that part of the
+string which is before the underscore (<code>PJBKANFHFJGBNJNM</code> in our
+example).  The part <em>after</em> the underscore is a so-called
+<em>token</em>; Thalassa uses it for an additional check against session
+identifier interception.
+</p>
+<p>The active sessions are stored in the subdirectory named
+<code>_sessions</code> under the
+<a href="thalcgi_overview.html#database">user database</a> directory, where
+exactly one file is created for each session, and the session ID is used as
+the file name.
+</p>
+<p class="remark">Don't worry much.  Before trying to access the file in
+any way, the CGI program checks whether it is <em>acceptable</em>.  In the
+present version, this acceptability means the name only consists of
+uppercase latin letters, digits, the underscore char, and is exactly 16
+chars long; so hardly it is possible to perform any injection here.<p></p>
+</p>
+<p>The <span id="session_file">session file</span> is a text file containing
+several
+<code><em>NAME</em>&nbsp;=&nbsp;<em>VALUE</em></code> pairs, like this:
+</p>
+<pre>
+  token = PPIGKEIGKBOFHDKL
+  oldtoken = ADHFMBOOBGDOIDMB
+  created = 1674939409
+  expire = 1675256475
+<p></pre>
+If the user logs in or at least tells his/her username without actually
+logging in (e.g., when requesting new passwords), more pairs get added to
+the session file, so it can look like this:
+</p>
+<pre>
+  token = OMBBNIGHNPJKPOOF
+  oldtoken = JGDGEIINIAPHKHAF
+  created = 1674939409
+  expire = 1675256475
+  user = charlie
+  logged_in = yes
+  login_time = 1675038541
+<p></pre>
+Furthermore, if the site is configured to allow anonymous comments, the
+user, while remaining not logged in and even nameless (in the sense of
+login name), still may use some arbitrary string as his/her &ldquo;visible
+name&rdquo; when posting a comment; this name is stored in the session file
+as an additional name-val pair, like this:
+</p>
+<pre>
+  realname = Johnny the Great
+<p></pre>
+</p>
+<p>It is more or less clear that date/time is stored as a &ldquo;unix date&rdquo; value
+here.  Expiration time is the last request time plus 72 hours, which is
+hardcoded, too (yes. yes, it definitely will change in next versions).  The
+<code>token</code> is well, the token, that is, the part of the cookie
+value, to the right from the underscore &mdash; that part which changes.
+And now the <code>oldtoken</code>: it's the previous value of the token.
+How <em>exactly</em> Thalassa checks the token validity is as follows: if
+the token from the cookie is equal either to the <code>token</code> or the
+<code>oldtoken</code> field of the session file.  This allows the session
+to remain active in case the script generated the content to be sent to the
+client, but something gone wrong with the connection between the client and
+the server (the CGI will never know about it).
+</p>
+
+
+<h2 id="captcha_conf">Configuring CAPTCHA infrastructure<p></h2>
+</p>
+   <h3 id="captcha_section">The base parameters<p></h3>
+</p>
+<p>The CAPTCHA implementation in Thalassa uses a simple
+<a href="thalcgi_overview.html#captcha">cryptographic trick explained
+here</a>, so the CGI doesn't need to store any information locally on the
+server until the CAPTCHA test is actually passed.  What it
+<strong>does</strong> need is an arbitrary but not easily guessable string
+which is kept private (the <em>secret</em>).  If unsure, issue a command
+like the following:
+</p>
+<pre>
+  dd if=/dev/urandom bs=16 count=1 status=none | shasum -b
+<p></pre>
+</p>
+<p>and use the sum as your secret.
+</p>
+<p>Besides the secret string, there's one more parameter to set for the
+CAPTCHA subsystem: the timeout value.  The user can't change the time value
+sent to the client inside the cookie response form, because otherwise the
+MD5 hash will not match, so the CGI can check if it took too long for the
+user to solve the captcha.
+</p>
+<p>Both the secret and the timeout are configured with the
+<code>[captcha]</code> ini section, in which two parameters are recognized:
+<code>secret</code> for the secret string and <code>expire</code> for the
+timeout value, in seconds.  For example:
+</p>
+<pre>
+  [captcha]
+  secret = 11e61c749de5944b74770b2206c2bfd97472c9d3
+  expire = 300
+<p></pre>
+The timeout in this example is 5 minutes (300 seconds).
+</p>
+
+
+   <h3 id="captcha_form">CAPTCHA solution form<p></h3>
+</p>
+<p>Suppose the user wants to establish a session, so (s)he solves the CAPTCHA
+and submits the solution.  It is important to understant that the
+Thalassa CGI program detects this situation by seeing the following
+conditions are met at once:</p>
+<ul id="cookie_set_request_cond">
+
+<li>it is a <code>POST</code> request, with the
+<code>application/x-www-form-urlencoded</code> content type;</li>
+
+<li>there's no active session (the cookie isn't set or doesn't correspond
+to an existing session);</li>
+
+<li>there's a &ldquo;form input value&rdquo; (intended to come from a hidden input)
+named <code>command</code>, with the value <code>setcookie</code>.</li>
+
+<p></ul>
+</p>
+<p class="remark">It worth mentioning that actually the &ldquo;form input&rdquo;
+named <code>command</code> is not used anywhere else in the Thalassa CGI's
+work, and it is never used with any other value.  So the pair
+<code>command=setcookie</code> should be considered a kind of magic word to
+detect this (very special) type of request.<p></p>
+</p>
+<p>Besides the <code>command</code> input value, the following inputs are
+expected <em>for a setcookie request</em>:</p>
+<ul>
+
+<li><code>captcha_ip</code> &mdash; the IP address of the client, in the
+most traditional decimal notation, like <code>198.51.100.173</code>;</li>
+
+<li><code>captcha_time</code> &mdash; the time when the CAPTCHA was issued,
+in the form of a unix date represented as a decimal, like
+<code>1685300179</code>;</li>
+
+<li><code>captcha_nonce</code> &mdash; the randomly-generated single-use
+number, also known as <em>nonce</em>, represented as a hexadecimal number,
+like <code>C34A30B848CC2FC1</code>;</li>
+
+<li><code>captcha_token</code> &mdash; the MD5 hash of the string built as
+a concatenation (in some unspecified order) of the IP, time, the correct
+CAPTCHA answer and the configured secret value; the hash is represented in
+base64, not in hex as you might be used to;</li>
+
+<li><code>captcha_response</code> &mdash; the response to the CAPTCHA
+challenge entered by the user.</li>
+
+<p></ul>
+</p>
+<p>Of all these &ldquo;inputs&rdquo;, only the <code>captcha_response</code> is intended
+to be a real input field for the user to fill.  All the others clearly
+should be hidden inputs; indeed, hardly a user can fill any of them.
+Instead, the CGI program must &ldquo;fill&rdquo; them when a CAPTCHA-containing page
+is generated.  All pages Thalassa CGI outputs (with the exception for a
+default error page) are derived from templates set in the configuration
+file, and this is true for the CAPTCHA pages, too; so one needs some means
+to access the respective values, as well as the CAPTCHA image.  And here the
+<code>%[captcha:&nbsp;]</code> macro enters the game.
+</p>
+<p>The <code>%[captcha:&nbsp;]</code> macro has several functions; when it is
+expanded for the first time during the particular run of the Thalassa CGI
+program, no matter which of its functions is used, the macro generates a
+brand new CAPTCHA challenge, the correct response for it, memorizes the
+current time and the client's IP address; after that, all functions
+of the macro simply return the memorized values.  The macro has five
+functions:</p>
+<ul>
+
+<li><code>%[captcha:image]</code> &mdash; the CAPTCHA challenge image, as a
+PNG picture, encoded with base64;</li>
+
+<li><code>%[captcha:ip]</code> &mdash; the IP address of the client;</li>
+
+<li><code>%[captcha:time]</code> &mdash; the unix time value;</li>
+
+<li><code>%[captcha:nonce]</code> &mdash; the nonce value;</li>
+
+<li><code>%[captcha:token]</code> &mdash; the MD5 hash to be the value for
+the <code>captcha_token</code> form input.</li>
+
+<p></ul>
+</p>
+<p>For the present version of Thalassa, a CAPTCHA form should appear on two
+different pages, both
+&ldquo;<a href="thalcgi_baseconf.html#special_pages">special</a>&rdquo;:
+<code>[nocookiepage]</code> and <code>[retrycaptchapage]</code>.
+The content of these pages is (well, should be) different, so it is
+recommended to prepare the CAPTCHA response form as a snippet within the
+<a href="thalcgi_baseconf.html#html_section"><code>[html]</code> ini
+section</a>.  For example, the following may work:
+</p>
+<pre>
+  [html]
+  cookieform =
+  +&lt;img alt="captcha" style="float:right;"
+  +     src="data:image/jpg;base64,%[captcha:image]" /&gt;
+  +&lt;form name="captcha" action="%[req:script]%[req:path]" method="POST"&gt;
+  +&lt;input type="hidden" name="captcha_ip" value=%[q:%[captcha:ip]] /&gt;
+  +&lt;input type="hidden" name="captcha_time" value=%[q:%[captcha:time]] /&gt;
+  +&lt;input type="hidden" name="captcha_nonce" value=%[q:%[captcha:nonce]] /&gt;
+  +&lt;input type="hidden" name="captcha_token" value=%[q:%[captcha:token]] /&gt;
+  +&lt;label for="captcha_input"&gt;Please enter the string made by swapping
+  + letters as shown at the picture to the right.  There are digits and
+  + latin letters only, case is ignored:&lt;/label&gt;&lt;br/&gt;
+  +&lt;input type="text" id="captcha_input" name="captcha_response" /&gt;&lt;br/&gt;
+  +&lt;input type="hidden" name="command" value="setcookie" /&gt;
+  +&lt;input type="submit" value="Set cookie and create session" /&gt;
+  +&lt;/form&gt;
+  +
+<p></pre>
+</p>
+
+   <h3 id="no_cookie_page">The No Cookie special page<p></h3>
+</p>
+<p>The No Cookie special page is the content to be displayed to the user in
+case the user requested a page which is configured as requiring an active
+session, and there's no active session.
+</p>
+<p>The page is configured with a <code>[nocookiepage]</code> ini section which
+is presently supposed to contain only one parameter, named
+<code>template</code>.  The parameter's value is passwd through the
+macroprocessor to build the actual HTML document to be sent to the user.
+</p>
+<p>Certainly the No Cookie page <strong>must</strong> contain the
+<a href="#captcha_form">CAPTCHA solution form</a>.  The rest is generally
+up to you, but perhaps the page <strong>should</strong> display a brief
+text explaining what's going on, stating that we're going to set a cookie,
+as well as that all the site's features &mdash; except for the interactive
+&mdash; should work without cookies, and that the cookie can be removed
+from the user's browser at any time.
+</p>
+
+
+   <h3 id="retry_captcha_page">The Retry Captcha special page<p></h3>
+</p>
+<p>The Retry Captcha special page is the content displayed to the user in case
+the user just tried to solve the CAPTCHA (that is, submitted the CAPTCHA
+form in a request that meets <a href="#cookie_set_request_cond">the
+conditions</a> &mdash; BTW, this implies that the Retry Captcha page can
+only be displayed in response to a <code>POST</code> request, which may be
+important), but for any reason the solution is rejected.  Actually
+there are five different reasons why it can be rejected, and it seems a
+good idea to tell the user what went wrong.  So the
+<code>[retrycaptchapage]</code> ini section, which configures the Retry
+Captcha page, is a bit more complicated than for the two other special
+pages.
+</p>
+<p>Just like other sections defining pages, this section has the
+<code>template</code> parameter, whose value is passed through the
+macroprocessor to build the content to send to the user; only for this
+parameter's value there's an additional content-specific macro,
+<code>%errmessage%</code>, which expands to a short piece of text
+explaining what's the actual reason the CGI rejected the user's submission.
+</p>
+<p>The error messages themselves are configurable, too; for that, there's the
+second parameter in the same section, named <code>errmessage</code>.  The
+parameter <em>should</em> be set separately for each of the five predefined
+<a href="ini_basics.html#parameter_specifiers">specifiers</a>, pretty
+self-explanatory: <code>ip_mismatch</code>, <code>expired</code>,
+<code>broken_data</code>, <code>wrong_answer</code> and
+<code>unknown</code>.  Setting the values for this parameter, you can
+choose your own wording and, e.g. translate the messages to a language
+other that English; for English, the following may make you a good start:
+</p>
+<pre>
+  [retrycaptchapage]
+  errmessage:ip_mismatch = &lt;strong&gt;ip address mismatch&lt;/strong&gt;.
+     It is possible you reconnected to the Internet between you
+     received the captcha and submitted the answer.
+  errmessage:expired = &lt;strong&gt;time is over&lt;/strong&gt; (5 minutes).
+  errmessage:broken_data = &lt;strong&gt;broken data in the request&lt;/strong&gt;.
+     The most likely it is a server side problem; if it repeats,
+     please contact the site owner.
+  errmessage:wrong_answer = &lt;strong&gt;wrong captcha answer&lt;/strong&gt;.
+     Please try again.
+  errmessage:unknown = &lt;strong&gt;unknown reason&lt;/strong&gt;.
+     This must never happen in normal circumstances.  Please report
+     this to the site administration.
+<p></pre>
+</p>
+<p>For <code>errmessage:expired</code>, in case you set the
+<code>[captcha]/expire</code> parameter to something different from
+<code>300</code>, be sure to replace &ldquo;<code>5 munutes</code>&rdquo; with
+whatever explains the expiration period you choose.
+</p>
+<p>Remember that the page <strong>must</strong> contain the
+<a href="#captcha_form">CAPTCHA solution form</a>; the rest is up to you,
+even explanations are not necessary as the user can only endup seeing this
+page <em>after</em> reading the <a href="#no_cookie_page">No Cookie</a>
+page.
+</p>
+
+
+<h2 id="sess_macro">The <code>%[sess:&nbsp;]</code> macro<p></h2>
+</p>
+<p>The session status (including absense of a session), as well as all data
+associated with the session in case it exists, can be examined with the
+<code>%[sess:&nbsp;]</code> macro.  When the session is associated with a
+user account (whether logged in or unverified), the macro provides access
+to the user account's properties as well.  Furthermore, the same macro is
+used to access the moderation queue.
+</p>
+<p>As usual, the macro accepts at least one argument which must be the
+function name, and for some functions it accepts more arguments.  We'll be
+documenting the <code>sess</code> macro functions along with the features
+they are intended to be used with.  As of now, we'll only discuss the
+functions related to work sessions as such.
+</p>
+<p><code>%[sess:cookie]</code> expands to the cookie value, if the session
+(and the cookie value) exists, otherwise it returns an empty string.  It is
+important to note that this is the cookie's value going to be sent to the
+client in the HTTP headers &mdash; which means, from the client's point of
+view, that this value is the same as the <em>new</em> value of the cookie.
+The <em>old</em> value of the cookie &mdash; the one which was sent to the
+server along with the request for this particular page &mdash; can be taken
+with <code>%[req:cookie:thalassa_sessid]</code>.
+</p>
+<p>The <code>ifvalid</code>, <code>ifhasuser</code> and
+<code>ifloggedin</code> functions are conditional checkers; they all take
+two additional arguments: the <em>then</em> value and the <em>else</em>
+value, and return the former in case the condition is true and the latter
+if it is false.  For <code>ifvalid</code>, the condition is if there is an
+established work session, so it can be used like this:
+</p>
+<pre>
+  %[sess:ifvalid:The session is active:You've got no session]
+<p></pre>
+</p>
+<p class="remark">
+The <code>ifhasuser</code>'s condition is if the session has an associated
+user name, and for <code>ifloggedin</code> the condition is if not only
+there's an associated user name, but the user entered a correct password
+thus passing the authentification &mdash; that is, the user's identity is
+confirmed.  If this doesn't seem to be clear, please wait for the
+detailed description of user accounts and associated procedures.
+<p></p>
+</p>
+
+<p><a href="thalcgi_user_accounts.html#sess_macro">Functions related to user
+accounts</a> are described together with
+<a href="thalcgi_user_accounts.html">user accounts</a>.
+<a href="thalcgi_comments.html#sess_macro">Functions related to the
+moderation queue</a> are described along with
+<a href="thalcgi_comments.html">comments</a>.
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="thalcgi_pages.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#thalcgi_sessions" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="thalcgi_webforms.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>

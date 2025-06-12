@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <link type="text/CSS" rel="stylesheet" href="style.css" />
+  <link type="image/x-icon" rel="shortcut icon" href="favicon.png" /> 
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+  <title>Thalassa CMS official documentation</title>
+</head><body>
+  <div class="theheader">
+    <a href="index.html"><img src="logo.png"
+         alt="thalassa cms logo" class="logo" /></a>
+    <h1><a href="index.html">Thalassa CMS official documentation</a></h1>
+  </div>
+  <div class="clear_both"></div>
+<div class="navbar" id="uppernavbar"> <a href="blocks.html#uppernavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#menus" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="comment_sections.html#uppernavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+<div class="page_content">
+
+    <h1 class="page_title"><a href="">Menus</a></h1>
+    <div class="page_body">
+<p>Menu is effectively a list of web links, in which one item may be
+<em>current</em> and therefore to be displayed differently, usually in
+different color and without the active link.  In Thalassa, this is
+achieved with so-called <em>labels</em>.  Each menu item has an associated
+label, and the <em>current label</em> is passed as an argument to the macro
+that builds the menu, so it can handle the item with the same label in a
+way other than for all the other items.
+</p>
+<p>Menus are configured with ini file sections of the <code>menu</code> group,
+headed like this:
+</p>
+<pre>
+  [menu <em>NAME</em>]
+<p></pre>
+</p>
+<p>&mdash; where <em>NAME</em> is a distinct identifier you'll use to
+reference the menu.  The menu itself is defined by the <code>items</code>
+parameter's value.  The first non-whitespace char in the value is used as
+the field delimiter; every menu item occupies four fields: the first
+defines the menu item's text, the second is the link (as it will appear in
+the <code>a&nbsp;href</code> attribute), the third is assumed to be the
+value for the <code>title</code> attribute of the link (typically it is
+displayed as a tooltip when the user points the mouse to the menu
+item), and the last (fourth) is the label.  For example, your menu
+definition might look like this:
+</p>
+<pre>
+  [menu topmenu]
+  items =
+    | News      | /news.html     | The site's news feed | pg.news
+    | Docs      | /docs.html     | Documentation        | pg.docs
+    | Books     | /books.html    | Books on topic       | pg.books
+    | Download  | /download.html | Files to download    | pg.download
+    | FAQ       | /faq.html      | Frequently asked questions | pg.faq
+    | Feedback  | /thalcgi.cgi/email
+                   | Send a message to the site's owner | feedback
+    | Guestbook | /guestbook     | The guestbook        | guestbook
+<p></pre>
+</p>
+<p>For every field, all leading and trailing whitespace is stripped off.
+</p>
+<p>There are two special cases.  If the second field (the link) is left empty,
+but the first (the item's text) is not empty, such item defines a
+<em>tag</em>, that is, a piece of text inserted into the menu for
+descriptive purposes.  Tag is not intended to be a link, to become a
+current item etc., it is there for informational purposes only, not as a
+navigation element.  If <em>both</em> the first and the second fields are
+left empty, this means a <em>break</em>, which may appear as an additional
+space between items, or as a rule between them, or the like.
+</p>
+<p>For tags and breaks, the third and fouth fields (the tooltip and the label)
+are typically ignored and should be left empty (but make sure they actually
+still there, meaning that exactly four field delimiter chars are there for
+each item).  However, they are still passed to the macroprocessor just like
+for link items, so in theory you can use them for your own purposes.
+</p>
+
+<p>Besides the <code>items</code> parameter, a <code>menu</code> ini section
+should contain the following parameter:</p>
+<ul>
+
+<li><code>begin</code> &mdash; defines the HTML code snippet that starts
+the menu;</li>
+
+<li><code>end</code> &mdash; defines the HTML code snippet that ends
+the menu;</li>
+
+<li><code>link</code> &mdash; template used to display menu items in their
+normal (active) state;</li>
+
+<li><code>curpos</code> &mdash; template used to display the current
+(disabled) menu item;</li>
+
+<li><code>tag</code> &mdash; template used to display tag items (the items
+for which the link field is left empty;</li>
+
+<li><code>break</code> &mdash; template used to form a break (empty space
+or the like).</li>
+
+<p></ul>
+</p>
+<p>Within the <code>link</code>, <code>curpos</code>, <code>tag</code> and
+<code>break</code> parameters' values,
+positional macros are available to access properties of the menu item being
+processed: <code>%0%</code> expands to the item's text, <code>%1%</code>
+expands to the link, and <code>%2%</code> expands to the title text.
+</p>
+<p class="remark">The <code>%3%</code> macro call expands to the label
+field just as you could expect, but you shouldn't need this; if you think
+you do, perhaps you're doing something wrong.<p></p>
+</p>
+<p>For example, your menu can be configured as follows:
+</p>
+<pre>
+  begin = &lt;ul class="menu"&gt;
+  end = &lt;/ul&gt;
+  link = &lt;li&gt;&lt;a href="%1%" %[if:%2%:title=%[q:%2%]:]
+                class="menu_link"&gt;%0%&lt;/a&gt;&lt;/li&gt;
+  curpos = &lt;li&gt;&lt;span class="menu_curr"&gt;%0%&lt;/span&gt;&lt;/li&gt;
+  tag = &lt;li&gt;&lt;span class="menu_tag"&gt;%0%&lt;/span&gt;&lt;/li&gt;
+  break =
+<p></pre>
+</p>
+<p>In this example, break items, if any, will have no effect; actually we
+can't have breaks within <code>&lt;ul&gt;</code> correctly.  This is though
+not the only possible approach to menu rendering, and if you use something
+different, like a sequence of paragraphs, or of strings enclosed in smth.
+like <code>&lt;span&gt;</code>, or even of table cells, there are lots of
+ways to implement a break there.
+</p>
+<p>Refer to various CSS manuals on how to define these <code>menu</code>,
+<code>menu_link</code> and <code>menu_curr</code> classes properly.
+</p>
+<p>Menus are inserted into your pages by calling the <code>menu</code> macro,
+which accepts two arguments: the menu ID and the label.  If the page you
+compose doesn't correspond to any of the menu items, the second argument
+should be left blank.
+</p>
+<p>For the example above, it is natural to assume that pages
+<code>news.html</code>,
+<code>docs.html</code>,
+<code>books.html</code>,
+<code>download.html</code> and
+<code>faq.html</code>
+are generated as page set items, with <code>pg</code> being the set ID and
+<code>news</code>,
+<code>docs</code>,
+<code>books</code>,
+<code>download</code> and
+<code>faq</code> being the item IDs; at the same time, the pages
+corresponding to the feedback form and to the guestbook are created in some
+other manner.  In this setting, the macro call within the <code>pg</code>'s
+page template might look like this:
+</p>
+<pre>
+  %[menu:topmenu:pg.%[li:id]]
+<p></pre>
+</p>
+<p>If we suppose that the guestbook page is created as a list item page
+(please note it can't be a stand-alone page because stand-alone pages can't
+have comment sections, which is obviously needed for the guestbook), in its
+template the macro should be called as follows:
+</p>
+<pre>
+  %[menu:topmenu:guestbook]
+<p></pre>
+</p>
+<p class="remark">The &ldquo;Feedback&rdquo; page in our example looks like a page
+provided by the CGI part of Thalassa.  Displaying menus from the main
+configuration on such a page is tricky, it requires to generate the CGI
+program configuration file as a &ldquo;stand-alone page&rdquo;.  We won't discuss it
+here.<p></p>
+</p>
+</div>
+
+</div>
+<div class="navbar" id="bottomnavbar"> <a href="blocks.html#bottomnavbar" title="previous" class="navlnk">&lArr;</a> &nbsp;&nbsp; <a href="userdoc.html#menus" title="up" class="navlnk">&uArr;</a> &nbsp;&nbsp; <a href="comment_sections.html#bottomnavbar" title="next" class="navlnk">&rArr;</a> </div> 
+
+  <div class="bottomref"><a href="map.html">site map</a></div>
+  <div class="clear_both"></div>
+  <div class="thefooter">
+  <p>&copy; Andrey Vikt. Stolyarov, 2023-2025</p>
+  </div>
+</body></html>
